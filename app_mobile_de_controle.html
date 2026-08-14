@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f172a">
+  
+  <title>App Logística - HL Mando</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --primary: #005c9e;
+      --primary-dark: #004b80;
+      --bg: #f1f5f9;
+      --text: #1e293b;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0; padding: 0;
+      height: 100vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    .view-container {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 90px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .view-container.active { display: block; }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .mobile-input {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 16px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background-color: #f8fafc;
+      transition: all 0.2s;
+      outline: none;
+      text-transform: uppercase;
+      font-weight: 600;
+      height: 48px;
+    }
+    .mobile-input:focus {
+      border-color: var(--primary);
+      background-color: #fff;
+      box-shadow: 0 0 0 3px rgba(0, 92, 158, 0.1);
+    }
+    
+    .mobile-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .btn-large {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 14px; border-radius: 8px;
+      font-weight: bold; font-size: 16px; text-transform: uppercase;
+      transition: active 0.1s; border: none; cursor: pointer;
+    }
+    .btn-large:active { transform: scale(0.98); }
+    .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(0, 92, 158, 0.2); }
+    .btn-success { background-color: #10b981; color: white; }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; width: 100%;
+      background: white; border-top: 1px solid #e2e8f0;
+      display: flex; justify-content: space-around;
+      padding: 8px 0; padding-bottom: env(safe-area-inset-bottom, 8px);
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 50;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center;
+      color: #94a3b8; font-size: 10px; font-weight: 700;
+      padding: 8px; border-radius: 8px; flex: 1;
+      text-transform: uppercase; cursor: pointer;
+    }
+    .nav-item.active { color: var(--primary); }
+    .nav-item i { font-size: 20px; margin-bottom: 4px; }
+
+    /* Botão Gigante de Horários */
+    .btn-ponto {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-height: 350px;
+      border-radius: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: white; font-weight: 900; font-size: 22px; text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 92, 158, 0.4);
+      transition: all 0.1s;
+      border: 8px solid rgba(255,255,255,0.2);
+    }
+    .btn-ponto:active { transform: scale(0.95); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .bg-etapa-padrao { background: linear-gradient(135deg, #005c9e, #003b66); }
+    .bg-etapa-fim { background: linear-gradient(135deg, #10b981, #059669); }
+
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+      background: #1e293b; color: white; padding: 12px 24px; border-radius: 30px;
+      font-weight: bold; font-size: 14px; z-index: 1000;
+      transition: transform 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- CABEÇALHO -->
+  <header class="bg-[#0f172a] text-white p-4 flex justify-between items-center shrink-0 shadow-md z-10 pt-[env(safe-area-inset-top,16px)]">
+    <div class="flex items-center gap-3">
+      <div class="bg-white p-1 rounded">
+        <i class="fa-solid fa-truck-fast text-[#0f172a] text-xl"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-sm leading-tight">HL MANDO</h1>
+        <p class="text-[10px] text-slate-300 opacity-80 uppercase tracking-widest">Controle Logístico</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <div id="sync-status" class="w-3 h-3 rounded-full bg-slate-500 animate-pulse"></div>
+      <span class="text-[10px] font-bold text-slate-300">DB</span>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- TELA 1: DADOS DA OPERAÇÃO                  -->
+  <!-- ========================================== -->
+  <main id="view-dados" class="view-container active p-4">
+    <h2 class="font-black text-lg text-slate-800 mb-4 flex items-center gap-2 uppercase">
+      <i class="fa-solid fa-clipboard-list text-blue-600"></i> Dados da Operação
+    </h2>
+    
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-4 mb-6">
+      
+      <!-- Linha 1: Data (60%) e Turno (40%) -->
+      <div class="grid grid-cols-5 gap-3">
+        <div class="col-span-3">
+          <label class="mobile-label flex justify-between">
+            Data
+            <span onclick="setToday()" class="text-blue-600 font-bold cursor-pointer">HOJE</span>
+          </label>
+          <input type="text" id="form-data" class="mobile-input text-center" placeholder="DD/MM/AAAA" />
+        </div>
+        <div class="col-span-2">
+          <label class="mobile-label truncate">Turno</label>
+          <select id="form-turno" class="mobile-input px-1 text-center bg-white">
+            <option value="A">TURNO A</option>
+            <option value="B">TURNO B</option>
+            <option value="C">TURNO C</option>
+            <option value="D">TURNO D</option>
+            <option value="E">TURNO E</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Linha 2: Operador e Fornecedor -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="mobile-label">Operador</label>
+          <input type="text" id="form-operador" list="op-list" onchange="onOperadorInput(this.value)" class="mobile-input text-center" placeholder="NOME..." />
+          <datalist id="op-list"></datalist>
+        </div>
+        <div>
+          <label class="mobile-label">Fornecedor</label>
+          <input type="text" id="form-fornecedor" list="forn-list" class="mobile-input text-center" placeholder="EX: GADA" />
+          <datalist id="forn-list"></datalist>
+        </div>
+      </div>
+
+      <!-- Linha 3: Placa e Doca -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="mobile-label">Placa</label>
+          <input type="text" id="form-placa" class="mobile-input text-center" placeholder="ABC-1234" />
+        </div>
+        <div>
+          <label class="mobile-label">Doca</label>
+          <select id="form-doca" class="mobile-input text-center bg-white">
+            <option value="Rec">Rec</option>
+            <option value="Exp">Exp</option>
+            <option value="Container">Cont.</option>
+            <option value="Doca 1">D1</option>
+            <option value="Doca 2">D2</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Linha 4: NF e Caixas -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="mobile-label">Nota Fiscal</label>
+          <input type="text" id="form-nf" class="mobile-input text-center" placeholder="Nº NF" />
+        </div>
+        <div>
+          <label class="mobile-label">Caixas</label>
+          <input type="number" id="form-caixas" class="mobile-input text-center" placeholder="QTD" />
+        </div>
+      </div>
+
+    </div>
+
+    <button onclick="navTo('tempos')" class="btn-large btn-primary">
+      Continuar p/ Horários <i class="fa-solid fa-arrow-right"></i>
+    </button>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- TELA 2: BATER PONTO (HORÁRIOS CIEGOS)      -->
+  <!-- ========================================== -->
+  <main id="view-tempos" class="view-container p-4">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="font-black text-lg text-slate-800 flex items-center gap-2 uppercase">
+        <i class="fa-solid fa-stopwatch text-indigo-600"></i> Bater Ponto
+      </h2>
+      <button onclick="resetarTempos()" class="text-xs font-bold text-slate-400 border border-slate-300 rounded px-2 py-1"><i class="fa-solid fa-rotate-left"></i> Zerar</button>
+    </div>
+
+    <!-- BOTÃO GIGANTE -->
+    <div class="flex justify-center mb-8 px-4">
+      <button id="btn-ponto" onclick="registrarProximaEtapa()" class="btn-ponto bg-etapa-padrao">
+        <i id="icon-ponto" class="fa-solid fa-truck-arrow-right text-5xl mb-2"></i>
+        <span id="txt-ponto">Registrar<br>Chegada</span>
+      </button>
+    </div>
+
+    <!-- LISTA DE HORÁRIOS GRAVADOS -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-slate-100 p-2 text-center text-xs font-bold text-slate-500 uppercase border-b border-slate-200">Cronograma da Operação</div>
+      <ul id="lista-horarios" class="divide-y divide-slate-100 p-2">
+        <!-- Preenchido via JS -->
+      </ul>
+    </div>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- TELA 3: FINALIZAR E EXPORTAR               -->
+  <!-- ========================================== -->
+  <main id="view-finalizar" class="view-container p-4">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 text-center mb-6">
+      <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fa-solid fa-flag-checkered text-3xl"></i>
+      </div>
+      <h2 class="font-black text-xl text-slate-800 uppercase mb-1">Finalizar Operação</h2>
+      <p class="text-sm text-slate-500 font-bold">Verifique os gargalos e salve.</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+      <label class="mobile-label text-rose-600 mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Houve Atraso? (Motivo)</label>
+      <textarea id="form-motivo" class="mobile-input h-24 p-3 text-sm normal-case placeholder-slate-400" placeholder="Se a operação estourou o tempo, escreva aqui o motivo..."></textarea>
+    </div>
+
+    <div class="space-y-4">
+      <button onclick="salvarNoSistemaControle()" class="btn-large btn-success shadow-lg shadow-emerald-600/30">
+        <i class="fa-solid fa-cloud-arrow-up"></i> Salvar no Controle Logístico
+      </button>
+      
+      <div class="pt-6 border-t border-slate-200 mt-6">
+        <button onclick="limparTudo()" class="btn-large bg-red-50 text-red-600 border border-red-200">
+          <i class="fa-solid fa-trash-can"></i> Limpar App / Nova Operação
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- NAVEGAÇÃO INFERIOR -->
+  <nav class="bottom-nav">
+    <div onclick="navTo('dados')" class="nav-item active" id="nav-btn-dados">
+      <i class="fa-solid fa-clipboard-list"></i>
+      Dados
+    </div>
+    <div onclick="navTo('tempos')" class="nav-item" id="nav-btn-tempos">
+      <i class="fa-solid fa-stopwatch"></i>
+      Horários
+    </div>
+    <div onclick="navTo('finalizar')" class="nav-item" id="nav-btn-finalizar">
+      <i class="fa-solid fa-flag-checkered"></i>
+      Finalizar
+    </div>
+  </nav>
+
+  <div id="toast" class="toast">Mensagem...</div>
+
+  <script>
+    // --- ESTADO DA APLICAÇÃO ---
+    let appState = {
+      dados: { data: "", turno: "A", operador: "", fornecedor: "", placa: "", doca: "Rec", nf: "", qtd_caixas: "" },
+      horarios: { chegada: "", lib_portaria: "", ini_desc: "", fim_desc: "", ini_conf: "", fim_conf: "", saida: "" },
+      motivo_atraso: ""
+    };
+
+    let operadoresMap = {}; // { NOME: TURNO }
+    let db = null;
+
+    // Definição das etapas do botão gigante
+    const etapasPonto = [
+      { id: 'chegada', txt: 'Registrar\nChegada', icon: 'fa-truck-arrow-right' },
+      { id: 'lib_portaria', txt: 'Liberar\nPortaria', icon: 'fa-gate-open' },
+      { id: 'ini_desc', txt: 'Iniciar\nDescarga', icon: 'fa-dolly' },
+      { id: 'fim_desc', txt: 'Fim da\nDescarga', icon: 'fa-box-check' },
+      { id: 'ini_conf', txt: 'Iniciar\nConferência', icon: 'fa-clipboard-check' },
+      { id: 'fim_conf', txt: 'Fim da\nConferência', icon: 'fa-check-double' },
+      { id: 'saida', txt: 'Registrar\nSaída', icon: 'fa-flag-checkered' }
+    ];
+    let etapaAtualIndex = 0;
+
+    // --- FUNÇÕES DE INTERFACE ---
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg; toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function setToday() {
+      const hoje = new Date();
+      const formatado = String(hoje.getDate()).padStart(2, '0') + '/' + 
+                        String(hoje.getMonth() + 1).padStart(2, '0') + '/' + 
+                        hoje.getFullYear();
+      document.getElementById('form-data').value = formatado;
+    }
+
+    function navTo(viewId) {
+      document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
+      document.getElementById(`view-${viewId}`).classList.add('active');
+      
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.getElementById(`nav-btn-${viewId}`).classList.add('active');
+      
+      if (viewId === 'tempos') salvarDados();
+      if (viewId === 'finalizar') salvarDados();
+    }
+
+    // --- LÓGICA DE DADOS ---
+    function salvarDados() {
+      appState.dados.data = document.getElementById('form-data').value.trim();
+      appState.dados.turno = document.getElementById('form-turno').value;
+      appState.dados.operador = document.getElementById('form-operador').value.trim().toUpperCase();
+      appState.dados.fornecedor = document.getElementById('form-fornecedor').value.trim().toUpperCase();
+      appState.dados.placa = document.getElementById('form-placa').value.trim().toUpperCase();
+      appState.dados.doca = document.getElementById('form-doca').value;
+      appState.dados.nf = document.getElementById('form-nf').value.trim().toUpperCase();
+      appState.dados.qtd_caixas = document.getElementById('form-caixas').value;
+      appState.motivo_atraso = document.getElementById('form-motivo').value.trim().toUpperCase();
+    }
+
+    function onOperadorInput(val) {
+      const opName = val.trim().toUpperCase();
+      if (operadoresMap[opName]) {
+        document.getElementById('form-turno').value = operadoresMap[opName];
+      }
+    }
+
+    // --- LÓGICA DO BOTÃO GIGANTE (HORÁRIOS) ---
+    function formatarHoraAtual() {
+      const now = new Date();
+      return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    }
+
+    function atualizarUITempos() {
+      const btn = document.getElementById('btn-ponto');
+      const txt = document.getElementById('txt-ponto');
+      const icon = document.getElementById('icon-ponto');
+      const lista = document.getElementById('lista-horarios');
+      
+      // Atualizar lista
+      lista.innerHTML = '';
+      etapasPonto.forEach((etapa, idx) => {
+        const hora = appState.horarios[etapa.id];
+        const isPast = hora !== "";
+        const isCurrent = idx === etapaAtualIndex;
+        
+        let colorCls = isPast ? "text-slate-800 font-black" : (isCurrent ? "text-blue-600 font-bold" : "text-slate-300");
+        let iconHtml = isPast ? '<i class="fa-solid fa-check text-emerald-500"></i>' : (isCurrent ? '<i class="fa-solid fa-arrow-right animate-pulse"></i>' : '<i class="fa-solid fa-circle text-[8px]"></i>');
+        
+        lista.innerHTML += `
+          <li class="flex justify-between items-center py-3 px-2 ${isCurrent ? 'bg-blue-50/50 rounded-lg' : ''}">
+            <div class="flex items-center gap-3 ${colorCls}">
+              <div class="w-5 text-center">${iconHtml}</div>
+              <span class="text-sm uppercase">${etapa.txt.replace('\n', ' ')}</span>
+            </div>
+            <div class="font-mono font-bold text-lg ${isPast ? 'text-emerald-600' : 'text-slate-300'}">${hora || '--:--'}</div>
+          </li>
+        `;
+      });
+
+      // Atualizar Botão
+      if (etapaAtualIndex < etapasPonto.length) {
+        const proxima = etapasPonto[etapaAtualIndex];
+        txt.innerHTML = proxima.txt;
+        icon.className = `fa-solid ${proxima.icon} text-5xl mb-2`;
+        btn.disabled = false;
+        btn.className = "btn-ponto bg-etapa-padrao";
+      } else {
+        txt.innerHTML = "OPERAÇÃO<br>CONCLUÍDA";
+        icon.className = "fa-solid fa-check-double text-5xl mb-2";
+        btn.disabled = true;
+        btn.className = "btn-ponto bg-etapa-fim opacity-90 cursor-not-allowed";
+        
+        // Pula para a tela de finalizar automaticamente
+        setTimeout(() => navTo('finalizar'), 1000);
+      }
+    }
+
+    function registrarProximaEtapa() {
+      if (etapaAtualIndex >= etapasPonto.length) return;
+      
+      const etapa = etapasPonto[etapaAtualIndex];
+      appState.horarios[etapa.id] = formatarHoraAtual();
+      showToast(`${etapa.txt.replace('\n', ' ')}: ${appState.horarios[etapa.id]}`);
+      
+      etapaAtualIndex++;
+      atualizarUITempos();
+    }
+
+    function resetarTempos() {
+      if(confirm("Deseja zerar os horários marcados?")) {
+        etapaAtualIndex = 0;
+        for(let key in appState.horarios) appState.horarios[key] = "";
+        atualizarUITempos();
+      }
+    }
+
+    // --- FIREBASE (Cadastro e Gravação) ---
+    function initFirebaseApp() {
+      const firebaseConfig = {
+        apiKey: "AIzaSyBQ7_k7huhS8oAyKp0OsbEajXFmrNxcrlo",
+        authDomain: "kyro-7cb7a.firebaseapp.com",
+        databaseURL: "https://kyro-7cb7a-default-rtdb.firebaseio.com",
+        projectId: "kyro-7cb7a",
+        storageBucket: "kyro-7cb7a.firebasestorage.app",
+        messagingSenderId: "368737182812",
+        appId: "1:368737182812:web:7be81b22a1a1fec5c97299"
+      };
+      
+      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+
+      // Listener de Conexão
+      db.ref('.info/connected').on('value', snap => {
+        const icon = document.getElementById('sync-status');
+        if (snap.val() === true) {
+          icon.className = 'w-3 h-3 rounded-full bg-emerald-400';
+        } else {
+          icon.className = 'w-3 h-3 rounded-full bg-red-500';
+        }
+      });
+
+      // Carregar Operadores e Turnos
+      db.ref('cadastros/operadores').on('value', snap => {
+        const dl = document.getElementById('op-list');
+        dl.innerHTML = ''; operadoresMap = {};
+        const arr = Array.isArray(snap.val()) ? snap.val().filter(x=>x) : Object.values(snap.val()||{});
+        arr.forEach(o => {
+          let nome = typeof o === 'object' ? o.nome : o;
+          let turno = typeof o === 'object' ? (o.turno || 'A') : 'A';
+          nome = nome.toUpperCase();
+          operadoresMap[nome] = turno.toUpperCase();
+          dl.innerHTML += `<option value="${nome}">`;
+        });
+      });
+
+      // Carregar Fornecedores
+      db.ref('cadastros/fornecedores').on('value', snap => {
+        const dl = document.getElementById('forn-list');
+        dl.innerHTML = '';
+        const arr = Array.isArray(snap.val()) ? snap.val().filter(x=>x) : Object.values(snap.val()||{});
+        arr.forEach(f => {
+          if(f) dl.innerHTML += `<option value="${f.toUpperCase()}">`;
+        });
+      });
+    }
+
+    // --- FUNÇÕES DE CÁLCULO E SALVAMENTO ---
+    function calcularDiferencaMinutos(hIni, hFim) {
+      if (!hIni || !hFim) return '';
+      let pI = hIni.split(':'), pF = hFim.split(':');
+      let mI = parseInt(pI[0]) * 60 + parseInt(pI[1]), mF = parseInt(pF[0]) * 60 + parseInt(pF[1]);
+      if (mF < mI) mF += 24 * 60; // Passou da meia noite
+      return mF - mI;
+    }
+
+    function salvarNoSistemaControle() {
+      salvarDados();
+      
+      if (!appState.dados.data || !appState.dados.fornecedor || !appState.dados.operador) {
+        showToast("Preencha Data, Operador e Fornecedor na aba DADOS.");
+        navTo('dados'); return;
+      }
+      
+      // Converte a data DD/MM/AAAA para YYYY-MM-DD exigido pelo Sistema Desktop
+      let dataBD = appState.dados.data;
+      if (dataBD.includes('/')) {
+        const p = dataBD.split('/');
+        if (p.length === 3) dataBD = `${p[2]}-${p[1]}-${p[0]}`;
+      }
+
+      // Calcula os Tempos Internos
+      const h = appState.horarios;
+      const espera_port = calcularDiferencaMinutos(h.chegada, h.lib_portaria);
+      const descarga = calcularDiferencaMinutos(h.ini_desc, h.fim_desc);
+      const conferencia = calcularDiferencaMinutos(h.ini_conf, h.fim_conf);
+      const lead_time = calcularDiferencaMinutos(h.chegada, h.saida);
+
+      const payload = {
+        id: Date.now(), // ID Único
+        data: dataBD,
+        turno: appState.dados.turno,
+        operador: appState.dados.operador,
+        fornecedor: appState.dados.fornecedor,
+        placa: appState.dados.placa,
+        doca: appState.dados.doca,
+        nf: appState.dados.nf,
+        qtd_caixas: appState.dados.qtd_caixas,
+        
+        chegada: h.chegada,
+        lib_portaria: h.lib_portaria,
+        ini_desc: h.ini_desc,
+        fim_desc: h.fim_desc,
+        ini_conf: h.ini_conf,
+        fim_conf: h.fim_conf,
+        saida: h.saida,
+        
+        chegou_emb: "NÃO", ini_carr: "", fim_carr: "", carreg: "", // Padrão
+        fez_pesagem: "NÃO", ini_pesag: "", fim_pesag: "", pesag: "", // Padrão
+        
+        espera_port: espera_port,
+        descarga: descarga,
+        conferencia: conferencia,
+        lead_time: lead_time,
+        motivo_atraso: appState.motivo_atraso
+      };
+
+      document.getElementById('sync-status').classList.replace('bg-emerald-400', 'bg-blue-500');
+      
+      db.ref('controle_logistico/' + payload.id).set(payload).then(() => {
+        showToast("Operação gravada com SUCESSO!");
+        document.getElementById('sync-status').classList.replace('bg-blue-500', 'bg-emerald-400');
+        setTimeout(() => limparTudo(), 2000); // Limpa para a próxima
+      }).catch(err => {
+        showToast("Erro ao gravar: " + err.message);
+        document.getElementById('sync-status').classList.replace('bg-blue-500', 'bg-red-500');
+      });
+    }
+
+    function limparTudo() {
+      appState = {
+        dados: { data: "", turno: "A", operador: "", fornecedor: "", placa: "", doca: "Rec", nf: "", qtd_caixas: "" },
+        horarios: { chegada: "", lib_portaria: "", ini_desc: "", fim_desc: "", ini_conf: "", fim_conf: "", saida: "" },
+        motivo_atraso: ""
+      };
+      
+      document.getElementById('form-operador').value = "";
+      document.getElementById('form-fornecedor').value = "";
+      document.getElementById('form-placa').value = "";
+      document.getElementById('form-nf').value = "";
+      document.getElementById('form-caixas').value = "";
+      document.getElementById('form-motivo').value = "";
+      setToday();
+      
+      etapaAtualIndex = 0;
+      atualizarUITempos();
+      navTo('dados');
+      showToast("Pronto para nova operação.");
+    }
+
+    window.onload = function() {
+      initFirebaseApp();
+      setToday();
+      atualizarUITempos();
+    };
+  </script>
+</body>
+</html>
+
