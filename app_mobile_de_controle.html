@@ -12,6 +12,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
+  <!-- Excel Library -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
 
@@ -125,6 +128,7 @@
       white-space: nowrap;
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.error { background: #991b1b; }
   </style>
 </head>
 <body>
@@ -156,7 +160,7 @@
     
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-4 mb-6">
       
-      <!-- Linha 1: Data (60%) e Turno (40%) -->
+      <!-- Linha 1: Data e Turno -->
       <div class="grid grid-cols-5 gap-3">
         <div class="col-span-3">
           <label class="mobile-label flex justify-between">
@@ -283,7 +287,12 @@
         <i class="fa-solid fa-flag-checkered text-3xl"></i>
       </div>
       <h2 class="font-black text-xl text-slate-800 uppercase mb-1">Finalizar Operação</h2>
-      <p class="text-sm text-slate-500 font-bold">Verifique os gargalos e salve.</p>
+      <p class="text-sm text-slate-500 font-bold">Verifique os gargalos e salve o camião.</p>
+      
+      <!-- Contador da Prancheta Virtual -->
+      <div class="mt-4 inline-block bg-blue-50 border border-blue-200 text-blue-700 text-[10px] px-3 py-1.5 rounded-lg font-black uppercase tracking-wide">
+         <i class="fa-solid fa-layer-group"></i> Prancheta Virtual: <span id="session-counter" class="text-sm">0</span>/12
+      </div>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
@@ -293,12 +302,17 @@
 
     <div class="space-y-4">
       <button onclick="salvarNoSistemaControle()" class="btn-large btn-success shadow-lg shadow-emerald-600/30">
-        <i class="fa-solid fa-cloud-arrow-up"></i> Salvar no Controle Logístico
+        <i class="fa-solid fa-cloud-arrow-up"></i> 1. Gravar BD e Adicionar ao Lote
+      </button>
+      
+      <!-- BOTÃO GERAR EXCEL COM LAYOUT DA PRANCHETA -->
+      <button onclick="gerarExcelPrancheta()" class="btn-large bg-[#217346] text-white shadow-lg shadow-green-600/30 mt-2">
+        <i class="fa-solid fa-file-excel"></i> 2. Gerar Excel (Layout Prancheta)
       </button>
       
       <div class="pt-6 border-t border-slate-200 mt-6">
-        <button onclick="limparTudo()" class="btn-large bg-red-50 text-red-600 border border-red-200">
-          <i class="fa-solid fa-trash-can"></i> Limpar App / Nova Operação
+        <button onclick="limparSessaoCompleta()" class="btn-large bg-red-50 text-red-600 border border-red-200">
+          <i class="fa-solid fa-trash-can"></i> Limpar App / Nova Prancheta
         </button>
       </div>
     </div>
@@ -329,6 +343,9 @@
       horarios: { chegada: "", lib_portaria: "", ini_desc: "", fim_desc: "", ini_conf: "", fim_conf: "", ini_pesag: "", fim_pesag: "", saida: "" },
       motivo_atraso: ""
     };
+
+    // Array que acumula até 12 camiões gravados na sessão atual (Prancheta Virtual)
+    let sessionRecords = [];
 
     let operadoresMap = {}; // { NOME: TURNO }
     let db = null;
@@ -376,10 +393,15 @@
       buildEtapas();
     }
 
-    // --- FUNÇÕES DE INTERFACE ---
-    function showToast(msg) {
+    function showToast(msg, isError = false) {
       const toast = document.getElementById('toast');
-      toast.innerText = msg; toast.classList.add('show');
+      toast.innerText = msg; 
+      if (isError) {
+          toast.classList.add('error');
+      } else {
+          toast.classList.remove('error');
+      }
+      toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
@@ -402,7 +424,6 @@
       if (viewId === 'finalizar') salvarDados();
     }
 
-    // --- LÓGICA DE DADOS ---
     function salvarDados() {
       appState.dados.data = document.getElementById('form-data').value.trim();
       appState.dados.turno = document.getElementById('form-turno').value;
@@ -424,7 +445,6 @@
       }
     }
 
-    // --- LÓGICA DO BOTÃO GIGANTE (HORÁRIOS) ---
     function formatarHoraAtual() {
       const now = new Date();
       return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
@@ -494,7 +514,6 @@
       }
     }
 
-    // --- FIREBASE (Cadastro e Gravação) ---
     function initFirebaseApp() {
       const firebaseConfig = {
         apiKey: "AIzaSyBQ7_k7huhS8oAyKp0OsbEajXFmrNxcrlo",
@@ -544,7 +563,6 @@
       });
     }
 
-    // --- FUNÇÕES DE CÁLCULO E SALVAMENTO ---
     function calcularDiferencaMinutos(hIni, hFim) {
       if (!hIni || !hFim) return '';
       let pI = hIni.split(':'), pF = hFim.split(':');
@@ -560,6 +578,13 @@
         showToast("Preencha Data, Operador e Fornecedor na aba DADOS.");
         navTo('dados'); return;
       }
+
+      if (sessionRecords.length >= 12) {
+        showToast("Prancheta Cheia (Max 12). Por favor, gere o Excel e inicie uma nova.", true);
+        return;
+      }
+
+      const nfAtual = appState.dados.nf;
       
       // Converte a data DD/MM/AAAA para YYYY-MM-DD exigido pelo Sistema Desktop
       let dataBD = appState.dados.data;
@@ -568,7 +593,41 @@
         if (p.length === 3) dataBD = `${p[2]}-${p[1]}-${p[0]}`;
       }
 
-      // Calcula os Tempos Internos
+      if (nfAtual && nfAtual.trim() !== '') {
+          const nfFormatada = nfAtual.trim();
+          document.getElementById('sync-status').classList.replace('bg-emerald-400', 'bg-blue-500');
+
+          db.ref('controle_logistico').once('value').then(snapshot => {
+              let existeDuplicata = false;
+              let duplicadoForn = "";
+              
+              if (snapshot.exists()) {
+                  const registros = Object.values(snapshot.val());
+                  // Trava Global de NF
+                  const regEncontrado = registros.find(r => r.nf && r.nf.trim() === nfFormatada);
+                  if (regEncontrado) {
+                      existeDuplicata = true;
+                      duplicadoForn = regEncontrado.fornecedor;
+                  }
+              }
+              
+              if (existeDuplicata) {
+                  showToast(`Erro: A NF ${nfFormatada} já existe no sistema (Forn: ${duplicadoForn})!`, true);
+                  document.getElementById('sync-status').classList.replace('bg-blue-500', 'bg-emerald-400');
+                  return; 
+              } else {
+                  processarEGravar(dataBD);
+              }
+          }).catch(err => {
+              showToast("Erro ao verificar NF: " + err.message, true);
+              document.getElementById('sync-status').classList.replace('bg-blue-500', 'bg-red-500');
+          });
+      } else {
+          processarEGravar(dataBD);
+      }
+    }
+
+    function processarEGravar(dataBD) {
       const h = appState.horarios;
       const espera_port = calcularDiferencaMinutos(h.chegada, h.lib_portaria);
       const descarga = calcularDiferencaMinutos(h.ini_desc, h.fim_desc);
@@ -576,7 +635,8 @@
       const pesag = calcularDiferencaMinutos(h.ini_pesag, h.fim_pesag);
       const lead_time = calcularDiferencaMinutos(h.chegada, h.saida);
 
-      const payload = {
+      // Usado para enviar pro BD
+      const payloadDB = {
         id: Date.now(), // ID Único
         data: dataBD,
         turno: appState.dados.turno,
@@ -608,26 +668,178 @@
         motivo_atraso: appState.motivo_atraso
       };
 
+      // Usado para o Excel
+      const payloadPrancheta = {
+        data: appState.dados.data, // formato DD/MM/AAAA
+        turno: appState.dados.turno,
+        operador: appState.dados.operador,
+        fornecedor: appState.dados.fornecedor,
+        placa: appState.dados.placa,
+        nf: appState.dados.nf,
+        qtd_caixas: appState.dados.qtd_caixas,
+        chegada: h.chegada,
+        lib_portaria: h.lib_portaria,
+        ini_desc: h.ini_desc,
+        fim_desc: h.fim_desc,
+        ini_conf: h.ini_conf,
+        fim_conf: h.fim_conf,
+        ini_pesag: h.ini_pesag,
+        fim_pesag: h.fim_pesag,
+        saida: h.saida,
+        motivo_atraso: appState.motivo_atraso
+      };
+
       document.getElementById('sync-status').classList.replace('bg-emerald-400', 'bg-blue-500');
       
-      db.ref('controle_logistico/' + payload.id).set(payload).then(() => {
-        showToast("Operação gravada com SUCESSO!");
+      db.ref('controle_logistico/' + payloadDB.id).set(payloadDB).then(() => {
+        // Grava no Excel local da sessão
+        sessionRecords.push(payloadPrancheta);
+        document.getElementById('session-counter').innerText = sessionRecords.length;
+
+        showToast("Camião Adicionado à Prancheta e BD!");
         document.getElementById('sync-status').classList.replace('bg-blue-500', 'bg-emerald-400');
-        setTimeout(() => limparTudo(), 2000); // Limpa para a próxima
+        
+        // Limpa o formulário para o PRÓXIMO camião, mas MANTÉM a sessão
+        setTimeout(() => limparTudo(false), 2000); 
       }).catch(err => {
-        showToast("Erro ao gravar: " + err.message);
+        showToast("Erro ao gravar: " + err.message, true);
         document.getElementById('sync-status').classList.replace('bg-blue-500', 'bg-red-500');
       });
     }
 
-    function limparTudo() {
+    function gerarExcelPrancheta() {
+      if (typeof XLSX === 'undefined') { showToast("Biblioteca Excel não carregou."); return; }
+      
+      if (sessionRecords.length === 0) {
+        showToast("Grave pelo menos um camião no BD para gerar o Excel.", true);
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+
+      // Estrutura Base
+      const wsData = [
+        ["HL Mando", "CONTROLE MANUAL - RECEBIMENTO DE CAMINHÕES", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+        ["DATA", "TURNO", "OPERADOR", "FORNECEDOR", "PLACA", "NF", "QNTD CAIXAS", "CHEGADA", "LIB. PORTARIA", "INI. DESC.", "FIM. DESC.", "INI. CONF", "FIM. CONF", "INI. EMBAL", "FIM. EMBAL", "INI. PESAG", "FIM. PESAG", "SAÍDA"]
+      ];
+
+      // Preencher as 12 Linhas
+      for(let i = 0; i < 12; i++) {
+        if(i < sessionRecords.length) {
+          const rec = sessionRecords[i];
+          
+          // Formatar a Data para ficar curta (ex: 03/08)
+          let d = rec.data;
+          if (d && d.includes('/')) {
+             let p = d.split('/');
+             d = `${p[0]}/${p[1]}`;
+          } else if (d && d.length > 5) {
+             d = d.substring(0,5);
+          }
+
+          wsData.push([
+            d, rec.turno, rec.operador, rec.fornecedor,
+            rec.placa, rec.nf, rec.qtd_caixas,
+            rec.chegada || "-", rec.lib_portaria || "-",
+            rec.ini_desc || "-", rec.fim_desc || "-",
+            rec.ini_conf || "-", rec.fim_conf || "-",
+            "-", "-", // Embalagem
+            rec.ini_pesag || "-", rec.fim_pesag || "-",
+            rec.saida || "-"
+          ]);
+        } else {
+          // Preenche linhas em branco para completar as 12 da prancheta
+          wsData.push(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
+        }
+      }
+
+      // Linha de Rodapé (Observações juntando os motivos de todos os camiões com atraso)
+      let observacoes = sessionRecords
+          .filter(r => r.motivo_atraso && r.motivo_atraso.trim() !== '')
+          .map(r => `NF ${r.nf||'S/N'}: ${r.motivo_atraso}`)
+          .join(" | ");
+
+      wsData.push(["Observações / Motivo de atraso: " + observacoes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      // Definição de Merges
+      ws['!merges'] = [
+        { s: { r: 0, c: 1 }, e: { r: 0, c: 17 } }, // Título Central
+        { s: { r: 14, c: 0 }, e: { r: 14, c: 17 } } // Observações
+      ];
+
+      // Estilos Gerais
+      const bordaFina = { style: "thin", color: { rgb: "000000" } };
+      const bordasTodas = { top: bordaFina, bottom: bordaFina, left: bordaFina, right: bordaFina };
+
+      for (let R = 0; R < wsData.length; ++R) {
+        for (let C = 0; C < 18; ++C) {
+          const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!ws[cellRef]) ws[cellRef] = { v: "", t: "s" };
+          
+          let s = { font: { name: "Arial", sz: 10 }, alignment: { horizontal: "center", vertical: "center", wrapText: true } };
+          
+          if (R === 0) {
+             s.font = { name: "Arial", sz: 14, bold: true };
+             s.border = bordasTodas;
+             if (C === 0) { s.font.color = {rgb:"005c9e"}; s.font.sz = 16; } // HL Mando Logo simulado
+          } 
+          else if (R === 1) { // Cabeçalhos
+             s.font.bold = true; s.font.sz = 9;
+             s.border = bordasTodas;
+             s.fill = { fgColor: { rgb: "EAEAEA" } };
+          }
+          else if (R >= 2 && R <= 13) { // Dados
+             s.border = bordasTodas;
+             if (sessionRecords[R-2]) s.font.color = {rgb: "0000FF"}; // Linha preenchida em azul (caneta)
+          }
+          else if (R === 14) { // Observações
+             s.border = bordasTodas;
+             s.alignment.horizontal = "left";
+             s.font.italic = true;
+             if (observacoes) s.font.color = {rgb: "0000FF"};
+          }
+          ws[cellRef].s = s;
+        }
+      }
+
+      // Largura das Colunas
+      ws['!cols'] = [
+        { wch: 8 }, { wch: 6 }, { wch: 12 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 7 }, 
+        { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, 
+        { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 } 
+      ];
+
+      // Altura das Linhas
+      ws['!rows'] = [];
+      ws['!rows'][0] = { hpt: 30 };
+      ws['!rows'][1] = { hpt: 35 };
+      for(let i=2; i<=13; i++) ws['!rows'][i] = { hpt: 25 };
+      ws['!rows'][14] = { hpt: 40 };
+
+      XLSX.utils.book_append_sheet(wb, ws, "Controle");
+      
+      const fornStr = sessionRecords[0].fornecedor ? `_${sessionRecords[0].fornecedor}` : '';
+      const dataStr = sessionRecords[0].data ? sessionRecords[0].data.replace(/\//g, '') : '';
+      const nomeArq = `Controle_Logistico_${dataStr}${fornStr}.xlsx`;
+      
+      XLSX.writeFile(wb, nomeArq);
+      showToast("Excel Gerado com Sucesso!");
+    }
+
+    function limparTudo(apagarSessao = false) {
       appState = {
         dados: { data: "", turno: "A", operador: "", fornecedor: "", placa: "", doca: "Rec", nf: "", qtd_caixas: "", teve_pesagem: "NÃO", teve_conferencia: "SIM" },
         horarios: { chegada: "", lib_portaria: "", ini_desc: "", fim_desc: "", ini_conf: "", fim_conf: "", ini_pesag: "", fim_pesag: "", saida: "" },
         motivo_atraso: ""
       };
       
-      document.getElementById('form-operador').value = "";
+      // Se for apenas para o próximo camião, mantemos Data e Operador para agilizar
+      let keepData = document.getElementById('form-data').value;
+      let keepOp = document.getElementById('form-operador').value;
+      let keepTurno = document.getElementById('form-turno').value;
+
       document.getElementById('form-fornecedor').value = "";
       document.getElementById('form-placa').value = "";
       document.getElementById('form-nf').value = "";
@@ -635,12 +847,28 @@
       document.getElementById('form-pesagem').value = "NÃO";
       document.getElementById('form-conferencia').value = "SIM";
       document.getElementById('form-motivo').value = "";
-      setToday();
+      
+      if (apagarSessao) {
+         setToday();
+         document.getElementById('form-operador').value = "";
+         sessionRecords = [];
+         document.getElementById('session-counter').innerText = 0;
+      } else {
+         document.getElementById('form-data').value = keepData;
+         document.getElementById('form-operador').value = keepOp;
+         document.getElementById('form-turno').value = keepTurno;
+      }
       
       etapaAtualIndex = 0;
       buildEtapas();
       navTo('dados');
-      showToast("Pronto para nova operação.");
+      if(apagarSessao) showToast("Prancheta limpa. Nova sessão iniciada.");
+    }
+
+    function limparSessaoCompleta() {
+      if(confirm("Deseja apagar os dados da prancheta atual e iniciar um novo lote de camiões? (Faça isso apenas após exportar o Excel)")) {
+        limparTudo(true);
+      }
     }
 
     window.onload = function() {
