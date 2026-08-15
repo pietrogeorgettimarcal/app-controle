@@ -221,6 +221,24 @@
         </div>
       </div>
 
+      <!-- Linha 5: Fluxo (Pesagem e Conferência) -->
+      <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 mt-2">
+        <div>
+          <label class="mobile-label">Teve Pesagem?</label>
+          <select id="form-pesagem" class="mobile-input text-center bg-white" onchange="onFlowChange()">
+            <option value="NÃO">NÃO</option>
+            <option value="SIM">SIM</option>
+          </select>
+        </div>
+        <div>
+          <label class="mobile-label">Teve Conferência?</label>
+          <select id="form-conferencia" class="mobile-input text-center bg-white" onchange="onFlowChange()">
+            <option value="SIM">SIM</option>
+            <option value="NÃO">NÃO</option>
+          </select>
+        </div>
+      </div>
+
     </div>
 
     <button onclick="navTo('tempos')" class="btn-large btn-primary">
@@ -307,8 +325,8 @@
   <script>
     // --- ESTADO DA APLICAÇÃO ---
     let appState = {
-      dados: { data: "", turno: "A", operador: "", fornecedor: "", placa: "", doca: "Rec", nf: "", qtd_caixas: "" },
-      horarios: { chegada: "", lib_portaria: "", ini_desc: "", fim_desc: "", ini_conf: "", fim_conf: "", saida: "" },
+      dados: { data: "", turno: "A", operador: "", fornecedor: "", placa: "", doca: "Rec", nf: "", qtd_caixas: "", teve_pesagem: "NÃO", teve_conferencia: "SIM" },
+      horarios: { chegada: "", lib_portaria: "", ini_desc: "", fim_desc: "", ini_conf: "", fim_conf: "", ini_pesag: "", fim_pesag: "", saida: "" },
       motivo_atraso: ""
     };
 
@@ -316,16 +334,47 @@
     let db = null;
 
     // Definição das etapas do botão gigante
-    const etapasPonto = [
-      { id: 'chegada', txt: 'Registrar\nChegada', icon: 'fa-truck-arrow-right' },
-      { id: 'lib_portaria', txt: 'Liberar\nPortaria', icon: 'fa-gate-open' },
-      { id: 'ini_desc', txt: 'Iniciar\nDescarga', icon: 'fa-dolly' },
-      { id: 'fim_desc', txt: 'Fim da\nDescarga', icon: 'fa-box-check' },
-      { id: 'ini_conf', txt: 'Iniciar\nConferência', icon: 'fa-clipboard-check' },
-      { id: 'fim_conf', txt: 'Fim da\nConferência', icon: 'fa-check-double' },
-      { id: 'saida', txt: 'Registrar\nSaída', icon: 'fa-flag-checkered' }
-    ];
+    let etapasPonto = [];
     let etapaAtualIndex = 0;
+
+    function buildEtapas() {
+      etapasPonto = [
+        { id: 'chegada', txt: 'Registrar\nChegada', icon: 'fa-truck-arrow-right' },
+        { id: 'lib_portaria', txt: 'Liberar\nPortaria', icon: 'fa-gate-open' },
+        { id: 'ini_desc', txt: 'Iniciar\nDescarga', icon: 'fa-dolly' },
+        { id: 'fim_desc', txt: 'Fim da\nDescarga', icon: 'fa-box-check' }
+      ];
+
+      if (appState.dados.teve_conferencia === 'SIM') {
+        etapasPonto.push({ id: 'ini_conf', txt: 'Iniciar\nConferência', icon: 'fa-clipboard-check' });
+        etapasPonto.push({ id: 'fim_conf', txt: 'Fim da\nConferência', icon: 'fa-check-double' });
+      }
+
+      if (appState.dados.teve_pesagem === 'SIM') {
+        etapasPonto.push({ id: 'ini_pesag', txt: 'Iniciar\nPesagem', icon: 'fa-scale-balanced' });
+        etapasPonto.push({ id: 'fim_pesag', txt: 'Fim da\nPesagem', icon: 'fa-scale-unbalanced' });
+      }
+
+      etapasPonto.push({ id: 'saida', txt: 'Registrar\nSaída', icon: 'fa-flag-checkered' });
+      atualizarUITempos();
+    }
+
+    function onFlowChange() {
+      if (etapaAtualIndex > 0) {
+        if (confirm("Alterar o fluxo de operação irá zerar os horários já marcados. Continuar?")) {
+          etapaAtualIndex = 0;
+          for(let key in appState.horarios) appState.horarios[key] = "";
+        } else {
+          // Reverte os selects para os valores do estado atual se o usuário cancelar
+          document.getElementById('form-pesagem').value = appState.dados.teve_pesagem;
+          document.getElementById('form-conferencia').value = appState.dados.teve_conferencia;
+          return;
+        }
+      }
+      appState.dados.teve_pesagem = document.getElementById('form-pesagem').value;
+      appState.dados.teve_conferencia = document.getElementById('form-conferencia').value;
+      buildEtapas();
+    }
 
     // --- FUNÇÕES DE INTERFACE ---
     function showToast(msg) {
@@ -363,6 +412,8 @@
       appState.dados.doca = document.getElementById('form-doca').value;
       appState.dados.nf = document.getElementById('form-nf').value.trim().toUpperCase();
       appState.dados.qtd_caixas = document.getElementById('form-caixas').value;
+      appState.dados.teve_pesagem = document.getElementById('form-pesagem').value;
+      appState.dados.teve_conferencia = document.getElementById('form-conferencia').value;
       appState.motivo_atraso = document.getElementById('form-motivo').value.trim().toUpperCase();
     }
 
@@ -522,6 +573,7 @@
       const espera_port = calcularDiferencaMinutos(h.chegada, h.lib_portaria);
       const descarga = calcularDiferencaMinutos(h.ini_desc, h.fim_desc);
       const conferencia = calcularDiferencaMinutos(h.ini_conf, h.fim_conf);
+      const pesag = calcularDiferencaMinutos(h.ini_pesag, h.fim_pesag);
       const lead_time = calcularDiferencaMinutos(h.chegada, h.saida);
 
       const payload = {
@@ -539,12 +591,15 @@
         lib_portaria: h.lib_portaria,
         ini_desc: h.ini_desc,
         fim_desc: h.fim_desc,
-        ini_conf: h.ini_conf,
-        fim_conf: h.fim_conf,
+        ini_conf: h.ini_conf || "",
+        fim_conf: h.fim_conf || "",
         saida: h.saida,
         
-        chegou_emb: "NÃO", ini_carr: "", fim_carr: "", carreg: "", // Padrão
-        fez_pesagem: "NÃO", ini_pesag: "", fim_pesag: "", pesag: "", // Padrão
+        chegou_emb: "NÃO", ini_carr: "", fim_carr: "", carreg: "", // Padrão fixo
+        fez_pesagem: appState.dados.teve_pesagem, 
+        ini_pesag: h.ini_pesag || "", 
+        fim_pesag: h.fim_pesag || "", 
+        pesag: pesag,
         
         espera_port: espera_port,
         descarga: descarga,
@@ -567,8 +622,8 @@
 
     function limparTudo() {
       appState = {
-        dados: { data: "", turno: "A", operador: "", fornecedor: "", placa: "", doca: "Rec", nf: "", qtd_caixas: "" },
-        horarios: { chegada: "", lib_portaria: "", ini_desc: "", fim_desc: "", ini_conf: "", fim_conf: "", saida: "" },
+        dados: { data: "", turno: "A", operador: "", fornecedor: "", placa: "", doca: "Rec", nf: "", qtd_caixas: "", teve_pesagem: "NÃO", teve_conferencia: "SIM" },
+        horarios: { chegada: "", lib_portaria: "", ini_desc: "", fim_desc: "", ini_conf: "", fim_conf: "", ini_pesag: "", fim_pesag: "", saida: "" },
         motivo_atraso: ""
       };
       
@@ -577,11 +632,13 @@
       document.getElementById('form-placa').value = "";
       document.getElementById('form-nf').value = "";
       document.getElementById('form-caixas').value = "";
+      document.getElementById('form-pesagem').value = "NÃO";
+      document.getElementById('form-conferencia').value = "SIM";
       document.getElementById('form-motivo').value = "";
       setToday();
       
       etapaAtualIndex = 0;
-      atualizarUITempos();
+      buildEtapas();
       navTo('dados');
       showToast("Pronto para nova operação.");
     }
@@ -589,9 +646,8 @@
     window.onload = function() {
       initFirebaseApp();
       setToday();
-      atualizarUITempos();
+      buildEtapas();
     };
   </script>
 </body>
 </html>
-
