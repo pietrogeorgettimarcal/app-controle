@@ -2,10 +2,12 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, interactive-widget=resizes-content">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2800/2800118.png">
   
   <title>App Logística - HL Mando</title>
   
@@ -16,6 +18,7 @@
   
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
 
   <!-- SheetJS (Excel Export) -->
@@ -25,7 +28,7 @@
     :root {
       --primary: #005c9e;
       --primary-dark: #004b80;
-      --bg: #f1f5f9;
+      --bg: #f8fafc;
       --text: #1e293b;
     }
     
@@ -34,65 +37,72 @@
       background-color: var(--bg);
       color: var(--text);
       margin: 0; padding: 0;
-      height: 100vh; /* Fallback */
-      height: 100dvh; /* Altura dinâmica real do mobile (corrige corte em baixo) */
+      height: 100vh;
+      height: 100dvh;
       display: flex; flex-direction: column;
       overflow: hidden;
+      touch-action: pan-y;
     }
 
     .view-container {
       flex: 1;
       overflow-y: auto;
-      /* O padding-bottom foi removido e substituído por um espaçador físico no HTML para maior compatibilidade no Android */
+      overflow-x: hidden;
+      padding-bottom: 90px;
       display: none;
-      animation: fadeIn 0.3s ease;
+      animation: fadeIn 0.2s ease;
+      width: 100%;
     }
-    .view-container.active { display: block; }
+    
+    .view-container.active {
+      display: block;
+    }
     
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(5px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Ajuste mais compacto para telemóveis */
+    /* Input: Forçado font-size 16px no mínimo no focus para evitar zoom no iOS/Android */
     .mobile-input {
       width: 100%;
       min-width: 0;
-      padding: 8px 10px;
-      font-size: 14px; 
+      padding: 10px 12px;
+      font-size: 16px !important; 
       border: 1px solid #cbd5e1;
       border-radius: 8px;
-      background-color: #f8fafc;
+      background-color: #f1f5f9;
       transition: all 0.2s;
       outline: none;
       text-transform: uppercase;
-      font-weight: 600;
-      height: 42px; 
+      font-weight: 700;
+      box-sizing: border-box;
       appearance: none;
     }
     .mobile-input:focus {
       border-color: var(--primary);
       background-color: #fff;
-      box-shadow: 0 0 0 3px rgba(0, 92, 158, 0.1);
+      box-shadow: 0 0 0 2px rgba(0, 92, 158, 0.15);
+      font-size: 16px !important;
     }
     
     .mobile-label {
       display: block;
-      font-size: 10px; 
+      font-size: 11px; 
       font-weight: 800;
       color: #64748b;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
       text-transform: uppercase;
     }
 
-    /* Botões de ação mais compactos */
+    /* Botões de ação */
     .btn-large {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; padding: 12px; border-radius: 8px;
-      font-weight: bold; font-size: 14px; text-transform: uppercase;
+      width: 100%; padding: 14px; border-radius: 10px;
+      font-weight: 900; font-size: 15px; text-transform: uppercase;
       transition: active 0.1s; border: none; cursor: pointer;
     }
-    .btn-large:active { transform: scale(0.98); }
+    .btn-large:active { transform: scale(0.97); }
     .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(0, 92, 158, 0.2); }
     .btn-success { background-color: #10b981; color: white; }
     .btn-excel { background-color: #059669; color: white; }
@@ -100,20 +110,20 @@
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; width: 100%;
       background: white; border-top: 1px solid #e2e8f0;
-      display: flex; justify-content: space-around;
-      padding: 8px 0; padding-bottom: env(safe-area-inset-bottom, 8px);
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 50;
+      display: none; justify-content: space-around;
+      padding: 6px 0; padding-bottom: env(safe-area-inset-bottom, 8px);
+      box-shadow: 0 -4px 15px rgba(0,0,0,0.03); z-index: 50;
     }
     .nav-item {
       display: flex; flex-direction: column; align-items: center;
-      color: #94a3b8; font-size: 10px; font-weight: 700;
+      color: #94a3b8; font-size: 10px; font-weight: 800;
       padding: 8px; border-radius: 8px; flex: 1;
       text-transform: uppercase; cursor: pointer;
     }
     .nav-item.active { color: var(--primary); }
-    .nav-item i { font-size: 20px; margin-bottom: 4px; }
+    .nav-item i { font-size: 18px; margin-bottom: 2px; }
 
-    /* BOTÃO GIGANTE - Ainda mais compacto para caber com a lista */
+    /* BOTÃO GIGANTE */
     .btn-ponto {
       width: 160px; 
       height: 160px;
@@ -130,14 +140,14 @@
     .bg-etapa-fim { background: linear-gradient(135deg, #10b981, #059669); }
 
     .time-input {
-      width: 76px;
+      width: 80px;
       background: transparent;
       border: 1px solid transparent;
       border-radius: 4px;
       text-align: center;
       font-weight: bold;
       font-size: 15px;
-      padding: 2px;
+      padding: 4px;
       outline: none;
       transition: 0.2s;
     }
@@ -152,7 +162,7 @@
       position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
       background: #1e293b; color: white; padding: 12px 24px; border-radius: 30px;
       font-weight: bold; font-size: 14px; z-index: 1000;
-      transition: transform 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       white-space: nowrap;
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
@@ -160,226 +170,261 @@
 </head>
 <body>
 
-  <!-- CABEÇALHO -->
-  <header class="bg-[#0f172a] text-white p-3 flex justify-between items-center shrink-0 shadow-md z-10 pt-[env(safe-area-inset-top,16px)]">
+  <!-- CABEÇALHO (Visível em todas as telas) -->
+  <header class="bg-[#0f172a] text-white p-3 flex justify-between items-center shrink-0 shadow-md z-10 pt-[env(safe-area-inset-top,12px)]">
     <div class="flex items-center gap-2">
-      <div class="bg-white p-1 rounded">
+      <div class="bg-white p-1.5 rounded-md shadow-sm ml-1">
         <i class="fa-solid fa-truck-fast text-[#0f172a] text-lg"></i>
       </div>
       <div>
-        <h1 class="font-bold text-sm leading-tight">HL MANDO</h1>
-        <p class="text-[9px] text-slate-300 opacity-80 uppercase tracking-widest">Controle Logístico</p>
+        <h1 class="font-black text-sm leading-tight tracking-tight">HL MANDO</h1>
+        <p class="text-[9px] text-slate-300 opacity-80 uppercase tracking-widest font-bold">Controle Logístico</p>
       </div>
     </div>
     <div class="flex items-center gap-3">
       <!-- Contador da Fila -->
-      <div class="bg-white/10 px-2 py-1 rounded text-xs font-bold font-mono">
+      <div id="badge-fila" class="bg-white/10 px-2 py-1.5 rounded text-xs font-bold font-mono hidden">
         <span id="fila-contador">0</span>/12
       </div>
       <div class="flex items-center gap-1">
-        <div id="sync-status" class="w-3 h-3 rounded-full bg-slate-500 animate-pulse"></div>
-        <span class="text-[9px] font-bold text-slate-300">DB</span>
+        <div id="sync-status" class="w-2.5 h-2.5 rounded-full bg-slate-500 animate-pulse"></div>
       </div>
+      <!-- Botão Sair -->
+      <button onclick="logout('Sessão encerrada com segurança.')" id="btn-logout" class="hidden text-[10px] bg-slate-800 px-2 py-1.5 rounded text-rose-400 hover:text-white font-bold uppercase tracking-wider ml-1">
+        Sair
+      </button>
     </div>
   </header>
 
   <!-- ========================================== -->
+  <!-- TELA 0: LOGIN SEGURA                       -->
+  <!-- ========================================== -->
+  <main id="view-login" class="view-container active p-4">
+    <div class="flex flex-col h-full justify-center max-w-sm mx-auto space-y-5 pb-20">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
+          <i class="fa-solid fa-user-shield text-2xl"></i>
+        </div>
+        <h2 class="font-black text-2xl text-slate-800 tracking-tight">ACESSO</h2>
+        <p class="text-slate-500 font-bold text-xs mt-1">Identifique-se para iniciar a operação</p>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+        <div>
+          <label class="mobile-label">Usuário</label>
+          <input type="text" id="login-email" class="mobile-input normal-case" placeholder="ex: joao (só o nome)" />
+          <p class="text-[9px] text-slate-400 font-bold mt-1 ml-1"><i class="fa-solid fa-circle-info"></i> O @hlcompany.com é inserido sozinho.</p>
+        </div>
+        <div>
+          <label class="mobile-label">Senha</label>
+          <input type="password" id="login-senha" class="mobile-input normal-case" placeholder="••••••••" />
+        </div>
+        <div class="pt-3 space-y-3">
+          <button onclick="fazerLogin()" class="btn-large btn-primary shadow-lg shadow-blue-500/30">
+            Entrar no Sistema
+          </button>
+          <button onclick="fazerCadastro()" class="btn-large bg-slate-100 text-slate-700 hover:bg-slate-200">
+            Criar meu Cadastro
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================== -->
   <!-- TELA 1: DADOS DA OPERAÇÃO                  -->
   <!-- ========================================== -->
-  <main id="view-dados" class="view-container active p-3">
-    <h2 class="font-black text-base text-slate-800 mb-3 flex items-center gap-2 uppercase">
-      <i class="fa-solid fa-clipboard-list text-blue-600"></i> Dados da Operação
-    </h2>
-    
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 mb-4">
-      
-      <!-- Linha 1: Data e Hora -->
-      <div class="grid grid-cols-2 gap-2 mb-2">
-        <div>
-          <label class="mobile-label flex justify-between">
-            Data
-            <span onclick="setToday()" class="text-blue-600 font-bold cursor-pointer uppercase text-[9px]">Hoje</span>
-          </label>
-          <input type="date" id="form-data" class="mobile-input" />
+  <main id="view-dados" class="view-container p-3">
+    <div class="max-w-sm mx-auto">
+        <h2 class="font-black text-lg text-slate-800 mb-3 flex items-center gap-2 uppercase">
+        <i class="fa-solid fa-clipboard-list text-blue-600"></i> Dados da Operação
+        </h2>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4 space-y-3">
+        
+        <!-- Linha 1: Data e Hora -->
+        <div class="grid grid-cols-2 gap-2">
+            <div>
+            <label class="mobile-label flex justify-between">
+                Data
+                <span onclick="setToday()" class="text-blue-600 font-bold cursor-pointer uppercase text-[9px]">Hoje</span>
+            </label>
+            <input type="date" id="form-data" class="mobile-input" />
+            </div>
+            <div>
+            <label class="mobile-label">Hora Início</label>
+            <input type="time" id="form-hora" class="mobile-input" />
+            </div>
         </div>
-        <div>
-          <label class="mobile-label">Hora Início</label>
-          <input type="time" id="form-hora" class="mobile-input" />
+        
+        <!-- Linha 2: Turno e Operador -->
+        <div class="grid grid-cols-2 gap-2">
+            <div>
+            <label class="mobile-label">Turno</label>
+            <select id="form-turno" class="mobile-input bg-white px-1">
+                <option value="A">TURNO A</option>
+                <option value="B">TURNO B</option>
+                <option value="C">TURNO C</option>
+                <option value="D">TURNO D</option>
+                <option value="E">TURNO E</option>
+            </select>
+            </div>
+            <div>
+            <label class="mobile-label">Operador</label>
+            <input type="text" id="form-operador" list="op-list" onchange="onOperadorInput(this.value)" class="mobile-input text-center" placeholder="NOME..." />
+            <datalist id="op-list"></datalist>
+            </div>
         </div>
-      </div>
-      
-      <!-- Linha 2: Turno e Operador -->
-      <div class="grid grid-cols-2 gap-2 mb-2">
-        <div>
-          <label class="mobile-label">Turno</label>
-          <select id="form-turno" class="mobile-input bg-white px-1">
-            <option value="A">TURNO A</option>
-            <option value="B">TURNO B</option>
-            <option value="C">TURNO C</option>
-            <option value="D">TURNO D</option>
-            <option value="E">TURNO E</option>
-          </select>
-        </div>
-        <div>
-          <label class="mobile-label">Operador</label>
-          <input type="text" id="form-operador" list="op-list" onchange="onOperadorInput(this.value)" class="mobile-input text-center" placeholder="NOME..." />
-          <datalist id="op-list"></datalist>
-        </div>
-      </div>
 
-      <!-- Linha 3: Fornecedor e Placa -->
-      <div class="grid grid-cols-2 gap-2 mb-2">
-        <div>
-          <label class="mobile-label">Fornecedor</label>
-          <input type="text" id="form-fornecedor" list="forn-list" class="mobile-input text-center" placeholder="EX: SADA" />
-          <datalist id="forn-list"></datalist>
+        <!-- Linha 3: Fornecedor e Placa -->
+        <div class="grid grid-cols-2 gap-2">
+            <div>
+            <label class="mobile-label">Fornecedor</label>
+            <input type="text" id="form-fornecedor" list="forn-list" class="mobile-input text-center" placeholder="EX: SADA" />
+            <datalist id="forn-list"></datalist>
+            </div>
+            <div>
+            <label class="mobile-label">Placa</label>
+            <input type="text" id="form-placa" class="mobile-input text-center" placeholder="ABC-1234" />
+            </div>
         </div>
-        <div>
-          <label class="mobile-label">Placa</label>
-          <input type="text" id="form-placa" class="mobile-input text-center" placeholder="ABC-1234" />
-        </div>
-      </div>
 
-      <!-- Linha 4: Doca e NF -->
-      <div class="grid grid-cols-2 gap-2 mb-2">
-        <div>
-          <label class="mobile-label">Doca</label>
-          <select id="form-doca" class="mobile-input text-center bg-white">
-            <option value="Rec">REC</option>
-            <option value="Exp">EXP</option>
-            <option value="Container">CONT.</option>
-            <option value="Doca 1">D1</option>
-            <option value="Doca 2">D2</option>
-          </select>
+        <!-- Linha 4: Doca e NF -->
+        <div class="grid grid-cols-2 gap-2">
+            <div>
+            <label class="mobile-label">Doca</label>
+            <select id="form-doca" class="mobile-input text-center bg-white">
+                <option value="Rec">REC</option>
+                <option value="Exp">EXP</option>
+                <option value="Container">CONT.</option>
+                <option value="Doca 1">D1</option>
+                <option value="Doca 2">D2</option>
+            </select>
+            </div>
+            <div>
+            <label class="mobile-label">Nota Fiscal</label>
+            <input type="text" id="form-nf" class="mobile-input text-center normal-case" placeholder="Nº NF" />
+            </div>
         </div>
-        <div>
-          <label class="mobile-label">Nota Fiscal</label>
-          <input type="text" id="form-nf" class="mobile-input text-center" placeholder="Nº NF" />
-        </div>
-      </div>
 
-      <!-- Linha 5: Caixas e Teve Pesagem -->
-      <div class="grid grid-cols-2 gap-2 mb-2">
-        <div>
-          <label class="mobile-label">Caixas</label>
-          <input type="number" id="form-caixas" class="mobile-input text-center" placeholder="QTD" />
+        <!-- Linha 5: Caixas e Teve Pesagem -->
+        <div class="grid grid-cols-2 gap-2">
+            <div>
+            <label class="mobile-label">Caixas</label>
+            <input type="number" id="form-caixas" class="mobile-input text-center" placeholder="QTD" />
+            </div>
+            <div>
+            <label class="mobile-label text-blue-600">Teve Pesagem?</label>
+            <select id="form-pesagem" onchange="atualizarEtapasDinamicas()" class="mobile-input text-center bg-white">
+                <option value="NÃO">NÃO</option>
+                <option value="SIM">SIM</option>
+            </select>
+            </div>
         </div>
-        <div>
-          <label class="mobile-label text-blue-600">Teve Pesagem?</label>
-          <select id="form-pesagem" onchange="atualizarEtapasDinamicas()" class="mobile-input text-center bg-white">
-            <option value="NÃO">NÃO</option>
-            <option value="SIM">SIM</option>
-          </select>
-        </div>
-      </div>
 
-      <!-- Linha 6: Conferência -->
-      <div class="grid grid-cols-2 gap-2">
-        <div class="col-span-2">
-          <label class="mobile-label text-blue-600">Teve Conferência?</label>
-          <select id="form-conferencia" onchange="atualizarEtapasDinamicas()" class="mobile-input text-center bg-white">
-            <option value="SIM">SIM (PADRÃO)</option>
-            <option value="NÃO">NÃO</option>
-          </select>
+        <!-- Linha 6: Conferência -->
+        <div class="grid grid-cols-2 gap-2 border-t border-slate-100 pt-2">
+            <div class="col-span-2">
+            <label class="mobile-label text-blue-600">Teve Conferência?</label>
+            <select id="form-conferencia" onchange="atualizarEtapasDinamicas()" class="mobile-input text-center bg-white">
+                <option value="SIM">SIM (PADRÃO)</option>
+                <option value="NÃO">NÃO</option>
+            </select>
+            </div>
         </div>
-      </div>
 
+        </div>
+
+        <button onclick="navTo('tempos')" class="btn-large btn-primary shadow-lg shadow-blue-500/30">
+        Continuar p/ Horários <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        
+        <div class="h-28 shrink-0"></div>
     </div>
-
-    <button onclick="navTo('tempos')" class="btn-large btn-primary">
-      Continuar p/ Horários <i class="fa-solid fa-arrow-right"></i>
-    </button>
-    
-    <!-- Espaçador de segurança para garantir scroll no Android -->
-    <div class="h-28 shrink-0"></div>
   </main>
 
   <!-- ========================================== -->
   <!-- TELA 2: BATER PONTO (HORÁRIOS CIEGOS)      -->
   <!-- ========================================== -->
   <main id="view-tempos" class="view-container p-3">
-    <div class="flex justify-between items-center mb-3">
-      <h2 class="font-black text-base text-slate-800 flex items-center gap-2 uppercase">
-        <i class="fa-solid fa-stopwatch text-indigo-600"></i> Bater Ponto
-      </h2>
-      <button onclick="resetarTempos()" class="text-[10px] font-bold text-slate-500 border border-slate-300 bg-white rounded px-2 py-1 shadow-sm"><i class="fa-solid fa-rotate-left"></i> Zerar</button>
-    </div>
+    <div class="max-w-sm mx-auto">
+        <div class="flex justify-between items-center mb-3">
+        <h2 class="font-black text-lg text-slate-800 flex items-center gap-2 uppercase">
+            <i class="fa-solid fa-stopwatch text-indigo-600"></i> Bater Ponto
+        </h2>
+        <button onclick="resetarTempos()" class="text-[10px] font-bold text-slate-500 border border-slate-300 bg-white rounded px-2 py-1 shadow-sm"><i class="fa-solid fa-rotate-left"></i> Zerar</button>
+        </div>
 
-    <!-- BOTÃO GIGANTE (Mais compacto) -->
-    <div class="flex justify-center mb-3 px-4">
-      <button id="btn-ponto" onclick="registrarProximaEtapa()" class="btn-ponto bg-etapa-padrao">
-        <i id="icon-ponto" class="fa-solid fa-truck-arrow-right text-3xl mb-1"></i>
-        <span id="txt-ponto" class="leading-tight text-sm">Registrar<br>Chegada</span>
-      </button>
-    </div>
+        <!-- BOTÃO GIGANTE -->
+        <div class="flex justify-center mb-5 px-4 mt-4">
+        <button id="btn-ponto" onclick="registrarProximaEtapa()" class="btn-ponto bg-etapa-padrao">
+            <i id="icon-ponto" class="fa-solid fa-truck-arrow-right text-4xl mb-2"></i>
+            <span id="txt-ponto" class="leading-tight text-base uppercase font-black">Registrar<br>Chegada</span>
+        </button>
+        </div>
 
-    <!-- LISTA DE HORÁRIOS -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-2">
-      <div class="bg-slate-100 p-2 text-center text-[10px] font-bold text-slate-500 uppercase border-b border-slate-200">
-        Cronograma da Operação
-      </div>
-      <ul id="lista-horarios" class="divide-y divide-slate-100 p-1">
-        <!-- Preenchido via JS -->
-      </ul>
+        <!-- LISTA DE HORÁRIOS -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-2">
+        <div class="bg-slate-100 p-2 text-center text-[10px] font-bold text-slate-500 uppercase border-b border-slate-200">
+            Cronograma da Operação
+        </div>
+        <ul id="lista-horarios" class="divide-y divide-slate-100 p-1">
+            <!-- Preenchido via JS -->
+        </ul>
+        </div>
+        <p class="text-center text-[10px] text-slate-400 font-bold"><i class="fa-solid fa-circle-info"></i> Toque num horário da lista para alterar.</p>
+        
+        <div class="h-28 shrink-0"></div>
     </div>
-    <p class="text-center text-[10px] text-slate-400"><i class="fa-solid fa-circle-info"></i> Toque num horário da lista para alterar.</p>
-    
-    <!-- Espaçador de segurança para garantir scroll no Android -->
-    <div class="h-28 shrink-0"></div>
   </main>
 
   <!-- ========================================== -->
   <!-- TELA 3: FINALIZAR E EXPORTAR               -->
   <!-- ========================================== -->
   <main id="view-finalizar" class="view-container p-3">
-    
-    <!-- Cabeçalho mais compacto -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 text-center mb-3 flex flex-col items-center">
-      <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-1">
-        <i class="fa-solid fa-flag-checkered text-lg"></i>
-      </div>
-      <h2 class="font-black text-base text-slate-800 uppercase mb-0">Concluir Registro</h2>
-      <p class="text-[10px] text-slate-500 font-medium mt-1">Salve localmente, exporte ou sincronize.</p>
-    </div>
+    <div class="max-w-sm mx-auto">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 text-center mb-5 flex flex-col items-center">
+        <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-2">
+            <i class="fa-solid fa-flag-checkered text-2xl"></i>
+        </div>
+        <h2 class="font-black text-lg text-slate-800 uppercase mb-0">Concluir Registro</h2>
+        <p class="text-[11px] text-slate-500 font-bold mt-1">Salve localmente, exporte ou sincronize.</p>
+        </div>
 
-    <!-- Motivo Atraso -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 mb-3">
-      <label class="mobile-label text-rose-600 mb-1"><i class="fa-solid fa-triangle-exclamation"></i> Houve Atraso? (Motivo)</label>
-      <textarea id="form-motivo" class="mobile-input h-14 p-2 text-sm normal-case placeholder-slate-400" placeholder="Escreva o motivo aqui..."></textarea>
-    </div>
+        <!-- Motivo Atraso -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4">
+        <label class="mobile-label text-rose-600 mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Houve Atraso? (Motivo)</label>
+        <textarea id="form-motivo" class="mobile-input h-20 p-3 text-sm normal-case placeholder-slate-400" placeholder="Escreva o motivo do atraso aqui..."></textarea>
+        </div>
 
-    <!-- Botões de Ação com menos espaçamento (space-y-2) -->
-    <div class="space-y-2">
-      
-      <!-- BOTÃO 1: Adicionar à Fila Local -->
-      <button onclick="adicionarFila()" class="btn-large btn-primary shadow-md shadow-blue-600/30">
-        <i class="fa-solid fa-plus"></i> Salvar & Novo Registro
-      </button>
-
-      <!-- BOTÃO 2: Exportar Excel -->
-      <button onclick="exportarExcel()" class="btn-large btn-excel">
-        <i class="fa-solid fa-file-excel"></i> Exportar Fila (Excel)
-      </button>
-
-      <!-- BOTÃO 3: Sincronizar com BD -->
-      <button onclick="sincronizarFila()" class="btn-large bg-indigo-600 text-white">
-        <i class="fa-solid fa-cloud-arrow-up"></i> Sincronizar com Nuvem
-      </button>
-      
-      <!-- LIMPAR TUDO -->
-      <div class="pt-2 border-t border-slate-200 mt-2">
-        <button onclick="limparFormulario()" class="btn-large bg-red-50 text-red-600 border border-red-200">
-          <i class="fa-solid fa-trash-can"></i> Limpar Fomulário
+        <!-- Botões de Ação -->
+        <div class="space-y-3">
+        <button onclick="adicionarFila()" class="btn-large btn-primary shadow-lg shadow-blue-600/30">
+            <i class="fa-solid fa-plus"></i> Salvar & Novo Registro
         </button>
-      </div>
-    </div>
 
-    <!-- Espaçador de segurança para garantir scroll no Android -->
-    <div class="h-28 shrink-0"></div>
+        <button onclick="exportarExcel()" class="btn-large btn-excel">
+            <i class="fa-solid fa-file-excel"></i> Exportar Fila (Excel)
+        </button>
+
+        <button onclick="sincronizarFila()" class="btn-large bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Sincronizar com Nuvem
+        </button>
+        
+        <!-- LIMPAR TUDO -->
+        <div class="pt-4 border-t border-slate-200 mt-4">
+            <button onclick="limparFormulario()" class="btn-large bg-red-50 text-red-600 border border-red-200">
+            <i class="fa-solid fa-trash-can"></i> Limpar Formulário
+            </button>
+        </div>
+        </div>
+
+        <div class="h-28 shrink-0"></div>
+    </div>
   </main>
 
   <!-- NAVEGAÇÃO INFERIOR -->
-  <nav class="bottom-nav">
+  <nav class="bottom-nav" id="main-bottom-nav">
     <div onclick="navTo('dados')" class="nav-item active" id="nav-btn-dados">
       <i class="fa-solid fa-clipboard-list"></i>
       Dados
@@ -399,31 +444,72 @@
   <script>
     // --- ESTADO DA APLICAÇÃO ---
     let appState = { horarios: {} };
-    let etapasPontoAtivas = []; // Preenchido dinamicamente
+    let etapasPontoAtivas = []; 
     let etapaAtualIndex = 0;
-    
-    // Fila Local (Máx 12)
     let filaRegistros = JSON.parse(localStorage.getItem('fila_logistica_hl') || '[]');
-
-    let operadoresMap = {}; // { NOME: TURNO }
+    let operadoresMap = {}; 
     let db = null;
+    let auth = null;
+    let currentView = 'login';
 
-    // --- FUNÇÕES DE INTERFACE ---
+    // ==========================================
+    // SEGURANÇA: INATIVIDADE (10 MINUTOS) E BLUR
+    // ==========================================
+    let inactivityTimer;
+    let lastActivityTime = Date.now();
+    const INACTIVITY_TIME_MS = 10 * 60 * 1000; 
+
+    function checkInactivityAndLogout() {
+      if (auth && auth.currentUser) {
+         logout("Sessão expirada por inatividade (10 min).");
+      }
+    }
+
+    function resetTimer() {
+      lastActivityTime = Date.now();
+      clearTimeout(inactivityTimer);
+      if (auth && auth.currentUser) {
+        inactivityTimer = setTimeout(checkInactivityAndLogout, INACTIVITY_TIME_MS);
+      }
+    }
+
+    // Calcula tempo ausente na troca de abas
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            if (auth && auth.currentUser) {
+                if (Date.now() - lastActivityTime >= INACTIVITY_TIME_MS) {
+                    logout("Sessão expirada. Você esteve ausente por mais de 10 minutos.");
+                } else {
+                    resetTimer(); 
+                }
+            }
+        }
+    });
+
+    ['touchstart', 'mousemove', 'mousedown', 'keypress', 'scroll'].forEach(evt => {
+        document.addEventListener(evt, resetTimer, true);
+    });
+
+    // ==========================================
+    // UTILITÁRIOS E NAVEGAÇÃO
+    // ==========================================
     function showToast(msg) {
       const toast = document.getElementById('toast');
       toast.innerText = msg; toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
+    function formatarEmail(valor) {
+      let v = valor.trim().toLowerCase();
+      return (v && !v.includes('@')) ? v + '@hlcompany.com' : v;
+    }
+
     function setToday() {
       const now = new Date();
-      // Formato YYYY-MM-DD exigido pelo input type="date"
       const ano = now.getFullYear();
       const mes = String(now.getMonth() + 1).padStart(2, '0');
       const dia = String(now.getDate()).padStart(2, '0');
       document.getElementById('form-data').value = `${ano}-${mes}-${dia}`;
-
-      // Formato HH:MM para hora de início
       const h = String(now.getHours()).padStart(2, '0');
       const m = String(now.getMinutes()).padStart(2, '0');
       document.getElementById('form-hora').value = `${h}:${m}`;
@@ -435,30 +521,87 @@
 
     function navTo(viewId) {
       document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
-      document.getElementById(`view-${viewId}`).classList.add('active');
+      const target = document.getElementById(`view-${viewId}`);
+      if(target) target.classList.add('active');
+      currentView = viewId;
       
-      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-      document.getElementById(`nav-btn-${viewId}`).classList.add('active');
-      
+      const nav = document.getElementById('main-bottom-nav');
+
+      if (viewId === 'login') {
+        if(nav) nav.style.display = 'none';
+      } else {
+        if(nav) nav.style.display = 'flex';
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        const btn = document.getElementById(`nav-btn-${viewId}`);
+        if(btn) btn.classList.add('active');
+      }
+
       if (viewId === 'tempos') atualizarEtapasDinamicas();
+    }
+
+    // ==========================================
+    // LOGIN
+    // ==========================================
+    document.getElementById('login-senha').addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') { event.preventDefault(); fazerLogin(); }
+    });
+
+    function fazerLogin() {
+      const emailRaw = document.getElementById('login-email').value;
+      const senha = document.getElementById('login-senha').value;
+      if (!emailRaw || !senha) { showToast("Preencha utilizador e senha."); return; }
+      auth.signInWithEmailAndPassword(formatarEmail(emailRaw), senha)
+        .then(() => { showToast("Login efetuado com sucesso!"); })
+        .catch(error => { showToast(error.code === 'auth/invalid-credential' ? "❌ Conta não existe ou senha errada." : "Erro: " + error.message); });
+    }
+
+    function fazerCadastro() {
+      const emailRaw = document.getElementById('login-email').value;
+      const senha = document.getElementById('login-senha').value;
+      if (!emailRaw || !senha) { showToast("Preencha utilizador e senha para registar."); return; }
+      const email = formatarEmail(emailRaw);
+      const nomeOp = emailRaw.split('@')[0].toUpperCase();
+      
+      auth.createUserWithEmailAndPassword(email, senha)
+        .then(() => {
+          db.ref('cadastros/operadores').once('value').then(snap => {
+            let ops = snap.val(); let arr = Array.isArray(ops) ? ops : Object.values(ops || {});
+            if (!arr.some(o => o && o.email && o.email.toLowerCase() === email.toLowerCase())) {
+               db.ref('cadastros/operadores').push({ nome: nomeOp, email: email, turno: "A" });
+            }
+          });
+          showToast("Acesso ativado com sucesso!");
+        })
+        .catch(error => { showToast(error.code === 'auth/email-already-in-use' ? "❌ Utilizador já existe!" : "Falha: " + error.message); });
+    }
+
+    function logout(mensagemToast = "Sessão terminada.") {
+      if(auth) {
+        auth.signOut().then(() => {
+          document.getElementById('btn-logout').classList.add('hidden');
+          document.getElementById('badge-fila').classList.add('hidden');
+          document.getElementById('login-email').value = ''; 
+          document.getElementById('login-senha').value = '';
+          clearTimeout(inactivityTimer); 
+          showToast(mensagemToast); 
+          navTo('login');
+        });
+      }
     }
 
     function onOperadorInput(val) {
       const opName = val.trim().toUpperCase();
-      if (operadoresMap[opName]) {
-        document.getElementById('form-turno').value = operadoresMap[opName];
-      }
+      if (operadoresMap[opName]) document.getElementById('form-turno').value = operadoresMap[opName];
     }
 
-    // --- LÓGICA DE ETAPAS DINÂMICAS ---
+    // ==========================================
+    // LÓGICA DE ETAPAS DINÂMICAS E BATER PONTO
+    // ==========================================
     function atualizarEtapasDinamicas() {
       const teveConferencia = document.getElementById('form-conferencia').value;
       const tevePesagem = document.getElementById('form-pesagem').value;
       
-      // Monta as etapas baseado no que foi selecionado
-      let novasEtapas = [
-        { id: 'chegada', txt: 'Registrar\nChegada', icon: 'fa-truck-arrow-right' }
-      ];
+      let novasEtapas = [ { id: 'chegada', txt: 'Registar\nChegada', icon: 'fa-truck-arrow-right' } ];
 
       if (tevePesagem === 'SIM') {
         novasEtapas.push({ id: 'ini_pesag', txt: 'Iniciar\nPesagem', icon: 'fa-scale-balanced' });
@@ -474,14 +617,13 @@
         novasEtapas.push({ id: 'fim_conf', txt: 'Fim da\nConferência', icon: 'fa-check-double' });
       }
 
-      novasEtapas.push({ id: 'saida', txt: 'Registrar\nSaída', icon: 'fa-flag-checkered' });
+      novasEtapas.push({ id: 'saida', txt: 'Registar\nSaída', icon: 'fa-flag-checkered' });
 
       etapasPontoAtivas = novasEtapas;
-      recalcularEtapaAtual(); // Ajusta o index caso etapas sumam
+      recalcularEtapaAtual(); 
       atualizarUITempos();
     }
 
-    // --- LÓGICA DO BOTÃO GIGANTE E HORÁRIOS (COM EDIÇÃO MANUAL) ---
     function formatarHoraAtual() {
       const now = new Date();
       return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
@@ -504,12 +646,11 @@
         let iconHtml = isPast ? '<i class="fa-solid fa-check text-emerald-500"></i>' : (isCurrent ? '<i class="fa-solid fa-arrow-right animate-pulse"></i>' : '<i class="fa-solid fa-circle text-[6px]"></i>');
         let inputClass = isPast ? "time-input preenchido text-emerald-700" : "time-input text-slate-400";
         
-        // py-1.5 para tornar a lista ligeiramente mais compacta
         lista.innerHTML += `
-          <li class="flex justify-between items-center py-1.5 px-3 ${isCurrent ? 'bg-blue-50/70 rounded-lg' : ''}">
+          <li class="flex justify-between items-center py-2 px-3 ${isCurrent ? 'bg-blue-50/70 rounded-lg' : ''}">
             <div class="flex items-center gap-2 ${colorCls} flex-1">
               <div class="w-5 text-center">${iconHtml}</div>
-              <span class="text-[11px] uppercase tracking-tight">${etapa.txt.replace('\n', ' ')}</span>
+              <span class="text-xs uppercase tracking-tight">${etapa.txt.replace('\n', ' ')}</span>
             </div>
             <div>
               <input type="time" class="${inputClass}" value="${hora}" onchange="atualizarHorarioManual('${etapa.id}', this.value)" />
@@ -518,64 +659,53 @@
         `;
       });
 
-      // Atualizar Botão Gigante
       if (etapaAtualIndex < etapasPontoAtivas.length) {
         const proxima = etapasPontoAtivas[etapaAtualIndex];
         txt.innerHTML = proxima.txt;
-        icon.className = `fa-solid ${proxima.icon} text-2xl mb-1`;
+        icon.className = `fa-solid ${proxima.icon} text-3xl mb-1`;
         btn.disabled = false;
         btn.className = "btn-ponto bg-etapa-padrao";
       } else {
         txt.innerHTML = "OPERAÇÃO<br>CONCLUÍDA";
-        icon.className = "fa-solid fa-check-double text-2xl mb-1";
+        icon.className = "fa-solid fa-check-double text-3xl mb-1";
         btn.disabled = true;
         btn.className = "btn-ponto bg-etapa-fim opacity-90 cursor-not-allowed";
-        
-        setTimeout(() => navTo('finalizar'), 800); // Pula para finalizar
+        setTimeout(() => navTo('finalizar'), 800); 
       }
     }
 
     function registrarProximaEtapa() {
       if (etapaAtualIndex >= etapasPontoAtivas.length) return;
-      
       const etapa = etapasPontoAtivas[etapaAtualIndex];
       appState.horarios[etapa.id] = formatarHoraAtual();
-      showToast(`${etapa.txt.replace('\n', ' ')} Registrado!`);
-      
+      showToast(`${etapa.txt.replace('\n', ' ')} Registado!`);
       recalcularEtapaAtual();
       atualizarUITempos();
     }
 
     function atualizarHorarioManual(idEtapa, novoValor) {
-      if(novoValor) {
-        appState.horarios[idEtapa] = novoValor;
-      } else {
-        delete appState.horarios[idEtapa]; // Se apagou a caixa
-      }
+      if(novoValor) appState.horarios[idEtapa] = novoValor;
+      else delete appState.horarios[idEtapa]; 
       recalcularEtapaAtual();
       atualizarUITempos();
     }
 
     function recalcularEtapaAtual() {
-      // Procura a primeira etapa da lista ativa que ainda não tem horário
       for(let i = 0; i < etapasPontoAtivas.length; i++) {
-        if(!appState.horarios[etapasPontoAtivas[i].id]) {
-          etapaAtualIndex = i;
-          return;
-        }
+        if(!appState.horarios[etapasPontoAtivas[i].id]) { etapaAtualIndex = i; return; }
       }
-      etapaAtualIndex = etapasPontoAtivas.length; // Tudo preenchido
+      etapaAtualIndex = etapasPontoAtivas.length; 
     }
 
     function resetarTempos() {
-      if(confirm("Deseja zerar os horários dessa operação?")) {
-        appState.horarios = {};
-        recalcularEtapaAtual();
-        atualizarUITempos();
+      if(confirm("Deseja repor os horários desta operação?")) {
+        appState.horarios = {}; recalcularEtapaAtual(); atualizarUITempos();
       }
     }
 
-    // --- FUNÇÕES DE CÁLCULO E FILA LOCAL ---
+    // ==========================================
+    // FUNÇÕES DE CÁLCULO E FILA LOCAL
+    // ==========================================
     function calcularDiferencaMinutos(hIni, hFim) {
       if (!hIni || !hFim) return '';
       let pI = hIni.split(':'), pF = hFim.split(':');
@@ -586,23 +716,14 @@
     }
 
     function adicionarFila() {
-      if (filaRegistros.length >= 12) {
-        alert("Fila cheia! Por favor, Sincronize com o BD ou Exporte para Excel antes de adicionar mais.");
-        return;
-      }
-
+      if (filaRegistros.length >= 12) { alert("Fila cheia! Sincronize com a Base de Dados ou Exporte para Excel antes de adicionar mais."); return; }
       const dataStr = document.getElementById('form-data').value;
       const op = document.getElementById('form-operador').value.trim();
       const forn = document.getElementById('form-fornecedor').value.trim();
 
-      if (!dataStr || !op || !forn) {
-        showToast("Preencha Data, Operador e Fornecedor na aba DADOS.");
-        navTo('dados'); return;
-      }
+      if (!dataStr || !op || !forn) { showToast("Preencha Data, Operador e Fornecedor no separador DADOS."); navTo('dados'); return; }
 
       const h = appState.horarios;
-      
-      // Tempos Padrões (Alguns podem estar vazios se NÃO marcou Conferência/Pesagem)
       const espera_port = calcularDiferencaMinutos(h.chegada, h.lib_portaria);
       const descarga = calcularDiferencaMinutos(h.ini_desc, h.fim_desc);
       const conferencia = calcularDiferencaMinutos(h.ini_conf, h.fim_conf);
@@ -611,7 +732,7 @@
 
       const payload = {
         id: "REG_" + Date.now(),
-        data: dataStr, // Já está em YYYY-MM-DD
+        data: dataStr,
         hora: document.getElementById('form-hora').value,
         turno: document.getElementById('form-turno').value,
         operador: op.toUpperCase(),
@@ -621,54 +742,42 @@
         nf: document.getElementById('form-nf').value.trim().toUpperCase(),
         qtd_caixas: document.getElementById('form-caixas').value,
         
-        // Pega todos os horários (se não existir, salva vazio)
         chegada: h.chegada || "", lib_portaria: h.lib_portaria || "", 
         ini_desc: h.ini_desc || "", fim_desc: h.fim_desc || "", 
         ini_conf: h.ini_conf || "", fim_conf: h.fim_conf || "", 
         saida: h.saida || "",
         
-        // Pesagem
         fez_pesagem: document.getElementById('form-pesagem').value,
         ini_pesag: h.ini_pesag || "", fim_pesag: h.fim_pesag || "", pesag: pesagem || "",
         
-        // Variáveis padrão para manter compatibilidade com DB
         chegou_emb: "NÃO", ini_carr: "", fim_carr: "", carreg: "",
         
-        espera_port: espera_port,
-        descarga: descarga,
-        conferencia: conferencia,
-        lead_time: lead_time,
+        espera_port: espera_port, descarga: descarga, conferencia: conferencia, lead_time: lead_time,
         motivo_atraso: document.getElementById('form-motivo').value.trim().toUpperCase()
       };
 
       filaRegistros.push(payload);
       localStorage.setItem('fila_logistica_hl', JSON.stringify(filaRegistros));
       
-      atualizarContadorFila();
-      limparFormulario();
-      showToast("Salvo na Fila Local! (Novo Registro Livre)");
+      atualizarContadorFila(); limparFormulario(); showToast("Guardado na Fila Local!");
     }
 
     function limparFormulario() {
       appState.horarios = {};
-      
-      document.getElementById('form-operador').value = "";
       document.getElementById('form-fornecedor').value = "";
       document.getElementById('form-placa').value = "";
       document.getElementById('form-nf').value = "";
       document.getElementById('form-caixas').value = "";
       document.getElementById('form-motivo').value = "";
-      
-      // Reseta dropdowns
       document.getElementById('form-conferencia').value = "SIM";
       document.getElementById('form-pesagem').value = "NÃO";
       
-      setToday();
-      atualizarEtapasDinamicas(); // Recalcula e zera interface
-      navTo('dados');
+      setToday(); atualizarEtapasDinamicas(); navTo('dados');
     }
 
-    // --- FIREBASE & SINCRONIZAÇÃO ---
+    // ==========================================
+    // FIREBASE E SINCRONIZAÇÃO
+    // ==========================================
     function initFirebaseApp() {
       const firebaseConfig = {
         apiKey: "AIzaSyBQ7_k7huhS8oAyKp0OsbEajXFmrNxcrlo",
@@ -682,13 +791,41 @@
       
       if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
       db = firebase.database();
+      auth = firebase.auth();
+
+      // Listener de Autenticação com MDM
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+            resetTimer();
+            // Busca o operador no MDM usando o E-mail e preenche os Dados
+            db.ref('cadastros/operadores').once('value').then(snap => {
+               let ops = snap.val();
+               let arr = Array.isArray(ops) ? ops.filter(o => o) : Object.values(ops || {});
+               let opProfile = arr.find(o => o && o.email && o.email.toLowerCase() === user.email.toLowerCase());
+
+               if (opProfile) {
+                   document.getElementById('form-operador').value = opProfile.nome;
+                   document.getElementById('form-turno').value = opProfile.turno;
+               } else {
+                   document.getElementById('form-operador').value = user.email.split('@')[0].toUpperCase();
+                   document.getElementById('form-turno').value = "A";
+               }
+            });
+
+            document.getElementById('btn-logout').classList.remove('hidden');
+            document.getElementById('badge-fila').classList.remove('hidden');
+            if (currentView === 'login') navTo('dados');
+        } else {
+            clearTimeout(inactivityTimer);
+            navTo('login');
+        }
+      });
 
       db.ref('.info/connected').on('value', snap => {
         const icon = document.getElementById('sync-status');
-        icon.className = snap.val() === true ? 'w-3 h-3 rounded-full bg-emerald-400' : 'w-3 h-3 rounded-full bg-red-500';
+        icon.className = snap.val() === true ? 'w-2.5 h-2.5 rounded-full bg-emerald-400' : 'w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse';
       });
 
-      // Auto-completar: Operadores e Fornecedores
       db.ref('cadastros/operadores').on('value', snap => {
         const dl = document.getElementById('op-list'); dl.innerHTML = ''; operadoresMap = {};
         const arr = Array.isArray(snap.val()) ? snap.val().filter(x=>x) : Object.values(snap.val()||{});
@@ -698,6 +835,7 @@
           dl.innerHTML += `<option value="${nome}">`;
         });
       });
+      
       db.ref('cadastros/fornecedores').on('value', snap => {
         const dl = document.getElementById('forn-list'); dl.innerHTML = '';
         const arr = Array.isArray(snap.val()) ? snap.val().filter(x=>x) : Object.values(snap.val()||{});
@@ -709,20 +847,16 @@
       if(filaRegistros.length === 0) { showToast("A fila está vazia."); return; }
       
       const btnIcon = document.getElementById('sync-status');
-      btnIcon.className = 'w-3 h-3 rounded-full bg-blue-500 animate-spin';
+      btnIcon.className = 'w-2.5 h-2.5 rounded-full bg-blue-500 animate-spin';
       
-      let sucessos = 0;
-      let novaFila = [...filaRegistros];
+      let sucessos = 0; let novaFila = [...filaRegistros];
 
       for (let i = 0; i < filaRegistros.length; i++) {
         let registro = filaRegistros[i];
         try {
           await db.ref('controle_logistico/' + registro.id).set(registro);
-          sucessos++;
-          novaFila = novaFila.filter(item => item.id !== registro.id); // Remove da fila se der sucesso
-        } catch(e) {
-          console.error("Erro ao subir registro: ", registro.id);
-        }
+          sucessos++; novaFila = novaFila.filter(item => item.id !== registro.id);
+        } catch(e) { console.error("Erro ao subir registo: ", registro.id); }
       }
 
       filaRegistros = novaFila;
@@ -731,24 +865,15 @@
       
       if(sucessos > 0) showToast(`${sucessos} registos enviados para a Base de Dados!`);
       else showToast("Falha na sincronização. Tente novamente.");
-      
-      btnIcon.className = 'w-3 h-3 rounded-full bg-emerald-400';
+      btnIcon.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400';
     }
 
-    // --- EXPORTAR EXCEL ---
     function exportarExcel() {
       if(filaRegistros.length === 0) { showToast("Não há registos na fila para exportar."); return; }
-      
-      // Cria folha a partir do array de objetos da fila
       const ws = XLSX.utils.json_to_sheet(filaRegistros);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Registos");
-      
-      // Formata data para o nome do ficheiro
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Registos");
       const hj = new Date();
-      const nomeArquivo = `App_Logistica_${hj.getFullYear()}-${hj.getMonth()+1}-${hj.getDate()}.xlsx`;
-      
-      XLSX.writeFile(wb, nomeArquivo);
+      XLSX.writeFile(wb, `App_Logistica_${hj.getFullYear()}-${hj.getMonth()+1}-${hj.getDate()}.xlsx`);
       showToast("Download do Excel iniciado!");
     }
 
@@ -756,7 +881,9 @@
       initFirebaseApp();
       setToday();
       atualizarContadorFila();
-      atualizarEtapasDinamicas(); // Inicia com a configuração padrão
+      atualizarEtapasDinamicas(); 
+      const loginEmail = document.getElementById('login-email');
+      if(loginEmail) loginEmail.addEventListener('blur', function() { this.value = formatarEmail(this.value); });
     };
   </script>
 </body>
