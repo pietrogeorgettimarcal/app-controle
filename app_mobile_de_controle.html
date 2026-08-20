@@ -9,14 +9,17 @@
   
   <title>App Logística - HL Mando</title>
   
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- Excel Library -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
+  <!-- SheetJS (Excel Export) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
     :root {
@@ -50,10 +53,12 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    /* Ajuste para inputs nativos no iOS */
     .mobile-input {
       width: 100%;
-      padding: 12px 16px;
-      font-size: 16px;
+      min-width: 0;
+      padding: 10px 12px;
+      font-size: 15px;
       border: 1px solid #cbd5e1;
       border-radius: 8px;
       background-color: #f8fafc;
@@ -62,6 +67,7 @@
       text-transform: uppercase;
       font-weight: 600;
       height: 48px;
+      appearance: none; /* Remove formatação padrão chata do iOS */
     }
     .mobile-input:focus {
       border-color: var(--primary);
@@ -71,8 +77,8 @@
     
     .mobile-label {
       display: block;
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 11px;
+      font-weight: 800;
       color: #64748b;
       margin-bottom: 4px;
       text-transform: uppercase;
@@ -81,13 +87,14 @@
     .btn-large {
       display: flex; align-items: center; justify-content: center; gap: 8px;
       width: 100%; padding: 14px; border-radius: 8px;
-      font-weight: bold; font-size: 16px; text-transform: uppercase;
+      font-weight: bold; font-size: 15px; text-transform: uppercase;
       transition: active 0.1s; border: none; cursor: pointer;
     }
     .btn-large:active { transform: scale(0.98); }
     .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(0, 92, 158, 0.2); }
     .btn-success { background-color: #10b981; color: white; }
-
+    .btn-excel { background-color: #059669; color: white; }
+    
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; width: 100%;
       background: white; border-top: 1px solid #e2e8f0;
@@ -104,21 +111,41 @@
     .nav-item.active { color: var(--primary); }
     .nav-item i { font-size: 20px; margin-bottom: 4px; }
 
-    /* Botão Gigante de Horários */
+    /* BOTÃO GIGANTE REDUZIDO (Resolvendo problema do tamanho na tela) */
     .btn-ponto {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      max-height: 350px;
-      border-radius: 100%;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      color: white; font-weight: 900; font-size: 22px; text-align: center;
+      color: white; font-weight: 900; font-size: 20px; text-align: center;
       box-shadow: 0 10px 25px rgba(0, 92, 158, 0.4);
       transition: all 0.1s;
-      border: 8px solid rgba(255,255,255,0.2);
+      border: 6px solid rgba(255,255,255,0.2);
+      margin: 0 auto;
     }
     .btn-ponto:active { transform: scale(0.95); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
     .bg-etapa-padrao { background: linear-gradient(135deg, #005c9e, #003b66); }
     .bg-etapa-fim { background: linear-gradient(135deg, #10b981, #059669); }
+
+    /* Estilo para input de hora editável na lista */
+    .time-input {
+      width: 80px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 16px;
+      padding: 2px;
+      outline: none;
+      transition: 0.2s;
+    }
+    .time-input:focus {
+      background: white;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+    }
+    .time-input.preenchido { border-color: #cbd5e1; background: #f8fafc; }
 
     .toast {
       position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
@@ -128,7 +155,6 @@
       white-space: nowrap;
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
-    .toast.error { background: #991b1b; }
   </style>
 </head>
 <body>
@@ -144,9 +170,15 @@
         <p class="text-[10px] text-slate-300 opacity-80 uppercase tracking-widest">Controle Logístico</p>
       </div>
     </div>
-    <div class="flex items-center gap-2">
-      <div id="sync-status" class="w-3 h-3 rounded-full bg-slate-500 animate-pulse"></div>
-      <span class="text-[10px] font-bold text-slate-300">DB</span>
+    <div class="flex items-center gap-3">
+      <!-- Contador da Fila -->
+      <div class="bg-white/10 px-2 py-1 rounded text-xs font-bold font-mono">
+        <span id="fila-contador">0</span>/12
+      </div>
+      <div class="flex items-center gap-1">
+        <div id="sync-status" class="w-3 h-3 rounded-full bg-slate-500 animate-pulse"></div>
+        <span class="text-[10px] font-bold text-slate-300">DB</span>
+      </div>
     </div>
   </header>
 
@@ -158,20 +190,28 @@
       <i class="fa-solid fa-clipboard-list text-blue-600"></i> Dados da Operação
     </h2>
     
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-4 mb-6">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
       
-      <!-- Linha 1: Data e Turno -->
-      <div class="grid grid-cols-5 gap-3">
-        <div class="col-span-3">
+      <!-- Linha 1: Data e Hora (Campos Nativos) -->
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div>
           <label class="mobile-label flex justify-between">
             Data
-            <span onclick="setToday()" class="text-blue-600 font-bold cursor-pointer">HOJE</span>
+            <span onclick="setToday()" class="text-blue-600 font-bold cursor-pointer uppercase text-[9px]">Hoje</span>
           </label>
-          <input type="text" id="form-data" class="mobile-input text-center" placeholder="DD/MM/AAAA" />
+          <input type="date" id="form-data" class="mobile-input" />
         </div>
-        <div class="col-span-2">
-          <label class="mobile-label truncate">Turno</label>
-          <select id="form-turno" class="mobile-input px-1 text-center bg-white">
+        <div>
+          <label class="mobile-label">Hora Início</label>
+          <input type="time" id="form-hora" class="mobile-input" />
+        </div>
+      </div>
+      
+      <!-- Linha 2: Turno e Operador -->
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label class="mobile-label">Turno</label>
+          <select id="form-turno" class="mobile-input bg-white px-1">
             <option value="A">TURNO A</option>
             <option value="B">TURNO B</option>
             <option value="C">TURNO C</option>
@@ -179,65 +219,65 @@
             <option value="E">TURNO E</option>
           </select>
         </div>
-      </div>
-      
-      <!-- Linha 2: Operador e Fornecedor -->
-      <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="mobile-label">Operador</label>
           <input type="text" id="form-operador" list="op-list" onchange="onOperadorInput(this.value)" class="mobile-input text-center" placeholder="NOME..." />
           <datalist id="op-list"></datalist>
         </div>
+      </div>
+
+      <!-- Linha 3: Fornecedor e Placa -->
+      <div class="grid grid-cols-2 gap-3 mb-3">
         <div>
           <label class="mobile-label">Fornecedor</label>
           <input type="text" id="form-fornecedor" list="forn-list" class="mobile-input text-center" placeholder="EX: SADA" />
           <datalist id="forn-list"></datalist>
         </div>
-      </div>
-
-      <!-- Linha 3: Placa e Doca -->
-      <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="mobile-label">Placa</label>
           <input type="text" id="form-placa" class="mobile-input text-center" placeholder="ABC-1234" />
         </div>
+      </div>
+
+      <!-- Linha 4: Doca e NF -->
+      <div class="grid grid-cols-2 gap-3 mb-3">
         <div>
           <label class="mobile-label">Doca</label>
           <select id="form-doca" class="mobile-input text-center bg-white">
-            <option value="Rec">Rec</option>
-            <option value="Exp">Exp</option>
-            <option value="Container">Cont.</option>
+            <option value="Rec">REC</option>
+            <option value="Exp">EXP</option>
+            <option value="Container">CONT.</option>
             <option value="Doca 1">D1</option>
             <option value="Doca 2">D2</option>
           </select>
         </div>
-      </div>
-
-      <!-- Linha 4: NF e Caixas -->
-      <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="mobile-label">Nota Fiscal</label>
           <input type="text" id="form-nf" class="mobile-input text-center" placeholder="Nº NF" />
         </div>
+      </div>
+
+      <!-- Linha 5: Caixas e Teve Conferência/Pesagem -->
+      <div class="grid grid-cols-2 gap-3 mb-3">
         <div>
           <label class="mobile-label">Caixas</label>
           <input type="number" id="form-caixas" class="mobile-input text-center" placeholder="QTD" />
         </div>
-      </div>
-
-      <!-- Linha 5: Fluxo (Pesagem e Conferência) -->
-      <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 mt-2">
         <div>
-          <label class="mobile-label">Teve Pesagem?</label>
-          <select id="form-pesagem" class="mobile-input text-center bg-white" onchange="onFlowChange()">
+          <label class="mobile-label text-blue-600">Teve Pesagem?</label>
+          <select id="form-pesagem" onchange="atualizarEtapasDinamicas()" class="mobile-input text-center bg-white">
             <option value="NÃO">NÃO</option>
             <option value="SIM">SIM</option>
           </select>
         </div>
-        <div>
-          <label class="mobile-label">Teve Conferência?</label>
-          <select id="form-conferencia" class="mobile-input text-center bg-white" onchange="onFlowChange()">
-            <option value="SIM">SIM</option>
+      </div>
+
+      <!-- Linha 6: Conferência -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="col-span-2">
+          <label class="mobile-label text-blue-600">Teve Conferência?</label>
+          <select id="form-conferencia" onchange="atualizarEtapasDinamicas()" class="mobile-input text-center bg-white">
+            <option value="SIM">SIM (PADRÃO)</option>
             <option value="NÃO">NÃO</option>
           </select>
         </div>
@@ -258,24 +298,27 @@
       <h2 class="font-black text-lg text-slate-800 flex items-center gap-2 uppercase">
         <i class="fa-solid fa-stopwatch text-indigo-600"></i> Bater Ponto
       </h2>
-      <button onclick="resetarTempos()" class="text-xs font-bold text-slate-400 border border-slate-300 rounded px-2 py-1"><i class="fa-solid fa-rotate-left"></i> Zerar</button>
+      <button onclick="resetarTempos()" class="text-xs font-bold text-slate-500 border border-slate-300 bg-white rounded px-3 py-1 shadow-sm"><i class="fa-solid fa-rotate-left"></i> Zerar</button>
     </div>
 
-    <!-- BOTÃO GIGANTE -->
-    <div class="flex justify-center mb-8 px-4">
+    <!-- BOTÃO GIGANTE (Agora Menor) -->
+    <div class="flex justify-center mb-6 px-4">
       <button id="btn-ponto" onclick="registrarProximaEtapa()" class="btn-ponto bg-etapa-padrao">
-        <i id="icon-ponto" class="fa-solid fa-truck-arrow-right text-5xl mb-2"></i>
-        <span id="txt-ponto">Registrar<br>Chegada</span>
+        <i id="icon-ponto" class="fa-solid fa-truck-arrow-right text-4xl mb-2"></i>
+        <span id="txt-ponto" class="leading-tight">Registrar<br>Chegada</span>
       </button>
     </div>
 
-    <!-- LISTA DE HORÁRIOS GRAVADOS -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <div class="bg-slate-100 p-2 text-center text-xs font-bold text-slate-500 uppercase border-b border-slate-200">Cronograma da Operação</div>
-      <ul id="lista-horarios" class="divide-y divide-slate-100 p-2">
+    <!-- LISTA DE HORÁRIOS COM INPUT EDITÁVEL -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-4">
+      <div class="bg-slate-100 p-2 text-center text-xs font-bold text-slate-500 uppercase border-b border-slate-200">
+        Cronograma da Operação
+      </div>
+      <ul id="lista-horarios" class="divide-y divide-slate-100 p-1">
         <!-- Preenchido via JS -->
       </ul>
     </div>
+    <p class="text-center text-xs text-slate-400"><i class="fa-solid fa-circle-info"></i> Toque num horário da lista para alterar manualmente.</p>
   </main>
 
   <!-- ========================================== -->
@@ -283,36 +326,39 @@
   <!-- ========================================== -->
   <main id="view-finalizar" class="view-container p-4">
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 text-center mb-6">
-      <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-        <i class="fa-solid fa-flag-checkered text-3xl"></i>
+      <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+        <i class="fa-solid fa-flag-checkered text-2xl"></i>
       </div>
-      <h2 class="font-black text-xl text-slate-800 uppercase mb-1">Finalizar Operação</h2>
-      <p class="text-sm text-slate-500 font-bold">Verifique os gargalos e salve o camião.</p>
-      
-      <!-- Contador da Prancheta Virtual -->
-      <div class="mt-4 inline-block bg-blue-50 border border-blue-200 text-blue-700 text-[10px] px-3 py-1.5 rounded-lg font-black uppercase tracking-wide">
-         <i class="fa-solid fa-layer-group"></i> Prancheta Virtual: <span id="session-counter" class="text-sm">0</span>/12
-      </div>
+      <h2 class="font-black text-xl text-slate-800 uppercase mb-1">Concluir Registro</h2>
+      <p class="text-sm text-slate-500 font-medium">Salve no celular, exporte ou sincronize.</p>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
       <label class="mobile-label text-rose-600 mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Houve Atraso? (Motivo)</label>
-      <textarea id="form-motivo" class="mobile-input h-24 p-3 text-sm normal-case placeholder-slate-400" placeholder="Se a operação estourou o tempo, escreva aqui o motivo..."></textarea>
+      <textarea id="form-motivo" class="mobile-input h-20 p-3 text-sm normal-case placeholder-slate-400" placeholder="Escreva o motivo aqui se houver..."></textarea>
     </div>
 
-    <div class="space-y-4">
-      <button onclick="salvarNoSistemaControle()" class="btn-large btn-success shadow-lg shadow-emerald-600/30">
-        <i class="fa-solid fa-cloud-arrow-up"></i> 1. Gravar BD e Adicionar ao Lote
+    <div class="space-y-3">
+      
+      <!-- BOTÃO 1: Adicionar à Fila Local -->
+      <button onclick="adicionarFila()" class="btn-large btn-primary shadow-lg shadow-blue-600/30">
+        <i class="fa-solid fa-plus"></i> Salvar & Novo Registro
+      </button>
+
+      <!-- BOTÃO 2: Exportar Excel -->
+      <button onclick="exportarExcel()" class="btn-large btn-excel">
+        <i class="fa-solid fa-file-excel"></i> Exportar Fila (Excel)
+      </button>
+
+      <!-- BOTÃO 3: Sincronizar com BD -->
+      <button onclick="sincronizarFila()" class="btn-large bg-indigo-600 text-white">
+        <i class="fa-solid fa-cloud-arrow-up"></i> Sincronizar com Nuvem
       </button>
       
-      <!-- BOTÃO GERAR EXCEL COM LAYOUT DA PRANCHETA -->
-      <button onclick="gerarExcelPrancheta()" class="btn-large bg-[#217346] text-white shadow-lg shadow-green-600/30 mt-2">
-        <i class="fa-solid fa-file-excel"></i> 2. Gerar Excel (Layout Prancheta)
-      </button>
-      
-      <div class="pt-6 border-t border-slate-200 mt-6">
-        <button onclick="limparSessaoCompleta()" class="btn-large bg-red-50 text-red-600 border border-red-200">
-          <i class="fa-solid fa-trash-can"></i> Limpar App / Nova Prancheta
+      <!-- LIMPAR TUDO -->
+      <div class="pt-4 border-t border-slate-200 mt-4">
+        <button onclick="limparFormulario()" class="btn-large bg-red-50 text-red-600 border border-red-200">
+          <i class="fa-solid fa-trash-can"></i> Limpar Formulário Atual
         </button>
       </div>
     </div>
@@ -338,79 +384,39 @@
 
   <script>
     // --- ESTADO DA APLICAÇÃO ---
-    let appState = {
-      dados: { data: "", turno: "A", operador: "", fornecedor: "", placa: "", doca: "Rec", nf: "", qtd_caixas: "", teve_pesagem: "NÃO", teve_conferencia: "SIM" },
-      horarios: { chegada: "", lib_portaria: "", ini_desc: "", fim_desc: "", ini_conf: "", fim_conf: "", ini_pesag: "", fim_pesag: "", saida: "" },
-      motivo_atraso: ""
-    };
-
-    // Array que acumula até 12 camiões gravados na sessão atual (Prancheta Virtual)
-    let sessionRecords = [];
+    let appState = { horarios: {} };
+    let etapasPontoAtivas = []; // Preenchido dinamicamente
+    let etapaAtualIndex = 0;
+    
+    // Fila Local (Máx 12)
+    let filaRegistros = JSON.parse(localStorage.getItem('fila_logistica_hl') || '[]');
 
     let operadoresMap = {}; // { NOME: TURNO }
     let db = null;
 
-    // Definição das etapas do botão gigante
-    let etapasPonto = [];
-    let etapaAtualIndex = 0;
-
-    function buildEtapas() {
-      etapasPonto = [
-        { id: 'chegada', txt: 'Registrar\nChegada', icon: 'fa-truck-arrow-right' },
-        { id: 'lib_portaria', txt: 'Liberar\nPortaria', icon: 'fa-gate-open' },
-        { id: 'ini_desc', txt: 'Iniciar\nDescarga', icon: 'fa-dolly' },
-        { id: 'fim_desc', txt: 'Fim da\nDescarga', icon: 'fa-box-check' }
-      ];
-
-      if (appState.dados.teve_conferencia === 'SIM') {
-        etapasPonto.push({ id: 'ini_conf', txt: 'Iniciar\nConferência', icon: 'fa-clipboard-check' });
-        etapasPonto.push({ id: 'fim_conf', txt: 'Fim da\nConferência', icon: 'fa-check-double' });
-      }
-
-      if (appState.dados.teve_pesagem === 'SIM') {
-        etapasPonto.push({ id: 'ini_pesag', txt: 'Iniciar\nPesagem', icon: 'fa-scale-balanced' });
-        etapasPonto.push({ id: 'fim_pesag', txt: 'Fim da\nPesagem', icon: 'fa-scale-unbalanced' });
-      }
-
-      etapasPonto.push({ id: 'saida', txt: 'Registrar\nSaída', icon: 'fa-flag-checkered' });
-      atualizarUITempos();
-    }
-
-    function onFlowChange() {
-      if (etapaAtualIndex > 0) {
-        if (confirm("Alterar o fluxo de operação irá zerar os horários já marcados. Continuar?")) {
-          etapaAtualIndex = 0;
-          for(let key in appState.horarios) appState.horarios[key] = "";
-        } else {
-          // Reverte os selects para os valores do estado atual se o usuário cancelar
-          document.getElementById('form-pesagem').value = appState.dados.teve_pesagem;
-          document.getElementById('form-conferencia').value = appState.dados.teve_conferencia;
-          return;
-        }
-      }
-      appState.dados.teve_pesagem = document.getElementById('form-pesagem').value;
-      appState.dados.teve_conferencia = document.getElementById('form-conferencia').value;
-      buildEtapas();
-    }
-
-    function showToast(msg, isError = false) {
+    // --- FUNÇÕES DE INTERFACE ---
+    function showToast(msg) {
       const toast = document.getElementById('toast');
-      toast.innerText = msg; 
-      if (isError) {
-          toast.classList.add('error');
-      } else {
-          toast.classList.remove('error');
-      }
-      toast.classList.add('show');
+      toast.innerText = msg; toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
     function setToday() {
-      const hoje = new Date();
-      const formatado = String(hoje.getDate()).padStart(2, '0') + '/' + 
-                        String(hoje.getMonth() + 1).padStart(2, '0') + '/' + 
-                        hoje.getFullYear();
-      document.getElementById('form-data').value = formatado;
+      const now = new Date();
+      // Formato YYYY-MM-DD exigido pelo input type="date"
+      const ano = now.getFullYear();
+      const mes = String(now.getMonth() + 1).padStart(2, '0');
+      const dia = String(now.getDate()).padStart(2, '0');
+      document.getElementById('form-data').value = `${ano}-${mes}-${dia}`;
+
+      // Formato HH:MM para hora de início
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('form-hora').value = `${h}:${m}`;
+    }
+
+    function atualizarContadorFila() {
+      document.getElementById('fila-contador').innerText = filaRegistros.length;
     }
 
     function navTo(viewId) {
@@ -420,22 +426,7 @@
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
       document.getElementById(`nav-btn-${viewId}`).classList.add('active');
       
-      if (viewId === 'tempos') salvarDados();
-      if (viewId === 'finalizar') salvarDados();
-    }
-
-    function salvarDados() {
-      appState.dados.data = document.getElementById('form-data').value.trim();
-      appState.dados.turno = document.getElementById('form-turno').value;
-      appState.dados.operador = document.getElementById('form-operador').value.trim().toUpperCase();
-      appState.dados.fornecedor = document.getElementById('form-fornecedor').value.trim().toUpperCase();
-      appState.dados.placa = document.getElementById('form-placa').value.trim().toUpperCase();
-      appState.dados.doca = document.getElementById('form-doca').value;
-      appState.dados.nf = document.getElementById('form-nf').value.trim().toUpperCase();
-      appState.dados.qtd_caixas = document.getElementById('form-caixas').value;
-      appState.dados.teve_pesagem = document.getElementById('form-pesagem').value;
-      appState.dados.teve_conferencia = document.getElementById('form-conferencia').value;
-      appState.motivo_atraso = document.getElementById('form-motivo').value.trim().toUpperCase();
+      if (viewId === 'tempos') atualizarEtapasDinamicas();
     }
 
     function onOperadorInput(val) {
@@ -445,6 +436,38 @@
       }
     }
 
+    // --- LÓGICA DE ETAPAS DINÂMICAS ---
+    function atualizarEtapasDinamicas() {
+      const teveConferencia = document.getElementById('form-conferencia').value;
+      const tevePesagem = document.getElementById('form-pesagem').value;
+      
+      // Monta as etapas baseado no que foi selecionado
+      let novasEtapas = [
+        { id: 'chegada', txt: 'Registrar\nChegada', icon: 'fa-truck-arrow-right' }
+      ];
+
+      if (tevePesagem === 'SIM') {
+        novasEtapas.push({ id: 'ini_pesag', txt: 'Iniciar\nPesagem', icon: 'fa-scale-balanced' });
+        novasEtapas.push({ id: 'fim_pesag', txt: 'Fim da\nPesagem', icon: 'fa-check' });
+      }
+
+      novasEtapas.push({ id: 'lib_portaria', txt: 'Liberar\nPortaria', icon: 'fa-gate-open' });
+      novasEtapas.push({ id: 'ini_desc', txt: 'Iniciar\nDescarga', icon: 'fa-dolly' });
+      novasEtapas.push({ id: 'fim_desc', txt: 'Fim da\nDescarga', icon: 'fa-box-check' });
+
+      if (teveConferencia === 'SIM') {
+        novasEtapas.push({ id: 'ini_conf', txt: 'Iniciar\nConferência', icon: 'fa-clipboard-check' });
+        novasEtapas.push({ id: 'fim_conf', txt: 'Fim da\nConferência', icon: 'fa-check-double' });
+      }
+
+      novasEtapas.push({ id: 'saida', txt: 'Registrar\nSaída', icon: 'fa-flag-checkered' });
+
+      etapasPontoAtivas = novasEtapas;
+      recalcularEtapaAtual(); // Ajusta o index caso etapas sumam
+      atualizarUITempos();
+    }
+
+    // --- LÓGICA DO BOTÃO GIGANTE E HORÁRIOS (COM EDIÇÃO MANUAL) ---
     function formatarHoraAtual() {
       const now = new Date();
       return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
@@ -456,64 +479,181 @@
       const icon = document.getElementById('icon-ponto');
       const lista = document.getElementById('lista-horarios');
       
-      // Atualizar lista
       lista.innerHTML = '';
-      etapasPonto.forEach((etapa, idx) => {
-        const hora = appState.horarios[etapa.id];
+      
+      etapasPontoAtivas.forEach((etapa, idx) => {
+        const hora = appState.horarios[etapa.id] || "";
         const isPast = hora !== "";
         const isCurrent = idx === etapaAtualIndex;
         
-        let colorCls = isPast ? "text-slate-800 font-black" : (isCurrent ? "text-blue-600 font-bold" : "text-slate-300");
-        let iconHtml = isPast ? '<i class="fa-solid fa-check text-emerald-500"></i>' : (isCurrent ? '<i class="fa-solid fa-arrow-right animate-pulse"></i>' : '<i class="fa-solid fa-circle text-[8px]"></i>');
+        let colorCls = isPast ? "text-slate-800 font-black" : (isCurrent ? "text-blue-600 font-bold" : "text-slate-400 font-medium");
+        let iconHtml = isPast ? '<i class="fa-solid fa-check text-emerald-500"></i>' : (isCurrent ? '<i class="fa-solid fa-arrow-right animate-pulse"></i>' : '<i class="fa-solid fa-circle text-[6px]"></i>');
+        let inputClass = isPast ? "time-input preenchido text-emerald-700" : "time-input text-slate-400";
         
         lista.innerHTML += `
-          <li class="flex justify-between items-center py-3 px-2 ${isCurrent ? 'bg-blue-50/50 rounded-lg' : ''}">
-            <div class="flex items-center gap-3 ${colorCls}">
+          <li class="flex justify-between items-center py-2 px-3 ${isCurrent ? 'bg-blue-50/70 rounded-lg' : ''}">
+            <div class="flex items-center gap-3 ${colorCls} flex-1">
               <div class="w-5 text-center">${iconHtml}</div>
-              <span class="text-sm uppercase">${etapa.txt.replace('\n', ' ')}</span>
+              <span class="text-[13px] uppercase tracking-tight">${etapa.txt.replace('\n', ' ')}</span>
             </div>
-            <div class="font-mono font-bold text-lg ${isPast ? 'text-emerald-600' : 'text-slate-300'}">${hora || '--:--'}</div>
+            <div>
+              <input type="time" class="${inputClass}" value="${hora}" onchange="atualizarHorarioManual('${etapa.id}', this.value)" />
+            </div>
           </li>
         `;
       });
 
-      // Atualizar Botão
-      if (etapaAtualIndex < etapasPonto.length) {
-        const proxima = etapasPonto[etapaAtualIndex];
+      // Atualizar Botão Gigante
+      if (etapaAtualIndex < etapasPontoAtivas.length) {
+        const proxima = etapasPontoAtivas[etapaAtualIndex];
         txt.innerHTML = proxima.txt;
-        icon.className = `fa-solid ${proxima.icon} text-5xl mb-2`;
+        icon.className = `fa-solid ${proxima.icon} text-4xl mb-2`;
         btn.disabled = false;
         btn.className = "btn-ponto bg-etapa-padrao";
       } else {
         txt.innerHTML = "OPERAÇÃO<br>CONCLUÍDA";
-        icon.className = "fa-solid fa-check-double text-5xl mb-2";
+        icon.className = "fa-solid fa-check-double text-4xl mb-2";
         btn.disabled = true;
         btn.className = "btn-ponto bg-etapa-fim opacity-90 cursor-not-allowed";
         
-        // Pula para a tela de finalizar automaticamente
-        setTimeout(() => navTo('finalizar'), 1000);
+        setTimeout(() => navTo('finalizar'), 800); // Pula para finalizar
       }
     }
 
     function registrarProximaEtapa() {
-      if (etapaAtualIndex >= etapasPonto.length) return;
+      if (etapaAtualIndex >= etapasPontoAtivas.length) return;
       
-      const etapa = etapasPonto[etapaAtualIndex];
+      const etapa = etapasPontoAtivas[etapaAtualIndex];
       appState.horarios[etapa.id] = formatarHoraAtual();
-      showToast(`${etapa.txt.replace('\n', ' ')}: ${appState.horarios[etapa.id]}`);
+      showToast(`${etapa.txt.replace('\n', ' ')} Registrado!`);
       
-      etapaAtualIndex++;
+      recalcularEtapaAtual();
       atualizarUITempos();
     }
 
+    function atualizarHorarioManual(idEtapa, novoValor) {
+      if(novoValor) {
+        appState.horarios[idEtapa] = novoValor;
+      } else {
+        delete appState.horarios[idEtapa]; // Se apagou a caixa
+      }
+      recalcularEtapaAtual();
+      atualizarUITempos();
+    }
+
+    function recalcularEtapaAtual() {
+      // Procura a primeira etapa da lista ativa que ainda não tem horário
+      for(let i = 0; i < etapasPontoAtivas.length; i++) {
+        if(!appState.horarios[etapasPontoAtivas[i].id]) {
+          etapaAtualIndex = i;
+          return;
+        }
+      }
+      etapaAtualIndex = etapasPontoAtivas.length; // Tudo preenchido
+    }
+
     function resetarTempos() {
-      if(confirm("Deseja zerar os horários marcados?")) {
-        etapaAtualIndex = 0;
-        for(let key in appState.horarios) appState.horarios[key] = "";
+      if(confirm("Deseja zerar os horários dessa operação?")) {
+        appState.horarios = {};
+        recalcularEtapaAtual();
         atualizarUITempos();
       }
     }
 
+    // --- FUNÇÕES DE CÁLCULO E FILA LOCAL ---
+    function calcularDiferencaMinutos(hIni, hFim) {
+      if (!hIni || !hFim) return '';
+      let pI = hIni.split(':'), pF = hFim.split(':');
+      let mI = parseInt(pI[0]) * 60 + parseInt(pI[1]);
+      let mF = parseInt(pF[0]) * 60 + parseInt(pF[1]);
+      if (mF < mI) mF += 24 * 60; 
+      return mF - mI;
+    }
+
+    function adicionarFila() {
+      if (filaRegistros.length >= 12) {
+        alert("Fila cheia! Por favor, Sincronize com o BD ou Exporte para Excel antes de adicionar mais.");
+        return;
+      }
+
+      const dataStr = document.getElementById('form-data').value;
+      const op = document.getElementById('form-operador').value.trim();
+      const forn = document.getElementById('form-fornecedor').value.trim();
+
+      if (!dataStr || !op || !forn) {
+        showToast("Preencha Data, Operador e Fornecedor na aba DADOS.");
+        navTo('dados'); return;
+      }
+
+      const h = appState.horarios;
+      
+      // Tempos Padrões (Alguns podem estar vazios se NÃO marcou Conferência/Pesagem)
+      const espera_port = calcularDiferencaMinutos(h.chegada, h.lib_portaria);
+      const descarga = calcularDiferencaMinutos(h.ini_desc, h.fim_desc);
+      const conferencia = calcularDiferencaMinutos(h.ini_conf, h.fim_conf);
+      const pesagem = calcularDiferencaMinutos(h.ini_pesag, h.fim_pesag);
+      const lead_time = calcularDiferencaMinutos(h.chegada, h.saida);
+
+      const payload = {
+        id: "REG_" + Date.now(),
+        data: dataStr, // Já está em YYYY-MM-DD
+        hora: document.getElementById('form-hora').value,
+        turno: document.getElementById('form-turno').value,
+        operador: op.toUpperCase(),
+        fornecedor: forn.toUpperCase(),
+        placa: document.getElementById('form-placa').value.trim().toUpperCase(),
+        doca: document.getElementById('form-doca').value,
+        nf: document.getElementById('form-nf').value.trim().toUpperCase(),
+        qtd_caixas: document.getElementById('form-caixas').value,
+        
+        // Pega todos os horários (se não existir, salva vazio)
+        chegada: h.chegada || "", lib_portaria: h.lib_portaria || "", 
+        ini_desc: h.ini_desc || "", fim_desc: h.fim_desc || "", 
+        ini_conf: h.ini_conf || "", fim_conf: h.fim_conf || "", 
+        saida: h.saida || "",
+        
+        // Pesagem
+        fez_pesagem: document.getElementById('form-pesagem').value,
+        ini_pesag: h.ini_pesag || "", fim_pesag: h.fim_pesag || "", pesag: pesagem || "",
+        
+        // Variáveis padrão para manter compatibilidade com DB
+        chegou_emb: "NÃO", ini_carr: "", fim_carr: "", carreg: "",
+        
+        espera_port: espera_port,
+        descarga: descarga,
+        conferencia: conferencia,
+        lead_time: lead_time,
+        motivo_atraso: document.getElementById('form-motivo').value.trim().toUpperCase()
+      };
+
+      filaRegistros.push(payload);
+      localStorage.setItem('fila_logistica_hl', JSON.stringify(filaRegistros));
+      
+      atualizarContadorFila();
+      limparFormulario();
+      showToast("Salvo na Fila Local! (Novo Registro Livre)");
+    }
+
+    function limparFormulario() {
+      appState.horarios = {};
+      
+      document.getElementById('form-operador').value = "";
+      document.getElementById('form-fornecedor').value = "";
+      document.getElementById('form-placa').value = "";
+      document.getElementById('form-nf').value = "";
+      document.getElementById('form-caixas').value = "";
+      document.getElementById('form-motivo').value = "";
+      
+      // Reseta dropdowns
+      document.getElementById('form-conferencia').value = "SIM";
+      document.getElementById('form-pesagem').value = "NÃO";
+      
+      setToday();
+      atualizarEtapasDinamicas(); // Recalcula e zera interface
+      navTo('dados');
+    }
+
+    // --- FIREBASE & SINCRONIZAÇÃO ---
     function initFirebaseApp() {
       const firebaseConfig = {
         apiKey: "AIzaSyBQ7_k7huhS8oAyKp0OsbEajXFmrNxcrlo",
@@ -528,354 +668,83 @@
       if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
       db = firebase.database();
 
-      // Listener de Conexão
       db.ref('.info/connected').on('value', snap => {
         const icon = document.getElementById('sync-status');
-        if (snap.val() === true) {
-          icon.className = 'w-3 h-3 rounded-full bg-emerald-400';
-        } else {
-          icon.className = 'w-3 h-3 rounded-full bg-red-500';
-        }
+        icon.className = snap.val() === true ? 'w-3 h-3 rounded-full bg-emerald-400' : 'w-3 h-3 rounded-full bg-red-500';
       });
 
-      // Carregar Operadores e Turnos
+      // Auto-completar: Operadores e Fornecedores
       db.ref('cadastros/operadores').on('value', snap => {
-        const dl = document.getElementById('op-list');
-        dl.innerHTML = ''; operadoresMap = {};
+        const dl = document.getElementById('op-list'); dl.innerHTML = ''; operadoresMap = {};
         const arr = Array.isArray(snap.val()) ? snap.val().filter(x=>x) : Object.values(snap.val()||{});
         arr.forEach(o => {
-          let nome = typeof o === 'object' ? o.nome : o;
-          let turno = typeof o === 'object' ? (o.turno || 'A') : 'A';
-          nome = nome.toUpperCase();
-          operadoresMap[nome] = turno.toUpperCase();
+          let nome = (typeof o === 'object' ? o.nome : o).toUpperCase();
+          operadoresMap[nome] = (typeof o === 'object' ? (o.turno || 'A') : 'A').toUpperCase();
           dl.innerHTML += `<option value="${nome}">`;
         });
       });
-
-      // Carregar Fornecedores
       db.ref('cadastros/fornecedores').on('value', snap => {
-        const dl = document.getElementById('forn-list');
-        dl.innerHTML = '';
+        const dl = document.getElementById('forn-list'); dl.innerHTML = '';
         const arr = Array.isArray(snap.val()) ? snap.val().filter(x=>x) : Object.values(snap.val()||{});
-        arr.forEach(f => {
-          if(f) dl.innerHTML += `<option value="${f.toUpperCase()}">`;
-        });
+        arr.forEach(f => { if(f) dl.innerHTML += `<option value="${f.toUpperCase()}">`; });
       });
     }
 
-    function calcularDiferencaMinutos(hIni, hFim) {
-      if (!hIni || !hFim) return '';
-      let pI = hIni.split(':'), pF = hFim.split(':');
-      let mI = parseInt(pI[0]) * 60 + parseInt(pI[1]), mF = parseInt(pF[0]) * 60 + parseInt(pF[1]);
-      if (mF < mI) mF += 24 * 60; // Passou da meia noite
-      return mF - mI;
+    async function sincronizarFila() {
+      if(filaRegistros.length === 0) { showToast("A fila está vazia."); return; }
+      
+      const btnIcon = document.getElementById('sync-status');
+      btnIcon.className = 'w-3 h-3 rounded-full bg-blue-500 animate-spin';
+      
+      let sucessos = 0;
+      let novaFila = [...filaRegistros];
+
+      for (let i = 0; i < filaRegistros.length; i++) {
+        let registro = filaRegistros[i];
+        try {
+          await db.ref('controle_logistico/' + registro.id).set(registro);
+          sucessos++;
+          novaFila = novaFila.filter(item => item.id !== registro.id); // Remove da fila se der sucesso
+        } catch(e) {
+          console.error("Erro ao subir registro: ", registro.id);
+        }
+      }
+
+      filaRegistros = novaFila;
+      localStorage.setItem('fila_logistica_hl', JSON.stringify(filaRegistros));
+      atualizarContadorFila();
+      
+      if(sucessos > 0) showToast(`${sucessos} registros enviados ao DB!`);
+      else showToast("Falha na sincronização. Tente novamente.");
+      
+      btnIcon.className = 'w-3 h-3 rounded-full bg-emerald-400';
     }
 
-    function salvarNoSistemaControle() {
-      salvarDados();
+    // --- EXPORTAR EXCEL ---
+    function exportarExcel() {
+      if(filaRegistros.length === 0) { showToast("Não há registros na fila para exportar."); return; }
       
-      if (!appState.dados.data || !appState.dados.fornecedor || !appState.dados.operador) {
-        showToast("Preencha Data, Operador e Fornecedor na aba DADOS.");
-        navTo('dados'); return;
-      }
-
-      if (sessionRecords.length >= 12) {
-        showToast("Prancheta Cheia (Max 12). Por favor, gere o Excel e inicie uma nova.", true);
-        return;
-      }
-
-      const nfAtual = appState.dados.nf;
-      
-      // Converte a data DD/MM/AAAA para YYYY-MM-DD exigido pelo Sistema Desktop
-      let dataBD = appState.dados.data;
-      if (dataBD.includes('/')) {
-        const p = dataBD.split('/');
-        if (p.length === 3) dataBD = `${p[2]}-${p[1]}-${p[0]}`;
-      }
-
-      if (nfAtual && nfAtual.trim() !== '') {
-          const nfFormatada = nfAtual.trim();
-          document.getElementById('sync-status').classList.replace('bg-emerald-400', 'bg-blue-500');
-
-          db.ref('controle_logistico').once('value').then(snapshot => {
-              let existeDuplicata = false;
-              let duplicadoForn = "";
-              
-              if (snapshot.exists()) {
-                  const registros = Object.values(snapshot.val());
-                  // Trava Global de NF
-                  const regEncontrado = registros.find(r => r.nf && r.nf.trim() === nfFormatada);
-                  if (regEncontrado) {
-                      existeDuplicata = true;
-                      duplicadoForn = regEncontrado.fornecedor;
-                  }
-              }
-              
-              if (existeDuplicata) {
-                  showToast(`Erro: A NF ${nfFormatada} já existe no sistema (Forn: ${duplicadoForn})!`, true);
-                  document.getElementById('sync-status').classList.replace('bg-blue-500', 'bg-emerald-400');
-                  return; 
-              } else {
-                  processarEGravar(dataBD);
-              }
-          }).catch(err => {
-              showToast("Erro ao verificar NF: " + err.message, true);
-              document.getElementById('sync-status').classList.replace('bg-blue-500', 'bg-red-500');
-          });
-      } else {
-          processarEGravar(dataBD);
-      }
-    }
-
-    function processarEGravar(dataBD) {
-      const h = appState.horarios;
-      const espera_port = calcularDiferencaMinutos(h.chegada, h.lib_portaria);
-      const descarga = calcularDiferencaMinutos(h.ini_desc, h.fim_desc);
-      const conferencia = calcularDiferencaMinutos(h.ini_conf, h.fim_conf);
-      const pesag = calcularDiferencaMinutos(h.ini_pesag, h.fim_pesag);
-      const lead_time = calcularDiferencaMinutos(h.chegada, h.saida);
-
-      // Usado para enviar pro BD
-      const payloadDB = {
-        id: Date.now(), // ID Único
-        data: dataBD,
-        turno: appState.dados.turno,
-        operador: appState.dados.operador,
-        fornecedor: appState.dados.fornecedor,
-        placa: appState.dados.placa,
-        doca: appState.dados.doca,
-        nf: appState.dados.nf,
-        qtd_caixas: appState.dados.qtd_caixas,
-        
-        chegada: h.chegada,
-        lib_portaria: h.lib_portaria,
-        ini_desc: h.ini_desc,
-        fim_desc: h.fim_desc,
-        ini_conf: h.ini_conf || "",
-        fim_conf: h.fim_conf || "",
-        saida: h.saida,
-        
-        chegou_emb: "NÃO", ini_carr: "", fim_carr: "", carreg: "", // Padrão fixo
-        fez_pesagem: appState.dados.teve_pesagem, 
-        ini_pesag: h.ini_pesag || "", 
-        fim_pesag: h.fim_pesag || "", 
-        pesag: pesag,
-        
-        espera_port: espera_port,
-        descarga: descarga,
-        conferencia: conferencia,
-        lead_time: lead_time,
-        motivo_atraso: appState.motivo_atraso
-      };
-
-      // Usado para o Excel
-      const payloadPrancheta = {
-        data: appState.dados.data, // formato DD/MM/AAAA
-        turno: appState.dados.turno,
-        operador: appState.dados.operador,
-        fornecedor: appState.dados.fornecedor,
-        placa: appState.dados.placa,
-        nf: appState.dados.nf,
-        qtd_caixas: appState.dados.qtd_caixas,
-        chegada: h.chegada,
-        lib_portaria: h.lib_portaria,
-        ini_desc: h.ini_desc,
-        fim_desc: h.fim_desc,
-        ini_conf: h.ini_conf,
-        fim_conf: h.fim_conf,
-        ini_pesag: h.ini_pesag,
-        fim_pesag: h.fim_pesag,
-        saida: h.saida,
-        motivo_atraso: appState.motivo_atraso
-      };
-
-      document.getElementById('sync-status').classList.replace('bg-emerald-400', 'bg-blue-500');
-      
-      db.ref('controle_logistico/' + payloadDB.id).set(payloadDB).then(() => {
-        // Grava no Excel local da sessão
-        sessionRecords.push(payloadPrancheta);
-        document.getElementById('session-counter').innerText = sessionRecords.length;
-
-        showToast("Camião Adicionado à Prancheta e BD!");
-        document.getElementById('sync-status').classList.replace('bg-blue-500', 'bg-emerald-400');
-        
-        // Limpa o formulário para o PRÓXIMO camião, mas MANTÉM a sessão
-        setTimeout(() => limparTudo(false), 2000); 
-      }).catch(err => {
-        showToast("Erro ao gravar: " + err.message, true);
-        document.getElementById('sync-status').classList.replace('bg-blue-500', 'bg-red-500');
-      });
-    }
-
-    function gerarExcelPrancheta() {
-      if (typeof XLSX === 'undefined') { showToast("Biblioteca Excel não carregou."); return; }
-      
-      if (sessionRecords.length === 0) {
-        showToast("Grave pelo menos um camião no BD para gerar o Excel.", true);
-        return;
-      }
-
+      // Cria planilha a partir do array de objetos da fila
+      const ws = XLSX.utils.json_to_sheet(filaRegistros);
       const wb = XLSX.utils.book_new();
-
-      // Estrutura Base
-      const wsData = [
-        ["HL Mando", "CONTROLE MANUAL - RECEBIMENTO DE CAMINHÕES", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
-        ["DATA", "TURNO", "OPERADOR", "FORNECEDOR", "PLACA", "NF", "QNTD CAIXAS", "CHEGADA", "LIB. PORTARIA", "INI. DESC.", "FIM. DESC.", "INI. CONF", "FIM. CONF", "INI. EMBAL", "FIM. EMBAL", "INI. PESAG", "FIM. PESAG", "SAÍDA"]
-      ];
-
-      // Preencher as 12 Linhas
-      for(let i = 0; i < 12; i++) {
-        if(i < sessionRecords.length) {
-          const rec = sessionRecords[i];
-          
-          // Formatar a Data para ficar curta (ex: 03/08)
-          let d = rec.data;
-          if (d && d.includes('/')) {
-             let p = d.split('/');
-             d = `${p[0]}/${p[1]}`;
-          } else if (d && d.length > 5) {
-             d = d.substring(0,5);
-          }
-
-          wsData.push([
-            d, rec.turno, rec.operador, rec.fornecedor,
-            rec.placa, rec.nf, rec.qtd_caixas,
-            rec.chegada || "-", rec.lib_portaria || "-",
-            rec.ini_desc || "-", rec.fim_desc || "-",
-            rec.ini_conf || "-", rec.fim_conf || "-",
-            "-", "-", // Embalagem
-            rec.ini_pesag || "-", rec.fim_pesag || "-",
-            rec.saida || "-"
-          ]);
-        } else {
-          // Preenche linhas em branco para completar as 12 da prancheta
-          wsData.push(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
-        }
-      }
-
-      // Linha de Rodapé (Observações juntando os motivos de todos os camiões com atraso)
-      let observacoes = sessionRecords
-          .filter(r => r.motivo_atraso && r.motivo_atraso.trim() !== '')
-          .map(r => `NF ${r.nf||'S/N'}: ${r.motivo_atraso}`)
-          .join(" | ");
-
-      wsData.push(["Observações / Motivo de atraso: " + observacoes, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
-
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-      // Definição de Merges
-      ws['!merges'] = [
-        { s: { r: 0, c: 1 }, e: { r: 0, c: 17 } }, // Título Central
-        { s: { r: 14, c: 0 }, e: { r: 14, c: 17 } } // Observações
-      ];
-
-      // Estilos Gerais
-      const bordaFina = { style: "thin", color: { rgb: "000000" } };
-      const bordasTodas = { top: bordaFina, bottom: bordaFina, left: bordaFina, right: bordaFina };
-
-      for (let R = 0; R < wsData.length; ++R) {
-        for (let C = 0; C < 18; ++C) {
-          const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-          if (!ws[cellRef]) ws[cellRef] = { v: "", t: "s" };
-          
-          let s = { font: { name: "Arial", sz: 10 }, alignment: { horizontal: "center", vertical: "center", wrapText: true } };
-          
-          if (R === 0) {
-             s.font = { name: "Arial", sz: 14, bold: true };
-             s.border = bordasTodas;
-             if (C === 0) { s.font.color = {rgb:"005c9e"}; s.font.sz = 16; } // HL Mando Logo simulado
-          } 
-          else if (R === 1) { // Cabeçalhos
-             s.font.bold = true; s.font.sz = 9;
-             s.border = bordasTodas;
-             s.fill = { fgColor: { rgb: "EAEAEA" } };
-          }
-          else if (R >= 2 && R <= 13) { // Dados
-             s.border = bordasTodas;
-             if (sessionRecords[R-2]) s.font.color = {rgb: "0000FF"}; // Linha preenchida em azul (caneta)
-          }
-          else if (R === 14) { // Observações
-             s.border = bordasTodas;
-             s.alignment.horizontal = "left";
-             s.font.italic = true;
-             if (observacoes) s.font.color = {rgb: "0000FF"};
-          }
-          ws[cellRef].s = s;
-        }
-      }
-
-      // Largura das Colunas
-      ws['!cols'] = [
-        { wch: 8 }, { wch: 6 }, { wch: 12 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 7 }, 
-        { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, 
-        { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 } 
-      ];
-
-      // Altura das Linhas
-      ws['!rows'] = [];
-      ws['!rows'][0] = { hpt: 30 };
-      ws['!rows'][1] = { hpt: 35 };
-      for(let i=2; i<=13; i++) ws['!rows'][i] = { hpt: 25 };
-      ws['!rows'][14] = { hpt: 40 };
-
-      XLSX.utils.book_append_sheet(wb, ws, "Controle");
+      XLSX.utils.book_append_sheet(wb, ws, "Registros");
       
-      const fornStr = sessionRecords[0].fornecedor ? `_${sessionRecords[0].fornecedor}` : '';
-      const dataStr = sessionRecords[0].data ? sessionRecords[0].data.replace(/\//g, '') : '';
-      const nomeArq = `Controle_Logistico_${dataStr}${fornStr}.xlsx`;
+      // Formata data pro nome do arquivo
+      const hj = new Date();
+      const nomeArquivo = `App_Logistica_${hj.getFullYear()}-${hj.getMonth()+1}-${hj.getDate()}.xlsx`;
       
-      XLSX.writeFile(wb, nomeArq);
-      showToast("Excel Gerado com Sucesso!");
-    }
-
-    function limparTudo(apagarSessao = false) {
-      appState = {
-        dados: { data: "", turno: "A", operador: "", fornecedor: "", placa: "", doca: "Rec", nf: "", qtd_caixas: "", teve_pesagem: "NÃO", teve_conferencia: "SIM" },
-        horarios: { chegada: "", lib_portaria: "", ini_desc: "", fim_desc: "", ini_conf: "", fim_conf: "", ini_pesag: "", fim_pesag: "", saida: "" },
-        motivo_atraso: ""
-      };
-      
-      // Se for apenas para o próximo camião, mantemos Data e Operador para agilizar
-      let keepData = document.getElementById('form-data').value;
-      let keepOp = document.getElementById('form-operador').value;
-      let keepTurno = document.getElementById('form-turno').value;
-
-      document.getElementById('form-fornecedor').value = "";
-      document.getElementById('form-placa').value = "";
-      document.getElementById('form-nf').value = "";
-      document.getElementById('form-caixas').value = "";
-      document.getElementById('form-pesagem').value = "NÃO";
-      document.getElementById('form-conferencia').value = "SIM";
-      document.getElementById('form-motivo').value = "";
-      
-      if (apagarSessao) {
-         setToday();
-         document.getElementById('form-operador').value = "";
-         sessionRecords = [];
-         document.getElementById('session-counter').innerText = 0;
-      } else {
-         document.getElementById('form-data').value = keepData;
-         document.getElementById('form-operador').value = keepOp;
-         document.getElementById('form-turno').value = keepTurno;
-      }
-      
-      etapaAtualIndex = 0;
-      buildEtapas();
-      navTo('dados');
-      if(apagarSessao) showToast("Prancheta limpa. Nova sessão iniciada.");
-    }
-
-    function limparSessaoCompleta() {
-      if(confirm("Deseja apagar os dados da prancheta atual e iniciar um novo lote de camiões? (Faça isso apenas após exportar o Excel)")) {
-        limparTudo(true);
-      }
+      XLSX.writeFile(wb, nomeArquivo);
+      showToast("Download do Excel iniciado!");
     }
 
     window.onload = function() {
       initFirebaseApp();
       setToday();
-      buildEtapas();
+      atualizarContadorFila();
+      atualizarEtapasDinamicas(); // Inicia com a configuração padrão
     };
   </script>
 </body>
 </html>
+
+
