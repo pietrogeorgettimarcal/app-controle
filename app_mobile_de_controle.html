@@ -43,7 +43,7 @@
     .view-container {
       flex: 1;
       overflow-y: auto;
-      padding-bottom: 130px; /* Aumentado para garantir que o botão não fica escondido */
+      /* O padding-bottom foi removido e substituído por um espaçador físico no HTML para maior compatibilidade no Android */
       display: none;
       animation: fadeIn 0.3s ease;
     }
@@ -59,7 +59,7 @@
       width: 100%;
       min-width: 0;
       padding: 8px 10px;
-      font-size: 14px; /* Ligeiramente mais pequeno */
+      font-size: 14px; 
       border: 1px solid #cbd5e1;
       border-radius: 8px;
       background-color: #f8fafc;
@@ -67,7 +67,7 @@
       outline: none;
       text-transform: uppercase;
       font-weight: 600;
-      height: 42px; /* Reduzido de 48px para caber melhor na tela */
+      height: 42px; 
       appearance: none;
     }
     .mobile-input:focus {
@@ -78,17 +78,18 @@
     
     .mobile-label {
       display: block;
-      font-size: 10px; /* Reduzido de 11px */
+      font-size: 10px; 
       font-weight: 800;
       color: #64748b;
       margin-bottom: 2px;
       text-transform: uppercase;
     }
 
+    /* Botões de ação mais compactos */
     .btn-large {
       display: flex; align-items: center; justify-content: center; gap: 8px;
       width: 100%; padding: 12px; border-radius: 8px;
-      font-weight: bold; font-size: 15px; text-transform: uppercase;
+      font-weight: bold; font-size: 14px; text-transform: uppercase;
       transition: active 0.1s; border: none; cursor: pointer;
     }
     .btn-large:active { transform: scale(0.98); }
@@ -112,14 +113,14 @@
     .nav-item.active { color: var(--primary); }
     .nav-item i { font-size: 20px; margin-bottom: 4px; }
 
-    /* BOTÃO GIGANTE */
+    /* BOTÃO GIGANTE - Ainda mais compacto para caber com a lista */
     .btn-ponto {
-      width: 180px; /* Um pouco mais compacto para caber perfeitamente com a lista */
-      height: 180px;
+      width: 160px; 
+      height: 160px;
       border-radius: 50%;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      color: white; font-weight: 900; font-size: 18px; text-align: center;
-      box-shadow: 0 10px 25px rgba(0, 92, 158, 0.4);
+      color: white; font-weight: 900; font-size: 16px; text-align: center;
+      box-shadow: 0 8px 20px rgba(0, 92, 158, 0.4);
       transition: all 0.1s;
       border: 6px solid rgba(255,255,255,0.2);
       margin: 0 auto;
@@ -129,13 +130,13 @@
     .bg-etapa-fim { background: linear-gradient(135deg, #10b981, #059669); }
 
     .time-input {
-      width: 80px;
+      width: 76px;
       background: transparent;
       border: 1px solid transparent;
       border-radius: 4px;
       text-align: center;
       font-weight: bold;
-      font-size: 16px;
+      font-size: 15px;
       padding: 2px;
       outline: none;
       transition: 0.2s;
@@ -192,7 +193,6 @@
     
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 mb-4">
       
-      <!-- Usando gap-2 e mb-2 para ficar mais compacto -->
       <!-- Linha 1: Data e Hora -->
       <div class="grid grid-cols-2 gap-2 mb-2">
         <div>
@@ -286,32 +286,34 @@
 
     </div>
 
-    <!-- O botão agora ficará perfeitamente visível acima da barra inferior -->
     <button onclick="navTo('tempos')" class="btn-large btn-primary">
       Continuar p/ Horários <i class="fa-solid fa-arrow-right"></i>
     </button>
+    
+    <!-- Espaçador de segurança para garantir scroll no Android -->
+    <div class="h-28 shrink-0"></div>
   </main>
 
   <!-- ========================================== -->
   <!-- TELA 2: BATER PONTO (HORÁRIOS CIEGOS)      -->
   <!-- ========================================== -->
   <main id="view-tempos" class="view-container p-3">
-    <div class="flex justify-between items-center mb-4">
+    <div class="flex justify-between items-center mb-3">
       <h2 class="font-black text-base text-slate-800 flex items-center gap-2 uppercase">
         <i class="fa-solid fa-stopwatch text-indigo-600"></i> Bater Ponto
       </h2>
       <button onclick="resetarTempos()" class="text-[10px] font-bold text-slate-500 border border-slate-300 bg-white rounded px-2 py-1 shadow-sm"><i class="fa-solid fa-rotate-left"></i> Zerar</button>
     </div>
 
-    <!-- BOTÃO GIGANTE -->
-    <div class="flex justify-center mb-4 px-4">
+    <!-- BOTÃO GIGANTE (Mais compacto) -->
+    <div class="flex justify-center mb-3 px-4">
       <button id="btn-ponto" onclick="registrarProximaEtapa()" class="btn-ponto bg-etapa-padrao">
         <i id="icon-ponto" class="fa-solid fa-truck-arrow-right text-3xl mb-1"></i>
-        <span id="txt-ponto" class="leading-tight text-base">Registrar<br>Chegada</span>
+        <span id="txt-ponto" class="leading-tight text-sm">Registrar<br>Chegada</span>
       </button>
     </div>
 
-    <!-- LISTA DE HORÁRIOS COM INPUT EDITÁVEL -->
+    <!-- LISTA DE HORÁRIOS -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-2">
       <div class="bg-slate-100 p-2 text-center text-[10px] font-bold text-slate-500 uppercase border-b border-slate-200">
         Cronograma da Operação
@@ -321,29 +323,36 @@
       </ul>
     </div>
     <p class="text-center text-[10px] text-slate-400"><i class="fa-solid fa-circle-info"></i> Toque num horário da lista para alterar.</p>
+    
+    <!-- Espaçador de segurança para garantir scroll no Android -->
+    <div class="h-28 shrink-0"></div>
   </main>
 
   <!-- ========================================== -->
   <!-- TELA 3: FINALIZAR E EXPORTAR               -->
   <!-- ========================================== -->
-  <main id="view-finalizar" class="view-container p-4">
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 text-center mb-5">
-      <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2">
-        <i class="fa-solid fa-flag-checkered text-xl"></i>
+  <main id="view-finalizar" class="view-container p-3">
+    
+    <!-- Cabeçalho mais compacto -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 text-center mb-3 flex flex-col items-center">
+      <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-1">
+        <i class="fa-solid fa-flag-checkered text-lg"></i>
       </div>
-      <h2 class="font-black text-lg text-slate-800 uppercase mb-1">Concluir Registro</h2>
-      <p class="text-[11px] text-slate-500 font-medium">Salve no celular, exporte ou sincronize.</p>
+      <h2 class="font-black text-base text-slate-800 uppercase mb-0">Concluir Registro</h2>
+      <p class="text-[10px] text-slate-500 font-medium mt-1">Salve localmente, exporte ou sincronize.</p>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 mb-5">
-      <label class="mobile-label text-rose-600 mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Houve Atraso? (Motivo)</label>
-      <textarea id="form-motivo" class="mobile-input h-16 p-2 text-sm normal-case placeholder-slate-400" placeholder="Escreva o motivo aqui se houver..."></textarea>
+    <!-- Motivo Atraso -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 mb-3">
+      <label class="mobile-label text-rose-600 mb-1"><i class="fa-solid fa-triangle-exclamation"></i> Houve Atraso? (Motivo)</label>
+      <textarea id="form-motivo" class="mobile-input h-14 p-2 text-sm normal-case placeholder-slate-400" placeholder="Escreva o motivo aqui..."></textarea>
     </div>
 
-    <div class="space-y-3">
+    <!-- Botões de Ação com menos espaçamento (space-y-2) -->
+    <div class="space-y-2">
       
       <!-- BOTÃO 1: Adicionar à Fila Local -->
-      <button onclick="adicionarFila()" class="btn-large btn-primary shadow-lg shadow-blue-600/30">
+      <button onclick="adicionarFila()" class="btn-large btn-primary shadow-md shadow-blue-600/30">
         <i class="fa-solid fa-plus"></i> Salvar & Novo Registro
       </button>
 
@@ -358,12 +367,15 @@
       </button>
       
       <!-- LIMPAR TUDO -->
-      <div class="pt-3 border-t border-slate-200 mt-3">
+      <div class="pt-2 border-t border-slate-200 mt-2">
         <button onclick="limparFormulario()" class="btn-large bg-red-50 text-red-600 border border-red-200">
-          <i class="fa-solid fa-trash-can"></i> Limpar Formulário Atual
+          <i class="fa-solid fa-trash-can"></i> Limpar Fomulário
         </button>
       </div>
     </div>
+
+    <!-- Espaçador de segurança para garantir scroll no Android -->
+    <div class="h-28 shrink-0"></div>
   </main>
 
   <!-- NAVEGAÇÃO INFERIOR -->
@@ -492,11 +504,12 @@
         let iconHtml = isPast ? '<i class="fa-solid fa-check text-emerald-500"></i>' : (isCurrent ? '<i class="fa-solid fa-arrow-right animate-pulse"></i>' : '<i class="fa-solid fa-circle text-[6px]"></i>');
         let inputClass = isPast ? "time-input preenchido text-emerald-700" : "time-input text-slate-400";
         
+        // py-1.5 para tornar a lista ligeiramente mais compacta
         lista.innerHTML += `
-          <li class="flex justify-between items-center py-2 px-3 ${isCurrent ? 'bg-blue-50/70 rounded-lg' : ''}">
+          <li class="flex justify-between items-center py-1.5 px-3 ${isCurrent ? 'bg-blue-50/70 rounded-lg' : ''}">
             <div class="flex items-center gap-2 ${colorCls} flex-1">
               <div class="w-5 text-center">${iconHtml}</div>
-              <span class="text-[12px] uppercase tracking-tight">${etapa.txt.replace('\n', ' ')}</span>
+              <span class="text-[11px] uppercase tracking-tight">${etapa.txt.replace('\n', ' ')}</span>
             </div>
             <div>
               <input type="time" class="${inputClass}" value="${hora}" onchange="atualizarHorarioManual('${etapa.id}', this.value)" />
@@ -509,12 +522,12 @@
       if (etapaAtualIndex < etapasPontoAtivas.length) {
         const proxima = etapasPontoAtivas[etapaAtualIndex];
         txt.innerHTML = proxima.txt;
-        icon.className = `fa-solid ${proxima.icon} text-3xl mb-1`;
+        icon.className = `fa-solid ${proxima.icon} text-2xl mb-1`;
         btn.disabled = false;
         btn.className = "btn-ponto bg-etapa-padrao";
       } else {
         txt.innerHTML = "OPERAÇÃO<br>CONCLUÍDA";
-        icon.className = "fa-solid fa-check-double text-3xl mb-1";
+        icon.className = "fa-solid fa-check-double text-2xl mb-1";
         btn.disabled = true;
         btn.className = "btn-ponto bg-etapa-fim opacity-90 cursor-not-allowed";
         
@@ -716,7 +729,7 @@
       localStorage.setItem('fila_logistica_hl', JSON.stringify(filaRegistros));
       atualizarContadorFila();
       
-      if(sucessos > 0) showToast(`${sucessos} registros enviados ao DB!`);
+      if(sucessos > 0) showToast(`${sucessos} registos enviados para a Base de Dados!`);
       else showToast("Falha na sincronização. Tente novamente.");
       
       btnIcon.className = 'w-3 h-3 rounded-full bg-emerald-400';
@@ -724,14 +737,14 @@
 
     // --- EXPORTAR EXCEL ---
     function exportarExcel() {
-      if(filaRegistros.length === 0) { showToast("Não há registros na fila para exportar."); return; }
+      if(filaRegistros.length === 0) { showToast("Não há registos na fila para exportar."); return; }
       
-      // Cria planilha a partir do array de objetos da fila
+      // Cria folha a partir do array de objetos da fila
       const ws = XLSX.utils.json_to_sheet(filaRegistros);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Registros");
+      XLSX.utils.book_append_sheet(wb, ws, "Registos");
       
-      // Formata data pro nome do arquivo
+      // Formata data para o nome do ficheiro
       const hj = new Date();
       const nomeArquivo = `App_Logistica_${hj.getFullYear()}-${hj.getMonth()+1}-${hj.getDate()}.xlsx`;
       
