@@ -5,17 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, interactive-widget=resizes-content">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0f1729">
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2800/2800118.png">
-  
+
   <title>App Logística - HL Mando</title>
-  
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
   <!-- Firebase Compat -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
@@ -26,512 +26,807 @@
 
   <style>
     :root {
-      --primary: #0284c7;
-      --primary-dark: #0369a1;
-      --bg: #f1f5f9;
-      --text: #0f172a;
+      --ink: #0f1729;
+      --ink-2: #1c2942;
+      --blue: #1d4ed8;
+      --blue-soft: #eef4ff;
+      --green: #0f9d58;
+      --amber: #b45309;
+      --rose: #dc2626;
+      --bg: #f4f6fa;
+      --card: #ffffff;
+      --line: #e2e8f0;
+      --text: #111827;
+      --muted: #6b7280;
     }
-    
+
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Inter', Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
       color: var(--text);
       margin: 0; padding: 0;
-      height: 100vh;
-      height: 100dvh;
+      height: 100vh; height: 100dvh;
       display: flex; flex-direction: column;
       overflow: hidden;
       touch-action: pan-y;
     }
 
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #c8d0dc; border-radius: 99px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
     .view-container {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding-bottom: 110px;
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 130px;
       display: none;
-      animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: fade .25s ease;
       width: 100%;
     }
-    
     .view-container.active { display: block; }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ---------------- Topo ---------------- */
+    .app-top { flex-shrink: 0; z-index: 60; }
+    .app-head {
+      background: var(--ink);
+      padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: max(env(safe-area-inset-top), 12px);
+    }
+    .brand-mark {
+      width: 34px; height: 34px; border-radius: 9px;
+      background: var(--blue); color: #fff;
+      display: flex; align-items: center; justify-content: center; font-size: 15px;
+    }
+    .op-strip {
+      background: var(--ink-2);
+      border-top: 1px solid rgba(255,255,255,.06);
+      padding: 8px 14px;
+      display: none; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .op-strip.show { display: flex; }
+    .op-avatar {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: #2f4570; color: #dbe6ff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10.5px; font-weight: 800; letter-spacing: .5px; flex-shrink: 0;
+    }
+    .tag-dark {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+      color: #cbd5e1; font-size: 9.5px; font-weight: 800;
+      padding: 4px 8px; border-radius: 7px; letter-spacing: .4px; white-space: nowrap;
+    }
+    .tag-dark.alerta { background: rgba(220,38,38,.2); border-color: rgba(248,113,113,.4); color: #fecaca; }
+
+    /* ---------------- Estrutura de conteúdo ---------------- */
+    .wrap { max-width: 480px; margin: 0 auto; padding: 16px 14px 0; }
+
+    .page-title { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .page-title .bar { width: 4px; height: 32px; border-radius: 4px; background: var(--blue); }
+    .page-title h2 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.3px; }
+    .page-title p { margin: 2px 0 0; font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .card + .card { margin-top: 12px; }
+
+    .block-label {
+      font-size: 10px; font-weight: 800; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .9px;
+      display: flex; align-items: center; gap: 6px;
+      padding-bottom: 8px; margin-bottom: 12px;
+      border-bottom: 1px solid var(--line);
     }
 
+    /* ---------------- Inputs ---------------- */
     .mobile-input {
-      width: 100%;
-      padding: 12px 14px;
+      width: 100%; padding: 12px 13px;
       font-size: 16px !important;
-      border: 1px solid #cbd5e1;
-      border-radius: 12px;
-      background-color: #f8fafc;
-      transition: all 0.2s ease;
-      outline: none;
-      text-transform: uppercase;
-      font-weight: 600;
-      box-sizing: border-box;
-      appearance: none;
-      color: #334155;
+      border: 1px solid #cfd8e3; border-radius: 10px;
+      background: #fff; color: var(--text);
+      font-weight: 700; text-transform: uppercase;
+      outline: none; appearance: none;
+      transition: border-color .15s, box-shadow .15s;
     }
-    
-    .mobile-input:focus {
-      border-color: var(--primary);
-      background-color: #ffffff;
-      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
-    }
-    
-    .mobile-input::placeholder { color: #94a3b8; font-weight: 500; }
+    .mobile-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,78,216,.12); }
+    .mobile-input::placeholder { color: #9aa5b4; font-weight: 600; }
+    .mobile-input:disabled { background: #f1f3f7; color: #94a3b8; }
 
     .mobile-label {
       display: flex; justify-content: space-between; align-items: center;
-      font-size: 11px; 
-      font-weight: 700;
-      color: #64748b;
-      margin-bottom: 6px;
-      margin-left: 2px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-size: 10px; font-weight: 800; color: var(--muted);
+      margin-bottom: 5px; text-transform: uppercase; letter-spacing: .6px;
     }
 
+    /* Segmentado SIM / NÃO */
+    .seg { display: flex; background: #eef1f6; border: 1px solid #dfe5ee; border-radius: 10px; padding: 3px; gap: 3px; }
+    .seg button {
+      flex: 1; border: 0; background: transparent; cursor: pointer;
+      font-size: 11.5px; font-weight: 800; color: #64748b;
+      padding: 9px 4px; border-radius: 8px; letter-spacing: .4px;
+      transition: all .15s;
+    }
+    .seg button.on { background: #fff; color: var(--blue); box-shadow: 0 1px 3px rgba(15,23,41,.14); }
+    .seg button.on.yes { color: #0f9d58; }
+    .seg.compact button { padding: 8px 4px; font-size: 11px; }
+
+    /* ---------------- Botões ---------------- */
     .btn-large {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; padding: 16px; border-radius: 12px;
-      font-weight: 800; font-size: 15px; text-transform: uppercase;
-      letter-spacing: 0.5px;
-      transition: transform 0.1s, background-color 0.2s; border: none; cursor: pointer;
+      width: 100%; padding: 15px; border-radius: 12px;
+      font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: .6px;
+      border: 1px solid transparent; cursor: pointer;
+      transition: transform .1s, filter .15s;
     }
-    .btn-large:active { transform: scale(0.96); }
-    .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3); }
-    
+    .btn-large:active { transform: scale(.98); }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-dark { background: var(--ink); color: #fff; }
+    .btn-soft { background: #fff; color: #334155; border-color: #cfd8e3; }
+    .btn-danger-outline { background: #fff; color: var(--rose); border-color: #f3bcbc; }
+    .btn-green { background: var(--green); color: #fff; }
+    .btn-sky { background: #0369a1; color: #fff; }
+
+    .btn-mini {
+      border: 1px solid #cfd8e3; background: #fff; color: #475569;
+      font-size: 10.5px; font-weight: 800; padding: 8px 11px; border-radius: 9px;
+      text-transform: uppercase; letter-spacing: .4px; cursor: pointer;
+    }
+    .btn-mini.danger { border-color: #f3bcbc; color: var(--rose); background: #fff5f5; }
+
+    /* ---------------- Nav inferior ---------------- */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; width: 100%;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-top: 1px solid #e2e8f0;
+      background: #fff; border-top: 1px solid var(--line);
       display: none; justify-content: space-around;
-      padding: 8px 0; padding-bottom: env(safe-area-inset-bottom, 12px);
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 50;
+      padding: 7px 6px; padding-bottom: max(env(safe-area-inset-bottom), 8px);
+      z-index: 50;
     }
-    
     .nav-item {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      color: #94a3b8; font-size: 10px; font-weight: 700;
-      padding: 6px 12px; border-radius: 12px; flex: 1;
-      text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+      font-size: 9.5px; font-weight: 800; color: #94a3b8;
+      padding: 7px 2px; border-radius: 10px; cursor: pointer;
+      text-transform: uppercase; letter-spacing: .4px;
+      transition: background .15s, color .15s;
+      min-width: 0; text-align: center; line-height: 1.15;
     }
-    .nav-item.active { color: var(--primary); background: #f0f9ff; }
-    .nav-item i { font-size: 20px; margin-bottom: 4px; transition: transform 0.2s; }
-    .nav-item.active i { transform: translateY(-2px); }
+    .nav-item i { font-size: 16px; }
+    .nav-item.active { color: var(--blue); background: var(--blue-soft); }
 
-    .btn-ponto {
-      width: 180px; height: 180px;
-      border-radius: 50%;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      color: white; font-weight: 900; font-size: 18px; text-align: center;
-      box-shadow: 0 10px 25px rgba(2, 132, 199, 0.4);
-      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-      border: 8px solid rgba(255,255,255,0.25);
-      margin: 0 auto;
-      letter-spacing: 0.5px;
-    }
-    .btn-ponto:active { transform: scale(0.92); box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-width: 4px; }
-    .bg-etapa-padrao { background: linear-gradient(145deg, #0284c7, #0369a1); }
-    .bg-etapa-fim { background: linear-gradient(145deg, #10b981, #059669); }
-
-    .time-input {
-      width: 85px;
-      background: #f1f5f9;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      text-align: center;
-      font-weight: 800;
-      font-size: 15px;
-      padding: 8px 4px;
-      outline: none;
-      transition: all 0.2s;
-      color: #475569;
-    }
-    .time-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
-    .time-input.preenchido { border-color: #10b981; background: #ecfdf5; color: #059669; }
-
+    /* ---------------- Cartão do caminhão ---------------- */
     .truck-card {
-      background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;
-      display: flex; flex-direction: column; gap: 8px; cursor: pointer;
-      transition: transform 0.1s, box-shadow 0.1s;
+      background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--blue);
+      border-radius: 12px; padding: 13px 14px;
+      display: flex; flex-direction: column; gap: 9px; cursor: pointer;
+      transition: transform .1s, border-color .15s;
     }
-    .truck-card:active { transform: scale(0.98); box-shadow: 0 1px 5px rgba(0,0,0,0.05); background: #f8fafc; }
-    
-    .toast {
-      position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-100px);
-      background: #0f172a; color: white; padding: 14px 24px; border-radius: 30px;
-      font-weight: 700; font-size: 14px; z-index: 1000;
-      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      white-space: nowrap; display: flex; align-items: center; gap: 8px;
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); }
+    .truck-card:active { transform: scale(.99); }
+    .truck-card.fim { border-left-color: var(--green); background: #fcfefd; }
 
-    /* Modal customizado para exclusão sem travar no navegador */
+    .placa { font-size: 17px; font-weight: 900; letter-spacing: -.2px; color: #0f1729; line-height: 1; }
+
+    .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 9.5px; font-weight: 800; padding: 3px 7px; border-radius: 6px;
+      text-transform: uppercase; letter-spacing: .3px; border: 1px solid;
+    }
+    .chip-blue { background: #eef4ff; color: #1d4ed8; border-color: #dbe6ff; }
+    .chip-green { background: #ecfdf3; color: #0f7c46; border-color: #ccf0dc; }
+    .chip-gray { background: #f4f6fa; color: #5b6779; border-color: #e2e8f0; }
+    .chip-amber { background: #fef6e7; color: #a15c07; border-color: #f8e3bd; }
+    .chip-violet { background: #f4f1ff; color: #5b34d6; border-color: #e3dcff; }
+    .chip-teal { background: #ecfbfb; color: #0d7490; border-color: #cceff3; }
+
+    /* ---------------- Stats ---------------- */
+    .stat {
+      background: #fff; border: 1px solid var(--line); border-radius: 12px;
+      padding: 11px 13px;
+    }
+    .stat span { font-size: 9.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+    .stat strong { display: block; font-size: 21px; font-weight: 900; line-height: 1.15; margin-top: 2px; }
+
+    /* ---------------- Progresso ---------------- */
+    .progress-track { height: 7px; background: #e6ebf3; border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: var(--blue); border-radius: 99px; transition: width .3s ease; }
+
+    /* ---------------- Botão de ponto (redondo) ---------------- */
+    .ponto-zone {
+      display: flex; flex-direction: column; align-items: center; gap: 9px;
+      margin: 6px 0 16px;
+    }
+    .btn-ponto {
+      position: relative;
+      width: min(clamp(140px, 46vw, 186px), 38vh);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      border: 0; cursor: pointer; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 12px 26px -10px rgba(15,23,41,.5), inset 0 0 0 6px rgba(255,255,255,.16);
+      transition: transform .12s, box-shadow .2s, background .2s;
+    }
+    .btn-ponto::after {
+      content: ''; position: absolute; inset: -9px; border-radius: 50%;
+      border: 2px solid currentColor; opacity: .3;
+      animation: ringPulse 2.2s ease-out infinite; pointer-events: none;
+    }
+    @keyframes ringPulse {
+      0% { transform: scale(.95); opacity: .35; }
+      70% { transform: scale(1.07); opacity: 0; }
+      100% { opacity: 0; }
+    }
+    .btn-ponto:active { transform: scale(.95); }
+    .ponto-inner {
+      display: flex; flex-direction: column; align-items: center; gap: 7px;
+      padding: 0 15px; max-width: 100%;
+    }
+    .ponto-inner i { font-size: clamp(25px, 8.4vw, 34px); line-height: 1; }
+    .ponto-inner span {
+      font-size: clamp(10px, 3.1vw, 12.5px); font-weight: 900;
+      text-transform: uppercase; letter-spacing: .4px; line-height: 1.2;
+      text-align: center; word-break: break-word;
+    }
+    .bg-etapa-padrao { background: var(--blue); }
+    .bg-etapa-fim { background: var(--green); }
+    .btn-ponto:disabled { cursor: not-allowed; }
+    .btn-ponto:disabled::after { display: none; }
+    .ponto-hint {
+      font-size: 9.5px; font-weight: 800; color: var(--muted); margin: 0;
+      text-transform: uppercase; letter-spacing: .6px; text-align: center;
+    }
+
+    /* ---------------- Linha do tempo ---------------- */
+    .time-input {
+      background: #f4f6fa; border: 1px solid #dbe2ec; color: #475569;
+      border-radius: 9px; padding: 7px 8px;
+      font-weight: 800; font-size: 14px; text-align: center;
+      width: 88px; min-width: 0; flex: 0 0 auto;
+      outline: none; appearance: none;
+    }
+    .time-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,78,216,.12); }
+    .time-input.preenchido { background: #ecfdf3; border-color: #bfe8d0; color: #0f7c46; }
+
+    .step-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 10px 11px; border-radius: 10px;
+      border: 1px solid transparent;
+    }
+    .step-row.atual { background: var(--blue-soft); border-color: #d7e4ff; }
+    .step-name { display: flex; align-items: center; gap: 9px; flex: 1 1 auto; min-width: 0; }
+    .step-name span {
+      font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px;
+      line-height: 1.25; overflow-wrap: anywhere;
+    }
+
+    /* ---------------- Modal ---------------- */
     .modal-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px);
-      display: none; align-items: center; justify-content: center; z-index: 2000;
-      padding: 20px;
+      position: fixed; inset: 0; background: rgba(15,23,41,.55);
+      display: none; align-items: center; justify-content: center; z-index: 100;
+      padding: clamp(14px, 5vw, 24px);
+      backdrop-filter: blur(2px);
+    }
+    .modal-card { animation: pop .18s ease; }
+    @keyframes pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+
+    /* ---------------- Toast ---------------- */
+    .toast {
+      position: fixed; bottom: 92px; left: 50%; transform: translate(-50%, 16px);
+      background: var(--ink); color: #fff;
+      padding: 11px 16px; border-radius: 11px;
+      font-size: 12.5px; font-weight: 700; z-index: 200;
+      display: flex; align-items: center; gap: 9px;
+      max-width: 88%; opacity: 0; transition: all .25s ease;
+      border: 1px solid rgba(255,255,255,.1);
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .dot-on { width: 8px; height: 8px; border-radius: 99px; background: #22c55e; }
+    .dot-off { width: 8px; height: 8px; border-radius: 99px; background: #ef4444; }
+
+    input[type="date"], input[type="time"] { -webkit-appearance: none; }
+
+    /* ---------------- Responsivo: telas pequenas ---------------- */
+    /* Base fluida: usa vw para respirar em telas estreitas sem estourar */
+    .wrap { padding-left: clamp(10px, 3.6vw, 16px); padding-right: clamp(10px, 3.6vw, 16px); }
+    .card { padding: clamp(12px, 4vw, 16px); border-radius: clamp(12px, 3.4vw, 14px); }
+    .page-title h2 { font-size: clamp(17px, 5.4vw, 20px); }
+    .btn-large { padding: clamp(12px, 3.8vw, 15px); font-size: clamp(12.5px, 3.6vw, 14px); }
+    .placa { font-size: clamp(15px, 4.6vw, 17px); }
+    .stat strong { font-size: clamp(18px, 5.6vw, 21px); }
+    .mobile-input { padding: clamp(10px, 3.2vw, 12px) clamp(10px, 3.2vw, 13px); }
+
+    /* iPhone SE / Galaxy pequenos (<= 380px) */
+    @media (max-width: 380px) {
+      .op-strip { padding: 7px 10px; gap: 6px; }
+      .tag-dark { font-size: 9px; padding: 3px 6px; }
+      .nav-item { font-size: 8.5px; }
+      .nav-item i { font-size: 15px; }
+      .time-input { width: 78px; font-size: 13px; padding: 6px 4px; }
+      .step-name span { font-size: 10.5px; }
+      .step-row { padding: 9px 8px; gap: 6px; }
+      .block-label { font-size: 9px; letter-spacing: .6px; }
+      .chip { font-size: 9px; padding: 3px 6px; }
+      .btn-mini { font-size: 9.5px; padding: 7px 9px; }
+    }
+
+    /* Telas muito estreitas (<= 340px): empilha pares de campos */
+    @media (max-width: 340px) {
+      .grid.grid-cols-2 { grid-template-columns: 1fr; }
+      .stack-keep-2 { grid-template-columns: 1fr 1fr !important; }
+      .step-row { flex-wrap: wrap; }
+      .time-input { width: 100%; }
+    }
+
+    /* Telas baixas (paisagem / aparelhos curtos): reduz o círculo */
+    @media (max-height: 640px) {
+      .btn-ponto { width: min(clamp(120px, 38vw, 150px), 30vh); }
+      .ponto-zone { margin: 2px 0 12px; gap: 6px; }
+      .view-container { padding-bottom: 118px; }
     }
   </style>
 </head>
 <body>
 
-  <header class="bg-[#0f172a] text-white p-4 flex justify-between items-center shrink-0 shadow-lg z-10 pt-[max(env(safe-area-inset-top),16px)]">
-    <div class="flex items-center gap-3">
-      <div class="bg-gradient-to-br from-sky-400 to-blue-600 p-2 rounded-xl shadow-inner">
-        <i class="fa-solid fa-truck-fast text-white text-xl"></i>
-      </div>
-      <div>
-        <h1 class="font-black text-base leading-tight tracking-tight">HL MANDO</h1>
-        <p class="text-[10px] text-sky-200 uppercase tracking-widest font-bold">Controle Logístico</p>
-      </div>
-    </div>
-    <div class="flex items-center gap-4">
-      <div class="flex flex-col items-end">
-        <div id="sync-status-container" class="flex items-center gap-1.5 bg-slate-800 px-2 py-1 rounded-full border border-slate-700">
-          <div id="sync-status" class="w-2.5 h-2.5 rounded-full bg-slate-500 animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
-          <span class="text-[9px] font-bold text-slate-300 uppercase tracking-wider">Sync</span>
+  <div class="app-top">
+    <header class="app-head">
+      <div class="flex items-center gap-2.5">
+        <div class="brand-mark"><i class="fa-solid fa-truck-fast"></i></div>
+        <div class="leading-tight">
+          <h1 class="text-white font-black text-[14px] tracking-tight m-0">HL LOGÍSTICA</h1>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <div id="sync-status" class="dot-off"></div>
+            <p class="text-[8.5px] text-slate-400 font-bold uppercase tracking-[.16em] m-0">Controle de Pátio</p>
+          </div>
         </div>
       </div>
-      <button onclick="logout('Sessão encerrada com segurança.')" id="btn-logout" class="hidden w-9 h-9 flex items-center justify-center bg-rose-500/10 border border-rose-500/30 rounded-full text-rose-400 hover:bg-rose-500 hover:text-white transition-colors">
+      <button onclick="logout('Sessão encerrada com segurança.')" id="btn-logout" class="hidden w-9 h-9 flex items-center justify-center bg-white/10 border border-white/15 rounded-lg text-rose-300">
         <i class="fa-solid fa-power-off"></i>
       </button>
-    </div>
-  </header>
+    </header>
 
-  <main id="view-login" class="view-container active p-4">
-    <div class="flex flex-col h-full justify-center max-w-sm mx-auto space-y-6 pb-20">
-      <div class="text-center">
-        <div class="w-20 h-20 bg-gradient-to-br from-sky-500 to-blue-700 text-white rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-xl shadow-blue-500/30">
-          <i class="fa-solid fa-user-shield text-3xl"></i>
+    <!-- Operador logado + tempo restante de sessão -->
+    <div id="user-bar" class="op-strip">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div id="operador-avatar" class="op-avatar">--</div>
+        <div class="leading-tight min-w-0">
+          <p class="text-[8px] uppercase tracking-[.16em] font-bold text-slate-400 m-0">Operador logado</p>
+          <p id="operador-nome" class="text-[12.5px] font-black text-white truncate max-w-[150px] m-0">---</p>
         </div>
-        <h2 class="font-black text-3xl text-slate-800 tracking-tight">ACESSO</h2>
-        <p class="text-slate-500 font-bold text-sm mt-1">Identifique-se para iniciar a operação</p>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="tag-dark"><i class="fa-solid fa-layer-group"></i> <span id="turno-chip-txt">TURNO A</span></span>
+        <span id="sessao-chip" class="tag-dark" title="Encerra automaticamente após 10 min sem uso"><i class="fa-regular fa-clock"></i> <span id="sessao-restante">10:00</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ LOGIN ============ -->
+  <main id="view-login" class="view-container active">
+    <div class="wrap" style="max-width:400px;">
+      <div class="text-center mt-8 mb-6">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:var(--ink); color:#fff;">
+          <i class="fa-solid fa-right-to-bracket text-2xl"></i>
+        </div>
+        <h2 class="font-black text-[26px] text-slate-900 tracking-tight m-0">Acesso ao sistema</h2>
+        <p class="text-slate-500 font-bold text-[12.5px] mt-1.5">Identifique-se para iniciar a operação</p>
       </div>
 
-      <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-5">
-        <div>
-          <label class="mobile-label">Nome de Usuário</label>
+      <div class="card">
+        <div class="mb-4">
+          <label class="mobile-label">Nome de usuário</label>
           <div class="relative">
-            <i class="fa-regular fa-user absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-            <input type="text" id="login-email" class="mobile-input pl-11 normal-case" placeholder="Ex: joao" />
+            <i class="fa-regular fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="login-email" class="mobile-input pl-10 normal-case" placeholder="ex: joao" />
           </div>
-          <p class="text-[10px] text-slate-400 font-bold mt-2 ml-1"><i class="fa-solid fa-circle-info text-sky-500"></i> @hlcompany.com é inserido automaticamente.</p>
+          <p class="text-[9.5px] text-slate-400 font-bold mt-2">@hlcompany.com é completado automaticamente.</p>
         </div>
-        <div>
+        <div class="mb-5">
           <label class="mobile-label">Senha</label>
           <div class="relative">
-            <i class="fa-solid fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-            <input type="password" id="login-senha" class="mobile-input pl-11 normal-case" placeholder="••••••••" />
+            <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="password" id="login-senha" class="mobile-input pl-10 pr-10 normal-case" placeholder="••••••••" />
+            <button type="button" onclick="toggleSenha()" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-slate-400">
+              <i id="icon-senha" class="fa-regular fa-eye"></i>
+            </button>
           </div>
         </div>
-        <div class="pt-4 space-y-3">
-          <button onclick="fazerLogin()" class="btn-large btn-primary">
-            Entrar no Sistema <i class="fa-solid fa-arrow-right-to-bracket ml-1"></i>
-          </button>
-          <button onclick="fazerCadastro()" class="btn-large bg-slate-100 text-slate-700 hover:bg-slate-200 shadow-none border border-slate-300">
-            Criar meu Cadastro
-          </button>
+        <div class="space-y-2.5">
+          <button onclick="fazerLogin()" class="btn-large btn-primary">Entrar</button>
+          <button onclick="fazerCadastro()" class="btn-large btn-soft">Criar meu cadastro</button>
         </div>
       </div>
+
+      <p class="text-center text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mt-5 leading-relaxed">
+        <i class="fa-solid fa-shield-halved"></i> Sessão encerrada após 10 min sem uso<br>ou ao fechar o aplicativo
+      </p>
     </div>
   </main>
 
-  <main id="view-patio" class="view-container p-4">
-    <div class="max-w-md mx-auto">
-      <div class="flex justify-between items-center mb-5 mt-2">
-        <div>
-          <h2 class="font-black text-2xl text-slate-800 tracking-tight">Pátio</h2>
-          <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Caminhões em Operação</p>
+  <!-- ============ PÁTIO ============ -->
+  <main id="view-patio" class="view-container">
+    <div class="wrap">
+      <div class="flex items-start justify-between mb-3">
+        <div class="page-title mb-0">
+          <div class="bar"></div>
+          <div>
+            <h2>Pátio</h2>
+            <p>Caminhões registrados</p>
+          </div>
         </div>
-        <div class="bg-sky-100 text-sky-700 px-3 py-1.5 rounded-lg font-bold text-sm border border-sky-200">
+        <div class="chip chip-gray" style="padding:7px 10px; font-size:11px;">
           <i class="fa-solid fa-truck"></i> <span id="contador-patio">0</span>
         </div>
       </div>
 
-      <button onclick="iniciarNovoRegistro()" class="btn-large bg-slate-800 text-white mb-6 shadow-xl shadow-slate-800/20 hover:bg-slate-700">
-        <i class="fa-solid fa-plus-circle text-lg"></i> Novo Caminhão
+      <div class="grid grid-cols-2 stack-keep-2 gap-2.5 mb-3">
+        <div class="stat">
+          <span>Em operação</span>
+          <strong style="color:var(--blue);" id="stat-andamento">0</strong>
+        </div>
+        <div class="stat">
+          <span>Concluídos</span>
+          <strong style="color:var(--green);" id="stat-concluido">0</strong>
+        </div>
+      </div>
+
+      <div class="relative mb-3">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+        <input type="text" id="patio-busca" oninput="renderizarPatio()" class="mobile-input pl-10 text-sm" placeholder="BUSCAR PLACA, FORNECEDOR, NF..." />
+      </div>
+
+      <button onclick="iniciarNovoRegistro()" class="btn-large btn-dark mb-4">
+        <i class="fa-solid fa-plus"></i> Novo caminhão
       </button>
 
-      <div id="lista-patio" class="space-y-3">
+      <p class="text-[9.5px] font-800 font-bold text-slate-400 uppercase tracking-wider mb-2.5">
+        <i class="fa-solid fa-arrow-down-wide-short"></i> Última ação registrada primeiro
+      </p>
+
+      <div id="lista-patio" class="space-y-2.5">
         <!-- Renderizado dinamicamente via Firebase -->
       </div>
-      
-      <div id="empty-patio" class="text-center py-10 hidden">
-        <div class="w-16 h-16 bg-slate-100 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-3">
-          <i class="fa-solid fa-wind text-2xl"></i>
+
+      <div id="empty-patio" class="text-center py-12 hidden">
+        <div class="w-14 h-14 bg-white text-slate-300 rounded-xl flex items-center justify-center mx-auto mb-3 border border-slate-200">
+          <i class="fa-solid fa-wind text-xl"></i>
         </div>
-        <p class="text-slate-400 font-bold text-sm">Nenhum caminhão no pátio.</p>
+        <p class="text-slate-400 font-bold text-[13px]">Nenhum caminhão encontrado.</p>
       </div>
     </div>
   </main>
 
-  <main id="view-dados" class="view-container p-4">
-    <div class="max-w-md mx-auto">
-        <div class="flex items-center gap-3 mb-5 mt-2">
-          <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shadow-sm">
-            <i class="fa-solid fa-clipboard-list text-lg"></i>
+  <!-- ============ DADOS ============ -->
+  <main id="view-dados" class="view-container">
+    <div class="wrap">
+      <div class="page-title">
+        <div class="bar"></div>
+        <div>
+          <h2>Dados do veículo</h2>
+          <p id="header-placa-ativa">NENHUM SELECIONADO</p>
+        </div>
+      </div>
+
+      <!-- Identificação -->
+      <div class="card">
+        <div class="block-label"><i class="fa-regular fa-calendar"></i> Identificação</div>
+
+        <div class="grid grid-cols-2 gap-2.5 mb-3">
+          <div>
+            <label class="mobile-label">
+              Data
+              <span onclick="setToday()" class="cursor-pointer" style="color:var(--blue);">HOJE</span>
+            </label>
+            <input type="date" id="form-data" class="mobile-input text-sm" />
           </div>
           <div>
-            <h2 class="font-black text-xl text-slate-800 leading-tight">Dados</h2>
-            <p id="header-placa-ativa" class="text-[11px] font-bold text-blue-600 uppercase tracking-widest">NENHUM SELECIONADO</p>
-          </div>
-        </div>
-        
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-5 space-y-4">
-          <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="mobile-label">
-                  Data
-                  <span onclick="setToday()" class="text-sky-600 font-bold cursor-pointer bg-sky-50 px-2 py-0.5 rounded text-[9px]">HOJE</span>
-                </label>
-                <input type="date" id="form-data" class="mobile-input text-sm" />
-              </div>
-              <div>
-                <label class="mobile-label">Hora Início</label>
-                <input type="time" id="form-hora" class="mobile-input text-sm" />
-              </div>
-          </div>
-          
-          <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="mobile-label">Turno</label>
-                <div class="relative">
-                  <select id="form-turno" class="mobile-input bg-white text-sm pr-8">
-                      <option value="A">TURNO A</option>
-                      <option value="B">TURNO B</option>
-                      <option value="C">TURNO C</option>
-                      <option value="D">TURNO D</option>
-                      <option value="E">TURNO E</option>
-                  </select>
-                  <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
-                </div>
-              </div>
-              <div>
-                <label class="mobile-label">Operador</label>
-                <input type="text" id="form-operador" list="op-list" onchange="onOperadorInput(this.value)" class="mobile-input text-sm" placeholder="NOME..." />
-                <datalist id="op-list"></datalist>
-              </div>
-          </div>
-
-          <hr class="border-slate-100 my-2">
-
-          <!-- Fornecedor: Digitar ou Clicar -->
-          <div class="grid grid-cols-1 gap-3">
-              <div class="relative">
-                <label class="mobile-label">Fornecedor / Transportadora</label>
-                <div class="relative">
-                  <input type="text" id="form-fornecedor" class="mobile-input text-sm pr-10" placeholder="EX: SADA, JSL..." autocomplete="off" onfocus="abrirDropdownFornecedor()" onblur="fecharDropdownFornecedor()" oninput="filtrarFornecedores()" />
-                  <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 p-2 cursor-pointer" onclick="document.getElementById('form-fornecedor').focus()"></i>
-                </div>
-                <div id="forn-dropdown" class="hidden absolute z-50 w-full bg-white border border-slate-200 mt-1 rounded-xl shadow-xl max-h-48 overflow-y-auto"></div>
-              </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="mobile-label">Placa</label>
-                <input type="text" id="form-placa" class="mobile-input text-sm" placeholder="ABC-1234" />
-              </div>
-              <div>
-                <label class="mobile-label">Doca</label>
-                <div class="relative">
-                  <select id="form-doca" class="mobile-input bg-white text-sm pr-8">
-                      <option value="Rec">REC</option>
-                      <option value="Exp">EXP</option>
-                      <option value="Container">CONT.</option>
-                      <option value="Doca 1">D1</option>
-                      <option value="Doca 2">D2</option>
-                  </select>
-                  <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
-                </div>
-              </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="mobile-label">Nota Fiscal</label>
-                <input type="text" inputmode="text" id="form-nf" class="mobile-input text-sm normal-case" placeholder="Nº NF" oninput="this.value = this.value.replace(/[^0-9\-]/g, ''); salvarEstadoAtual();" />
-              </div>
-              <div>
-                <label class="mobile-label">Volume (Caixas)</label>
-                <input type="text" inputmode="decimal" id="form-caixas" class="mobile-input text-sm" placeholder="QTD" oninput="this.value = this.value.replace(/[^0-9,]/g, ''); salvarEstadoAtual();" />
-              </div>
-          </div>
-
-          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 grid grid-cols-2 gap-3 mt-2">
-              <div>
-                <label class="mobile-label text-blue-700">Teve Pesagem?</label>
-                <div class="relative">
-                  <select id="form-pesagem" onchange="atualizarEtapasDinamicas()" class="mobile-input bg-white text-sm border-blue-200">
-                      <option value="NÃO">NÃO</option>
-                      <option value="SIM">SIM</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label class="mobile-label text-blue-700">Conferência?</label>
-                <div class="relative">
-                  <select id="form-conferencia" onchange="atualizarEtapasDinamicas()" class="mobile-input bg-white text-sm border-blue-200">
-                      <option value="SIM">SIM (PADRÃO)</option>
-                      <option value="NÃO">NÃO</option>
-                  </select>
-                </div>
-              </div>
+            <label class="mobile-label">Hora início</label>
+            <input type="time" id="form-hora" class="mobile-input text-sm" />
           </div>
         </div>
 
-        <button onclick="navTo('tempos')" class="btn-large btn-primary">
-          Avançar para Horários <i class="fa-solid fa-arrow-right"></i>
-        </button>
-    </div>
-  </main>
+        <div class="grid grid-cols-2 gap-2.5 mb-3">
+          <div>
+            <label class="mobile-label">Turno</label>
+            <div class="relative">
+              <select id="form-turno" class="mobile-input text-sm pr-7">
+                <option value="A">TURNO A</option>
+                <option value="B">TURNO B</option>
+                <option value="C">TURNO C</option>
+                <option value="D">TURNO D</option>
+                <option value="E">TURNO E</option>
+              </select>
+              <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"></i>
+            </div>
+          </div>
+          <div>
+            <label class="mobile-label">Operador</label>
+            <input type="text" id="form-operador" list="op-list" onchange="onOperadorInput(this.value)" class="mobile-input text-sm" placeholder="NOME..." />
+            <datalist id="op-list"></datalist>
+          </div>
+        </div>
 
-  <main id="view-tempos" class="view-container p-4">
-    <div class="max-w-md mx-auto">
-        <div class="flex items-center justify-between mb-6 mt-2">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
-              <i class="fa-solid fa-stopwatch text-lg"></i>
+        <div class="flex items-center justify-between gap-2 rounded-lg px-3 py-2" style="background:#f4f6fa; border:1px solid var(--line);">
+          <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide truncate m-0">
+            <i class="fa-solid fa-id-badge" style="color:var(--blue);"></i> Logado: <span id="dados-operador-logado" class="text-slate-900 font-black">---</span>
+          </p>
+          <button type="button" onclick="usarOperadorLogado()" class="btn-mini">Usar</button>
+        </div>
+      </div>
+
+      <!-- Carga -->
+      <div class="card">
+        <div class="block-label"><i class="fa-solid fa-truck-ramp-box"></i> Carga e veículo</div>
+
+        <div class="relative mb-3">
+          <label class="mobile-label">Fornecedor / Transportadora</label>
+          <div class="relative">
+            <input type="text" id="form-fornecedor" class="mobile-input text-sm pr-9" placeholder="EX: SADA, JSL..." autocomplete="off" onfocus="abrirDropdownFornecedor()" onblur="fecharDropdownFornecedor()" oninput="filtrarFornecedores()" />
+            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] cursor-pointer" onclick="document.getElementById('form-fornecedor').focus()"></i>
+          </div>
+          <div id="forn-dropdown" class="hidden absolute z-50 w-full bg-white border border-slate-200 mt-1 rounded-xl shadow-xl max-h-48 overflow-y-auto"></div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 mb-3">
+          <div>
+            <label class="mobile-label">Placa</label>
+            <input type="text" id="form-placa" class="mobile-input text-sm" placeholder="ABC-1234" />
+          </div>
+          <div>
+            <label class="mobile-label">Doca</label>
+            <div class="relative">
+              <select id="form-doca" class="mobile-input text-sm pr-7">
+                <option value="Rec">REC</option>
+                <option value="Exp">EXP</option>
+                <option value="Container">CONT.</option>
+                <option value="Doca 1">D1</option>
+                <option value="Doca 2">D2</option>
+              </select>
+              <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="mobile-label">Nota fiscal</label>
+            <input type="text" inputmode="text" id="form-nf" class="mobile-input text-sm normal-case" placeholder="Nº NF" oninput="this.value = this.value.replace(/[^0-9\-]/g, ''); salvarEstadoAtual();" />
+          </div>
+          <div>
+            <label class="mobile-label">Volume (caixas)</label>
+            <input type="text" inputmode="decimal" id="form-caixas" class="mobile-input text-sm" placeholder="QTD" oninput="this.value = this.value.replace(/[^0-9,]/g, ''); salvarEstadoAtual();" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Etapas da operação -->
+      <div class="card">
+        <div class="block-label"><i class="fa-solid fa-list-check"></i> O que essa operação teve?</div>
+
+        <div class="grid grid-cols-2 stack-keep-2 gap-2.5 mb-4">
+          <div>
+            <label class="mobile-label">Pesagem</label>
+            <div class="seg compact" id="seg-pesagem">
+              <button type="button" onclick="setFlag('pesagem','NÃO')">NÃO</button>
+              <button type="button" onclick="setFlag('pesagem','SIM')">SIM</button>
+            </div>
+            <input type="hidden" id="form-pesagem" value="NÃO" />
+          </div>
+          <div>
+            <label class="mobile-label">Conferência</label>
+            <div class="seg compact" id="seg-conferencia">
+              <button type="button" onclick="setFlag('conferencia','NÃO')">NÃO</button>
+              <button type="button" onclick="setFlag('conferencia','SIM')">SIM</button>
+            </div>
+            <input type="hidden" id="form-conferencia" value="SIM" />
+          </div>
+        </div>
+
+        <div class="rounded-xl p-3.5" style="background:#faf9ff; border:1px solid #e7e2ff;">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center text-[12px]" style="background:#ece7ff; color:#5b34d6;">
+              <i class="fa-solid fa-boxes-packing"></i>
+            </div>
+            <div class="leading-tight">
+              <p class="text-[10.5px] font-black uppercase tracking-wider m-0" style="color:#4c2bc0;">Embalagem</p>
+              <p class="text-[9px] font-bold text-violet-400 m-0">Marque cada uma de forma independente</p>
+            </div>
+          </div>
+
+          <div class="space-y-2.5">
+            <div>
+              <label class="mobile-label" style="color:#5b34d6;">Carregamento de embalagem</label>
+              <div class="seg compact" id="seg-emb_carr">
+                <button type="button" onclick="setFlag('emb_carr','NÃO')">NÃO</button>
+                <button type="button" onclick="setFlag('emb_carr','SIM')">SIM</button>
+              </div>
+              <input type="hidden" id="form-emb-carr" value="NÃO" />
             </div>
             <div>
-              <h2 class="font-black text-xl text-slate-800 leading-tight">Horários</h2>
-              <p id="header-tempos-placa" class="text-[11px] font-bold text-indigo-600 uppercase tracking-widest">Placa</p>
+              <label class="mobile-label" style="color:#5b34d6;">Descarregamento de embalagem</label>
+              <div class="seg compact" id="seg-emb_desc">
+                <button type="button" onclick="setFlag('emb_desc','NÃO')">NÃO</button>
+                <button type="button" onclick="setFlag('emb_desc','SIM')">SIM</button>
+              </div>
+              <input type="hidden" id="form-emb-desc" value="NÃO" />
             </div>
           </div>
-          <button onclick="resetarTempos()" class="text-[11px] font-bold text-slate-500 border border-slate-300 bg-white rounded-lg px-3 py-1.5 shadow-sm active:bg-slate-100">
-            <i class="fa-solid fa-rotate-left"></i> Zerar
-          </button>
-        </div>
 
-        <div class="flex justify-center mb-8 px-4">
-          <button id="btn-ponto" onclick="registrarProximaEtapa()" class="btn-ponto bg-etapa-padrao">
-              <i id="icon-ponto" class="fa-solid fa-truck-arrow-right text-4xl mb-3 drop-shadow-md"></i>
-              <span id="txt-ponto" class="leading-tight text-base uppercase font-black drop-shadow-md">Registrar<br>Chegada</span>
-          </button>
+          <p id="emb-hint" class="text-[9.5px] font-bold mt-3 mb-0 leading-snug" style="color:#7c5cd6;">
+            Pode ter só carregamento, só descarregamento, os dois ou nenhum.
+          </p>
         </div>
+      </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-2">
-          <div class="bg-slate-50 p-3 text-center text-[11px] font-bold text-slate-500 uppercase border-b border-slate-200 tracking-wider">
-              Linha do Tempo da Operação
-          </div>
-          <ul id="lista-horarios" class="divide-y divide-slate-100 p-2 space-y-1">
-            <!-- Horários dinâmicos -->
-          </ul>
-        </div>
-        <p class="text-center text-[10px] text-slate-400 font-bold mt-3"><i class="fa-solid fa-hand-pointer text-sky-400"></i> Toque num horário da lista para alterar manualmente.</p>
+      <div class="mt-4 space-y-2.5">
+        <button onclick="navTo('tempos')" class="btn-large btn-primary">
+          Avançar para horários <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <button onclick="confirmarExclusaoAtual()" class="btn-large btn-danger-outline text-[12.5px]">
+          <i class="fa-solid fa-trash-can"></i> Excluir este registro
+        </button>
+      </div>
     </div>
   </main>
 
-  <main id="view-finalizar" class="view-container p-4">
-    <div class="max-w-md mx-auto">
-        <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl shadow-lg border border-emerald-600 p-6 text-center mb-6 flex flex-col items-center text-white mt-2">
-          <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-3 border-2 border-white/40">
-              <i class="fa-solid fa-flag-checkered text-3xl"></i>
+  <!-- ============ HORÁRIOS ============ -->
+  <main id="view-tempos" class="view-container">
+    <div class="wrap">
+      <div class="flex items-start justify-between mb-3">
+        <div class="page-title mb-0">
+          <div class="bar"></div>
+          <div>
+            <h2>Horários</h2>
+            <p id="header-tempos-placa">PLACA</p>
           </div>
-          <h2 class="font-black text-2xl uppercase mb-1 drop-shadow-md">Concluir Registro</h2>
-          <p class="text-[12px] font-bold text-emerald-100">Exporte os dados filtrados ou retorne ao pátio.</p>
         </div>
-
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-5">
-          <label class="mobile-label text-rose-600 mb-2 font-black text-xs"><i class="fa-solid fa-triangle-exclamation"></i> Houve Atraso? (Motivo)</label>
-          <textarea id="form-motivo" class="mobile-input min-h-[90px] p-3 text-sm normal-case placeholder-slate-400 resize-none" placeholder="Descreva brevemente o motivo de qualquer atraso na operação..."></textarea>
+        <div class="flex gap-1.5">
+          <button onclick="resetarTempos()" class="btn-mini"><i class="fa-solid fa-rotate-left"></i> Zerar</button>
+          <button onclick="confirmarExclusaoAtual()" class="btn-mini danger" title="Excluir este registro"><i class="fa-solid fa-trash-can"></i></button>
         </div>
+      </div>
 
-        <!-- Bloco de Exportação Avançada com Filtro de Data -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6">
-            <h3 class="font-black text-slate-700 text-sm mb-3 flex items-center gap-2"><i class="fa-solid fa-file-export text-sky-600"></i> Exportar Dados (Excel / E-mail)</h3>
-            
-            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 mb-3">
-                <label class="mobile-label text-slate-600 mb-1">Período (Filtro por Data)</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400">DE:</span>
-                        <input type="date" id="export-data-ini" class="mobile-input text-xs py-2 px-2" />
-                    </div>
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400">ATÉ:</span>
-                        <input type="date" id="export-data-fim" class="mobile-input text-xs py-2 px-2" />
-                    </div>
-                </div>
-                <p class="text-[9px] text-slate-400 mt-1 italic text-center">* Deixe em branco para exportar toda a base.</p>
-            </div>
-
-            <label class="mobile-label">E-mail Destino</label>
-            <input type="email" id="email-export" class="mobile-input normal-case text-sm mb-3" placeholder="email@exemplo.com" />
-            
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="baixarExcel()" class="btn-large bg-emerald-600 text-white text-xs shadow-md p-3 flex-col gap-1">
-                    <i class="fa-solid fa-download text-base"></i> Baixar Excel
-                </button>
-                <button onclick="enviarPorEmail()" class="btn-large bg-sky-600 text-white text-xs shadow-md p-3 flex-col gap-1">
-                    <i class="fa-solid fa-envelope text-base"></i> Enviar E-mail
-                </button>
-            </div>
+      <div class="card mb-3">
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider m-0">Progresso da operação</p>
+          <p id="progresso-texto" class="text-[11px] font-black m-0" style="color:var(--blue);">0 / 0</p>
         </div>
+        <div class="progress-track"><div id="progresso-barra" class="progress-fill"></div></div>
+        <p id="progresso-etapa-atual" class="text-[10.5px] font-bold text-slate-500 mt-2.5 mb-0">Próxima etapa: —</p>
+      </div>
 
-        <div class="space-y-4">
-          <button onclick="navTo('patio')" class="btn-large bg-slate-800 text-white shadow-lg shadow-slate-800/30">
-            <i class="fa-solid fa-list-check"></i> Voltar ao Pátio
+      <div class="ponto-zone">
+        <button id="btn-ponto" onclick="registrarProximaEtapa()" class="btn-ponto bg-etapa-padrao">
+          <span class="ponto-inner">
+            <i id="icon-ponto" class="fa-solid fa-truck-arrow-right"></i>
+            <span id="txt-ponto">Registrar chegada</span>
+          </span>
+        </button>
+        <p class="ponto-hint"><i class="fa-solid fa-hand-pointer"></i> Toque para marcar a hora atual</p>
+      </div>
+
+      <div class="card" style="padding:10px;">
+        <div class="block-label" style="margin:6px 6px 8px; padding-bottom:8px;"><i class="fa-regular fa-clock"></i> Linha do tempo</div>
+        <ul id="lista-horarios" class="m-0 p-0 list-none space-y-1">
+          <!-- Horários dinâmicos -->
+        </ul>
+      </div>
+      <p class="text-center text-[9.5px] text-slate-400 font-bold mt-3">Toque em um horário para ajustar manualmente.</p>
+    </div>
+  </main>
+
+  <!-- ============ FINALIZAR ============ -->
+  <main id="view-finalizar" class="view-container">
+    <div class="wrap">
+      <div class="rounded-2xl p-5 text-center mb-3 text-white" style="background:var(--green);">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2.5" style="background:rgba(255,255,255,.18);">
+          <i class="fa-solid fa-flag-checkered text-xl"></i>
+        </div>
+        <h2 class="font-black text-[19px] uppercase m-0 tracking-tight">Concluir registro</h2>
+        <p class="text-[11.5px] font-bold m-0 mt-1" style="color:#dcfce7;">Exporte os dados ou volte ao pátio</p>
+      </div>
+
+      <div class="card">
+        <div class="block-label" style="color:var(--rose);"><i class="fa-solid fa-triangle-exclamation"></i> Houve atraso? Motivo</div>
+        <textarea id="form-motivo" class="mobile-input normal-case resize-none" style="min-height:88px; padding:11px;" placeholder="Descreva brevemente o motivo de qualquer atraso..."></textarea>
+      </div>
+
+      <div class="card">
+        <div class="block-label"><i class="fa-solid fa-file-export"></i> Exportar dados (Excel / e-mail)</div>
+
+        <label class="mobile-label">Período</label>
+        <div class="grid grid-cols-2 gap-2.5 mb-1">
+          <div>
+            <span class="text-[9px] font-black text-slate-400">DE</span>
+            <input type="date" id="export-data-ini" class="mobile-input text-xs" style="padding:9px;" />
+          </div>
+          <div>
+            <span class="text-[9px] font-black text-slate-400">ATÉ</span>
+            <input type="date" id="export-data-fim" class="mobile-input text-xs" style="padding:9px;" />
+          </div>
+        </div>
+        <p class="text-[9px] text-slate-400 font-bold mb-3">Em branco = exporta toda a base.</p>
+
+        <label class="mobile-label">E-mail destino</label>
+        <input type="email" id="email-export" class="mobile-input normal-case text-sm mb-3" placeholder="email@exemplo.com" />
+
+        <div class="grid grid-cols-2 stack-keep-2 gap-2.5">
+          <button onclick="baixarExcel()" class="btn-large btn-green text-[11.5px]" style="padding:12px;">
+            <i class="fa-solid fa-download"></i> Excel
           </button>
-          <div class="pt-2 border-t border-slate-200">
-              <button onclick="confirmarExclusaoAtual()" class="btn-large bg-rose-50 text-rose-600 border border-rose-200 shadow-none text-sm">
-                <i class="fa-solid fa-trash-can"></i> Excluir este Caminhão
-              </button>
-          </div>
+          <button onclick="enviarPorEmail()" class="btn-large btn-sky text-[11.5px]" style="padding:12px;">
+            <i class="fa-solid fa-envelope"></i> E-mail
+          </button>
         </div>
+      </div>
+
+      <div class="mt-4 space-y-2.5">
+        <button onclick="navTo('patio')" class="btn-large btn-dark">
+          <i class="fa-solid fa-list-check"></i> Voltar ao pátio
+        </button>
+        <button onclick="confirmarExclusaoAtual()" class="btn-large btn-danger-outline text-[12.5px]">
+          <i class="fa-solid fa-trash-can"></i> Excluir este caminhão
+        </button>
+      </div>
     </div>
   </main>
 
   <nav class="bottom-nav" id="main-bottom-nav">
     <div onclick="navTo('patio')" class="nav-item" id="nav-btn-patio">
-      <i class="fa-solid fa-list-check"></i>
-      Pátio
+      <i class="fa-solid fa-list-check"></i> Pátio
     </div>
     <div onclick="navTo('dados')" class="nav-item opacity-50 pointer-events-none" id="nav-btn-dados">
-      <i class="fa-solid fa-clipboard-list"></i>
-      Dados
+      <i class="fa-solid fa-clipboard-list"></i> Dados
     </div>
     <div onclick="navTo('tempos')" class="nav-item opacity-50 pointer-events-none" id="nav-btn-tempos">
-      <i class="fa-solid fa-stopwatch"></i>
-      Horários
+      <i class="fa-solid fa-stopwatch"></i> Horários
     </div>
     <div onclick="navTo('finalizar')" class="nav-item opacity-50 pointer-events-none" id="nav-btn-finalizar">
-      <i class="fa-solid fa-flag-checkered"></i>
-      Finalizar
+      <i class="fa-solid fa-flag-checkered"></i> Finalizar
     </div>
   </nav>
 
-  <!-- Modal customizado para Exclusão (Substitui o confirm() bloqueado no mobile) -->
+  <!-- Modal de exclusão -->
   <div id="modal-exclusao" class="modal-overlay">
-    <div class="bg-white rounded-2xl p-6 max-w-xs w-full text-center shadow-2xl border border-slate-100">
-      <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
-        <i class="fa-solid fa-triangle-exclamation"></i>
+    <div class="modal-card bg-white rounded-2xl p-5 max-w-xs w-full text-center border border-slate-200">
+      <div class="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-3 text-lg" style="background:#fee2e2; color:var(--rose);">
+        <i class="fa-solid fa-trash-can"></i>
       </div>
-      <h3 class="font-black text-lg text-slate-800 mb-1">Excluir Caminhão?</h3>
-      <p class="text-xs text-slate-500 mb-5">Esta ação apagará permanentemente o registro da nuvem.</p>
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="fecharModalExclusao()" class="py-2.5 px-4 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl">Cancelar</button>
-        <button onclick="executarExclusaoDefinitiva()" class="py-2.5 px-4 bg-rose-600 text-white font-bold text-xs rounded-xl shadow-md">Sim, Excluir</button>
+      <h3 class="font-black text-[17px] text-slate-900 mb-1 m-0">Excluir registro?</h3>
+      <p class="text-[11.5px] text-slate-500 mb-4 mt-1.5">O caminhão será apagado permanentemente da nuvem.</p>
+      <div class="grid grid-cols-2 stack-keep-2 gap-2">
+        <button onclick="fecharModalExclusao()" class="py-2.5 px-3 bg-slate-100 text-slate-700 font-bold text-[11.5px] rounded-lg">Cancelar</button>
+        <button onclick="executarExclusaoDefinitiva()" class="py-2.5 px-3 text-white font-bold text-[11.5px] rounded-lg" style="background:var(--rose);">Sim, excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para zerar horários -->
+  <div id="modal-reset" class="modal-overlay">
+    <div class="modal-card bg-white rounded-2xl p-5 max-w-xs w-full text-center border border-slate-200">
+      <div class="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-3 text-lg" style="background:#fef3c7; color:var(--amber);">
+        <i class="fa-solid fa-rotate-left"></i>
+      </div>
+      <h3 class="font-black text-[17px] text-slate-900 mb-1 m-0">Zerar horários?</h3>
+      <p class="text-[11.5px] text-slate-500 mb-4 mt-1.5">Todos os horários desta operação serão apagados.</p>
+      <div class="grid grid-cols-2 stack-keep-2 gap-2">
+        <button onclick="fecharModalReset()" class="py-2.5 px-3 bg-slate-100 text-slate-700 font-bold text-[11.5px] rounded-lg">Cancelar</button>
+        <button onclick="executarResetTempos()" class="py-2.5 px-3 text-white font-bold text-[11.5px] rounded-lg" style="background:#d97706;">Sim, zerar</button>
       </div>
     </div>
   </div>
 
   <script>
-    let appState = { activeId: null, horarios: {} }; 
+    let appState = { activeId: null, horarios: {} };
     let filaRegistros = [];
-    let etapasPontoAtivas = []; 
+    let etapasPontoAtivas = [];
     let etapaAtualIndex = 0;
-    let operadoresMap = {}; 
+    let operadoresMap = {};
     let listaFornecedoresApp = [];
     let db = null;
     let auth = null;
@@ -539,67 +834,229 @@
     let autoSaveTimeout = null;
     let isDeleting = false;
 
-    let inactivityTimer;
+    /* Operador logado (exibido no topo e gravado no registro) */
+    let operadorLogado = { nome: '---', email: '', turno: 'A' };
+
+    /* ============================================================
+       SESSÃO: 10 MIN DE INATIVIDADE (tela aberta E em 2º plano)
+       + ENCERRAMENTO AO FECHAR O APP / ABA
+       ============================================================ */
+    const INACTIVITY_TIME_MS = 10 * 60 * 1000;
+    const LS_LAST_ACT = 'hl_last_activity';
+    let inactivityTimer = null;
+    let sessaoTickTimer = null;
     let lastActivityTime = Date.now();
-    const INACTIVITY_TIME_MS = 20 * 60 * 1000; 
 
-    function checkInactivityAndLogout() { if (auth && auth.currentUser) { logout("Sessão expirada por inatividade."); } }
-    function resetTimer() { lastActivityTime = Date.now(); clearTimeout(inactivityTimer); if (auth && auth.currentUser) { inactivityTimer = setTimeout(checkInactivityAndLogout, INACTIVITY_TIME_MS); } }
+    function marcarAtividade() {
+      lastActivityTime = Date.now();
+      try { localStorage.setItem(LS_LAST_ACT, String(lastActivityTime)); } catch (e) {}
+    }
 
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (auth && auth.currentUser) { if (Date.now() - lastActivityTime >= INACTIVITY_TIME_MS) { logout("Sessão expirada."); } else { resetTimer(); } } } });
-    ['touchstart', 'mousemove', 'mousedown', 'keypress', 'scroll', 'input'].forEach(evt => { document.addEventListener(evt, resetTimer, true); });
+    function tempoInativoMs() {
+      let base = lastActivityTime;
+      try {
+        const salvo = parseInt(localStorage.getItem(LS_LAST_ACT) || '0', 10);
+        if (!isNaN(salvo) && salvo > base) base = salvo;
+      } catch (e) {}
+      return Date.now() - base;
+    }
 
-    function showToast(msg, icon = 'fa-circle-info') { 
+    function checkInactivityAndLogout() {
+      if (auth && auth.currentUser && tempoInativoMs() >= INACTIVITY_TIME_MS) {
+        logout("Sessão encerrada: 10 minutos sem atividade.");
+        return true;
+      }
+      return false;
+    }
+
+    function resetTimer() {
+      marcarAtividade();
+      clearTimeout(inactivityTimer);
+      if (auth && auth.currentUser) {
+        inactivityTimer = setTimeout(checkInactivityAndLogout, INACTIVITY_TIME_MS);
+      }
+      atualizarChipSessao();
+    }
+
+    function iniciarVigilanciaSessao() {
+      clearInterval(sessaoTickTimer);
+      sessaoTickTimer = setInterval(() => {
+        if (!auth || !auth.currentUser) return;
+        if (checkInactivityAndLogout()) return;
+        atualizarChipSessao();
+      }, 1000);
+    }
+
+    function atualizarChipSessao() {
+      const chip = document.getElementById('sessao-chip');
+      const txt = document.getElementById('sessao-restante');
+      if (!chip || !txt) return;
+      if (!auth || !auth.currentUser) { txt.innerText = '10:00'; chip.classList.remove('alerta'); return; }
+      const restante = Math.max(0, INACTIVITY_TIME_MS - tempoInativoMs());
+      const m = Math.floor(restante / 60000);
+      const s = Math.floor((restante % 60000) / 1000);
+      txt.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      if (restante <= 60000) chip.classList.add('alerta'); else chip.classList.remove('alerta');
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && auth && auth.currentUser) {
+        if (!checkInactivityAndLogout()) resetTimer();
+      }
+    });
+
+    ['touchstart', 'mousemove', 'mousedown', 'keypress', 'scroll', 'input', 'click'].forEach(evt => {
+      document.addEventListener(evt, resetTimer, true);
+    });
+
+    window.addEventListener('pagehide', (e) => {
+      if (!e.persisted) { try { sessionStorage.setItem('hl_sessao_fechando', '1'); } catch (err) {} }
+    });
+
+    function showToast(msg, icon = 'fa-circle-info') {
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.innerHTML = `<i class="fa-solid ${icon} text-sky-400"></i> <span>${msg}</span>`;
+      toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${msg}</span>`;
       document.body.appendChild(toast);
       toast.offsetHeight;
       toast.classList.add('show');
-      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000); 
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000);
     }
-    
+
+    function toggleSenha() {
+      const inp = document.getElementById('login-senha');
+      const ic = document.getElementById('icon-senha');
+      if (!inp) return;
+      if (inp.type === 'password') { inp.type = 'text'; ic.className = 'fa-regular fa-eye-slash'; }
+      else { inp.type = 'password'; ic.className = 'fa-regular fa-eye'; }
+    }
+
     function formatarEmail(valor) { let v = valor.trim().toLowerCase(); return (v && !v.includes('@')) ? v + '@hlcompany.com' : v; }
-    
-    function setToday() { 
-      const now = new Date(); const ano = now.getFullYear(); const mes = String(now.getMonth() + 1).padStart(2, '0'); const dia = String(now.getDate()).padStart(2, '0'); 
-      document.getElementById('form-data').value = `${ano}-${mes}-${dia}`; 
-      const h = String(now.getHours()).padStart(2, '0'); const m = String(now.getMinutes()).padStart(2, '0'); 
-      document.getElementById('form-hora').value = `${h}:${m}`; 
-      salvarEstadoAtual(); 
+
+    function setToday() {
+      const now = new Date(); const ano = now.getFullYear(); const mes = String(now.getMonth() + 1).padStart(2, '0'); const dia = String(now.getDate()).padStart(2, '0');
+      document.getElementById('form-data').value = `${ano}-${mes}-${dia}`;
+      const h = String(now.getHours()).padStart(2, '0'); const m = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('form-hora').value = `${h}:${m}`;
+      salvarEstadoAtual();
+    }
+
+    /* ---------- Botões SIM / NÃO (segmentados) ---------- */
+    const FLAG_INPUTS = {
+      pesagem: 'form-pesagem',
+      conferencia: 'form-conferencia',
+      emb_carr: 'form-emb-carr',
+      emb_desc: 'form-emb-desc'
+    };
+
+    function setFlag(nome, valor, silencioso = false) {
+      const inputId = FLAG_INPUTS[nome];
+      if (!inputId) return;
+      const input = document.getElementById(inputId);
+      input.value = valor;
+      atualizarSegUI(nome);
+
+      if (nome === 'emb_carr' && valor !== 'SIM') { delete appState.horarios.ini_carr; delete appState.horarios.fim_carr; }
+      if (nome === 'emb_desc' && valor !== 'SIM') { delete appState.horarios.ini_emb_desc; delete appState.horarios.fim_emb_desc; }
+      if (nome === 'pesagem' && valor !== 'SIM') { delete appState.horarios.ini_pesag; delete appState.horarios.fim_pesag; }
+      if (nome === 'conferencia' && valor !== 'SIM') { delete appState.horarios.ini_conf; delete appState.horarios.fim_conf; }
+
+      atualizarDicaEmbalagem();
+      if (!silencioso) { atualizarEtapasDinamicas(); salvarEstadoAtual(); }
+    }
+
+    function atualizarSegUI(nome) {
+      const seg = document.getElementById('seg-' + nome);
+      const input = document.getElementById(FLAG_INPUTS[nome]);
+      if (!seg || !input) return;
+      const val = input.value;
+      const botoes = seg.querySelectorAll('button');
+      botoes.forEach(b => {
+        const bv = b.innerText.trim().toUpperCase();
+        const ativo = (bv === 'SIM' && val === 'SIM') || (bv !== 'SIM' && val !== 'SIM');
+        b.className = ativo ? (bv === 'SIM' ? 'on yes' : 'on') : '';
+      });
+    }
+
+    function sincronizarTodosSegs(silencioso = true) {
+      Object.keys(FLAG_INPUTS).forEach(n => atualizarSegUI(n));
+      atualizarDicaEmbalagem();
+    }
+
+    function temEmbCarr() { return document.getElementById('form-emb-carr').value === 'SIM'; }
+    function temEmbDesc() { return document.getElementById('form-emb-desc').value === 'SIM'; }
+
+    function atualizarDicaEmbalagem() {
+      const hint = document.getElementById('emb-hint');
+      if (!hint) return;
+      const c = temEmbCarr(), d = temEmbDesc();
+      if (c && d) hint.innerText = 'Carregamento e descarregamento serão cronometrados separadamente.';
+      else if (c) hint.innerText = 'Somente o carregamento de embalagem entra na linha do tempo.';
+      else if (d) hint.innerText = 'Somente o descarregamento de embalagem entra na linha do tempo.';
+      else hint.innerText = 'Pode ter só carregamento, só descarregamento, os dois ou nenhum.';
+    }
+
+    /* ---------- Operador logado ---------- */
+    function aplicarOperadorLogadoUI() {
+      const barra = document.getElementById('user-bar');
+      const nomeEl = document.getElementById('operador-nome');
+      const avatarEl = document.getElementById('operador-avatar');
+      const turnoTxt = document.getElementById('turno-chip-txt');
+      const dadosEl = document.getElementById('dados-operador-logado');
+
+      const logado = !!(auth && auth.currentUser);
+      if (barra) barra.classList.toggle('show', logado && currentView !== 'login');
+
+      const nome = operadorLogado.nome || '---';
+      if (nomeEl) nomeEl.innerText = nome;
+      if (dadosEl) dadosEl.innerText = nome;
+      if (turnoTxt) turnoTxt.innerText = 'TURNO ' + (operadorLogado.turno || 'A');
+      if (avatarEl) {
+        const partes = nome.split(/[\s._-]+/).filter(Boolean);
+        const ini = partes.length > 1 ? (partes[0][0] + partes[1][0]) : nome.substring(0, 2);
+        avatarEl.innerText = (ini || '--').toUpperCase();
+      }
+    }
+
+    function usarOperadorLogado() {
+      const el = document.getElementById('form-operador');
+      if (!el) return;
+      el.value = operadorLogado.nome || '';
+      if (operadorLogado.turno) document.getElementById('form-turno').value = operadorLogado.turno;
+      salvarEstadoAtual();
+      showToast('Operador logado aplicado ao registro.', 'fa-user-check');
     }
 
     function navTo(viewId) {
       document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
       const target = document.getElementById(`view-${viewId}`);
-      if(target) target.classList.add('active');
+      if (target) target.classList.add('active');
       currentView = viewId;
-      
-      const nav = document.getElementById('main-bottom-nav');
 
-      if (viewId === 'login') { 
-        if(nav) nav.style.display = 'none'; 
+      const nav = document.getElementById('main-bottom-nav');
+      if (viewId === 'login') {
+        if (nav) nav.style.display = 'none';
       } else {
-        if(nav) nav.style.display = 'flex';
+        if (nav) nav.style.display = 'flex';
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
         const btn = document.getElementById(`nav-btn-${viewId}`);
-        if(btn) btn.classList.add('active');
+        if (btn) btn.classList.add('active');
       }
 
-      if (viewId === 'patio') {
-        renderizarPatio();
-        desbloquearTabs(false);
-      } else if (viewId === 'tempos') {
-        atualizarEtapasDinamicas();
-      }
+      aplicarOperadorLogadoUI();
+
+      if (viewId === 'patio') { renderizarPatio(); desbloquearTabs(false); }
+      else if (viewId === 'tempos') { atualizarEtapasDinamicas(); }
+
+      const alvoScroll = document.getElementById(`view-${viewId}`);
+      if (alvoScroll) alvoScroll.scrollTo({ top: 0, behavior: 'smooth' });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function desbloquearTabs(liberar) {
-      const ids = ['nav-btn-dados', 'nav-btn-tempos', 'nav-btn-finalizar'];
-      ids.forEach(id => {
+      ['nav-btn-dados', 'nav-btn-tempos', 'nav-btn-finalizar'].forEach(id => {
         const el = document.getElementById(id);
-        if(liberar) el.classList.remove('opacity-50', 'pointer-events-none');
+        if (liberar) el.classList.remove('opacity-50', 'pointer-events-none');
         else el.classList.add('opacity-50', 'pointer-events-none');
       });
     }
@@ -609,11 +1066,11 @@
     function fazerLogin() {
       const emailRaw = document.getElementById('login-email').value; const senha = document.getElementById('login-senha').value;
       if (!emailRaw || !senha) { showToast("Preencha utilizador e senha.", "fa-circle-exclamation"); return; }
-      auth.signInWithEmailAndPassword(formatarEmail(emailRaw), senha).then((userCredential) => { 
+      auth.signInWithEmailAndPassword(formatarEmail(emailRaw), senha).then((userCredential) => {
         document.getElementById('email-export').value = userCredential.user.email || '';
-        showToast("Login efetuado com sucesso!", "fa-check-circle"); 
-      }).catch(error => { 
-        showToast(error.code === 'auth/invalid-credential' ? "Conta não existe ou senha errada." : "Erro: " + error.message, "fa-circle-xmark"); 
+        showToast("Login efetuado com sucesso!", "fa-check-circle");
+      }).catch(error => {
+        showToast(error.code === 'auth/invalid-credential' ? "Conta não existe ou senha errada." : "Erro: " + error.message, "fa-circle-xmark");
       });
     }
 
@@ -621,92 +1078,143 @@
       const emailRaw = document.getElementById('login-email').value; const senha = document.getElementById('login-senha').value;
       if (!emailRaw || !senha) { showToast("Preencha utilizador e senha para registar.", "fa-circle-exclamation"); return; }
       const email = formatarEmail(emailRaw); const nomeOp = emailRaw.split('@')[0].toUpperCase();
-      
+
       auth.createUserWithEmailAndPassword(email, senha).then((userCredential) => {
-          document.getElementById('email-export').value = userCredential.user.email || '';
-          db.ref('cadastros/operadores').once('value').then(snap => { 
-            let ops = snap.val(); let arr = Array.isArray(ops) ? ops : Object.values(ops || {}); 
-            if (!arr.some(o => o && o.email && o.email.toLowerCase() === email.toLowerCase())) { 
-              db.ref('cadastros/operadores').push({ nome: nomeOp, email: email, turno: "A" }); 
-            } 
-          });
-          showToast("Acesso ativado com sucesso!", "fa-check-circle");
-        }).catch(error => { showToast(error.code === 'auth/email-already-in-use' ? "Utilizador já existe!" : "Falha: " + error.message, "fa-circle-xmark"); });
+        document.getElementById('email-export').value = userCredential.user.email || '';
+        db.ref('cadastros/operadores').once('value').then(snap => {
+          let ops = snap.val(); let arr = Array.isArray(ops) ? ops : Object.values(ops || {});
+          if (!arr.some(o => o && o.email && o.email.toLowerCase() === email.toLowerCase())) {
+            db.ref('cadastros/operadores').push({ nome: nomeOp, email: email, turno: "A" });
+          }
+        });
+        showToast("Acesso ativado com sucesso!", "fa-check-circle");
+      }).catch(error => { showToast(error.code === 'auth/email-already-in-use' ? "Utilizador já existe!" : "Falha: " + error.message, "fa-circle-xmark"); });
     }
 
     function logout(mensagemToast = "Sessão terminada.") {
-      if(auth) { 
-        auth.signOut().then(() => { 
-          document.getElementById('btn-logout').classList.add('hidden'); 
-          document.getElementById('login-senha').value = ''; 
-          clearTimeout(inactivityTimer); 
+      if (auth) {
+        auth.signOut().then(() => {
+          document.getElementById('btn-logout').classList.add('hidden');
+          document.getElementById('login-senha').value = '';
+          clearTimeout(inactivityTimer);
           appState.activeId = null;
-          showToast(mensagemToast, "fa-door-open"); 
-          navTo('login'); 
-        }); 
+          operadorLogado = { nome: '---', email: '', turno: 'A' };
+          try { localStorage.removeItem(LS_LAST_ACT); } catch (e) {}
+          showToast(mensagemToast, "fa-door-open");
+          navTo('login');
+        });
       }
+    }
+
+    /* ---------- PÁTIO: última ação primeiro ---------- */
+    function marcaTempoRegistro(reg) {
+      if (reg && reg.updated_at) {
+        const n = parseInt(reg.updated_at, 10);
+        if (!isNaN(n)) return n;
+      }
+      if (reg && typeof reg.id === 'string') {
+        const m = reg.id.match(/(\d{10,})/);
+        if (m) return parseInt(m[1], 10);
+      }
+      return 0;
     }
 
     function renderizarPatio() {
       const lista = document.getElementById('lista-patio');
       const empty = document.getElementById('empty-patio');
       const contador = document.getElementById('contador-patio');
-      
+      const busca = (document.getElementById('patio-busca')?.value || '').trim().toUpperCase();
+
       lista.innerHTML = '';
       contador.innerText = filaRegistros.length;
 
-      if (filaRegistros.length === 0) {
-        empty.classList.remove('hidden');
-      } else {
-        empty.classList.add('hidden');
-        const filaOrdenada = [...filaRegistros].sort((a, b) => {
-          const aFim = a.saida !== ""; const bFim = b.saida !== "";
-          return (aFim === bFim) ? 0 : aFim ? 1 : -1;
-        });
+      const emAndamento = filaRegistros.filter(r => !r.saida).length;
+      const concluidos = filaRegistros.length - emAndamento;
+      const sA = document.getElementById('stat-andamento'); if (sA) sA.innerText = emAndamento;
+      const sC = document.getElementById('stat-concluido'); if (sC) sC.innerText = concluidos;
 
-        filaOrdenada.forEach(reg => {
-          const isFim = reg.saida !== "";
-          const bgClass = isFim ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-200';
-          const iconStatus = isFim ? '<i class="fa-solid fa-check-double text-emerald-500"></i>' : '<i class="fa-solid fa-spinner fa-spin text-blue-500"></i>';
-          const textStatus = isFim ? '<span class="text-emerald-600 font-bold">Concluído</span>' : '<span class="text-blue-600 font-bold">Em Operação</span>';
-          
-          let placaDisplay = reg.placa || 'SEM PLACA';
-          let fornDisplay = reg.fornecedor || 'Fornecedor não inf.';
-          
-          lista.innerHTML += `
-            <div class="truck-card ${bgClass}" onclick="abrirRegistro('${reg.id}')">
-              <div class="flex justify-between items-start">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full ${isFim ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'} flex items-center justify-center font-black shadow-inner">
-                    <i class="fa-solid fa-truck"></i>
-                  </div>
-                  <div>
-                    <h3 class="font-black text-slate-800 text-lg leading-none">${placaDisplay}</h3>
-                    <p class="text-xs text-slate-500 font-medium mt-1 truncate max-w-[180px]">${fornDisplay}</p>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Status</div>
-                  <div class="flex items-center gap-1.5 justify-end text-xs">
-                    ${iconStatus} ${textStatus}
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
-        });
+      let base = filaRegistros;
+      if (busca) {
+        base = base.filter(r =>
+          (r.placa || '').toUpperCase().includes(busca) ||
+          (r.fornecedor || '').toUpperCase().includes(busca) ||
+          (r.nf || '').toUpperCase().includes(busca) ||
+          (r.operador || '').toUpperCase().includes(busca) ||
+          (r.doca || '').toUpperCase().includes(busca)
+        );
       }
+
+      if (base.length === 0) { empty.classList.remove('hidden'); return; }
+      empty.classList.add('hidden');
+
+      const filaOrdenada = [...base].sort((a, b) => marcaTempoRegistro(b) - marcaTempoRegistro(a));
+
+      filaOrdenada.forEach(reg => {
+        const isFim = !!reg.saida;
+        const status = isFim
+          ? '<span class="chip chip-green"><i class="fa-solid fa-check"></i> Concluído</span>'
+          : '<span class="chip chip-blue"><i class="fa-solid fa-clock"></i> Em operação</span>';
+
+        const chips = [];
+        if (reg.doca) chips.push(`<span class="chip chip-gray"><i class="fa-solid fa-warehouse"></i> ${reg.doca}</span>`);
+        if (reg.operador) chips.push(`<span class="chip chip-gray"><i class="fa-regular fa-user"></i> ${reg.operador}</span>`);
+        if (reg.fez_pesagem === 'SIM') chips.push('<span class="chip chip-amber"><i class="fa-solid fa-scale-balanced"></i> Pesagem</span>');
+        if (reg.emb_carregamento === 'SIM') chips.push('<span class="chip chip-violet"><i class="fa-solid fa-boxes-packing"></i> Carreg. emb.</span>');
+        if (reg.emb_descarregamento === 'SIM') chips.push('<span class="chip chip-teal"><i class="fa-solid fa-box-open"></i> Descarr. emb.</span>');
+
+        lista.innerHTML += `
+          <div class="truck-card ${isFim ? 'fim' : ''}" onclick="abrirRegistro('${reg.id}')">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0 flex-1">
+                <p class="placa m-0">${reg.placa || 'SEM PLACA'}</p>
+                <p class="text-[11px] text-slate-500 font-bold mt-1 mb-0 truncate">${reg.fornecedor || 'Fornecedor não informado'}</p>
+              </div>
+              <div class="flex-shrink-0">${status}</div>
+            </div>
+            <div class="flex flex-wrap gap-1.5">${chips.join(' ')}</div>
+            <div class="flex items-center justify-between gap-2 pt-2" style="border-top:1px solid #eef1f6;">
+              <p class="text-[10px] font-bold text-slate-500 truncate m-0 min-w-0 flex-1">${descreverUltimaAcao(reg)}</p>
+              <i class="fa-solid fa-chevron-right text-slate-300 text-[10px] flex-shrink-0"></i>
+            </div>
+          </div>`;
+      });
+    }
+
+    function descreverUltimaAcao(reg) {
+      const mapa = [
+        ['saida', 'Saída registrada'],
+        ['fim_conf', 'Fim da conferência'],
+        ['ini_conf', 'Início da conferência'],
+        ['fim_emb_desc', 'Fim descarreg. embalagem'],
+        ['ini_emb_desc', 'Início descarreg. embalagem'],
+        ['fim_carr', 'Fim carreg. embalagem'],
+        ['ini_carr', 'Início carreg. embalagem'],
+        ['fim_desc', 'Fim da descarga'],
+        ['ini_desc', 'Início da descarga'],
+        ['lib_portaria', 'Liberado na portaria'],
+        ['fim_pesag', 'Fim da pesagem'],
+        ['ini_pesag', 'Início da pesagem'],
+        ['chegada', 'Chegada registrada']
+      ];
+      for (const [campo, texto] of mapa) {
+        if (reg[campo]) return `${texto} às ${reg[campo]}`;
+      }
+      return 'Registro criado — sem horários';
     }
 
     function iniciarNovoRegistro() {
       limparFormularioDOM();
       appState.activeId = "REG_" + Date.now();
       appState.horarios = {};
-      salvarEstadoAtual(); 
+      if (operadorLogado.nome && operadorLogado.nome !== '---') {
+        document.getElementById('form-operador').value = operadorLogado.nome;
+        document.getElementById('form-turno').value = operadorLogado.turno || 'A';
+      }
+      salvarEstadoAtual();
       desbloquearTabs(true);
       atualizarHeadersAtivos();
       navTo('dados');
-      setToday(); 
+      setToday();
     }
 
     function abrirRegistro(id) {
@@ -717,9 +1225,11 @@
       appState.horarios = {
         chegada: reg.chegada, lib_portaria: reg.lib_portaria, ini_desc: reg.ini_desc,
         fim_desc: reg.fim_desc, ini_conf: reg.ini_conf, fim_conf: reg.fim_conf,
-        saida: reg.saida, ini_pesag: reg.ini_pesag, fim_pesag: reg.fim_pesag
+        saida: reg.saida, ini_pesag: reg.ini_pesag, fim_pesag: reg.fim_pesag,
+        ini_carr: reg.ini_carr, fim_carr: reg.fim_carr,
+        ini_emb_desc: reg.ini_emb_desc, fim_emb_desc: reg.fim_emb_desc
       };
-      Object.keys(appState.horarios).forEach(key => { if(!appState.horarios[key]) delete appState.horarios[key]; });
+      Object.keys(appState.horarios).forEach(key => { if (!appState.horarios[key]) delete appState.horarios[key]; });
 
       document.getElementById('form-data').value = reg.data || '';
       document.getElementById('form-hora').value = reg.hora || '';
@@ -730,14 +1240,25 @@
       document.getElementById('form-doca').value = reg.doca || 'Rec';
       document.getElementById('form-nf').value = reg.nf || '';
       document.getElementById('form-caixas').value = reg.qtd_caixas || '';
-      document.getElementById('form-pesagem').value = reg.fez_pesagem || 'NÃO';
-      document.getElementById('form-conferencia').value = (reg.fez_conferencia === false || reg.conferencia === undefined && reg.ini_conf === "") ? 'NÃO' : 'SIM'; 
       document.getElementById('form-motivo').value = reg.motivo_atraso || '';
+
+      setFlag('pesagem', reg.fez_pesagem === 'SIM' ? 'SIM' : 'NÃO', true);
+      setFlag('conferencia', reg.fez_conferencia === 'NÃO' ? 'NÃO' : 'SIM', true);
+
+      /* Compatibilidade com registros antigos (campo único de embalagem) */
+      let embC = reg.emb_carregamento, embD = reg.emb_descarregamento;
+      if (embC === undefined && embD === undefined) {
+        const antigoSim = reg.chegou_emb === 'SIM';
+        embC = (antigoSim && (reg.tipo_embalagem || 'CARREGAMENTO') === 'CARREGAMENTO') ? 'SIM' : 'NÃO';
+        embD = (antigoSim && reg.tipo_embalagem === 'DESCARREGAMENTO') ? 'SIM' : 'NÃO';
+      }
+      setFlag('emb_carr', embC === 'SIM' ? 'SIM' : 'NÃO', true);
+      setFlag('emb_desc', embD === 'SIM' ? 'SIM' : 'NÃO', true);
 
       desbloquearTabs(true);
       atualizarHeadersAtivos();
-      atualizarEtapasDinamicas(); 
-      navTo('tempos'); 
+      atualizarEtapasDinamicas();
+      navTo('tempos');
     }
 
     function salvarEstadoAtual() {
@@ -747,7 +1268,14 @@
       const op = document.getElementById('form-operador').value.trim().toUpperCase();
       const forn = document.getElementById('form-fornecedor').value.trim().toUpperCase();
       const placa = document.getElementById('form-placa').value.trim().toUpperCase();
-      
+      const embC = temEmbCarr() ? 'SIM' : 'NÃO';
+      const embD = temEmbDesc() ? 'SIM' : 'NÃO';
+
+      let tipoEmb = '';
+      if (embC === 'SIM' && embD === 'SIM') tipoEmb = 'CARREGAMENTO E DESCARREGAMENTO';
+      else if (embC === 'SIM') tipoEmb = 'CARREGAMENTO';
+      else if (embD === 'SIM') tipoEmb = 'DESCARREGAMENTO';
+
       const payload = {
         id: appState.activeId,
         status: h.saida ? 'FINALIZADO' : 'EM_ANDAMENTO',
@@ -755,6 +1283,8 @@
         hora: document.getElementById('form-hora').value,
         turno: document.getElementById('form-turno').value,
         operador: op, conferente: op, fornecedor: forn, placa: placa,
+        operador_logado: operadorLogado.nome || '',
+        email_logado: operadorLogado.email || '',
         doca: document.getElementById('form-doca').value,
         nf: document.getElementById('form-nf').value.trim().toUpperCase(),
         qtd_caixas: document.getElementById('form-caixas').value,
@@ -763,19 +1293,28 @@
         ini_conf: h.ini_conf || "", fim_conf: h.fim_conf || "",
         saida: h.saida || "",
         fez_pesagem: document.getElementById('form-pesagem').value,
+        fez_conferencia: document.getElementById('form-conferencia').value,
         ini_pesag: h.ini_pesag || "", fim_pesag: h.fim_pesag || "",
-        chegou_emb: "NÃO", ini_carr: "", fim_carr: "", carreg: "",
+        emb_carregamento: embC,
+        emb_descarregamento: embD,
+        chegou_emb: (embC === 'SIM' || embD === 'SIM') ? 'SIM' : 'NÃO',
+        tipo_embalagem: tipoEmb,
+        ini_carr: h.ini_carr || "", fim_carr: h.fim_carr || "",
+        carreg: calcularDiferencaMinutos(h.ini_carr, h.fim_carr),
+        ini_emb_desc: h.ini_emb_desc || "", fim_emb_desc: h.fim_emb_desc || "",
+        desc_emb: calcularDiferencaMinutos(h.ini_emb_desc, h.fim_emb_desc),
         espera_port: calcularDiferencaMinutos(h.chegada, h.lib_portaria),
         descarga: calcularDiferencaMinutos(h.ini_desc, h.fim_desc),
         conferencia: calcularDiferencaMinutos(h.ini_conf, h.fim_conf),
         pesag: calcularDiferencaMinutos(h.ini_pesag, h.fim_pesag),
         lead_time: calcularDiferencaMinutos(h.chegada, h.saida),
-        motivo_atraso: document.getElementById('form-motivo').value.trim().toUpperCase()
+        motivo_atraso: document.getElementById('form-motivo').value.trim().toUpperCase(),
+        updated_at: Date.now()
       };
 
       const idx = filaRegistros.findIndex(r => r.id === appState.activeId);
       if (idx >= 0) { filaRegistros[idx] = payload; } else { filaRegistros.push(payload); }
-      
+
       atualizarHeadersAtivos();
       enviarSyncParcialFirebase(payload);
     }
@@ -783,36 +1322,34 @@
     function atualizarHeadersAtivos() {
       const p = document.getElementById('form-placa').value.trim().toUpperCase() || 'NOVO CAMINHÃO';
       document.getElementById('header-placa-ativa').innerText = p;
-      document.getElementById('header-tempos-placa').innerText = `Placa: ${p}`;
+      document.getElementById('header-tempos-placa').innerText = p;
     }
 
     function confirmarExclusaoAtual() {
-      if(!appState.activeId) return;
+      if (!appState.activeId) { showToast("Nenhum registro selecionado.", "fa-circle-exclamation"); return; }
       document.getElementById('modal-exclusao').style.display = 'flex';
     }
 
-    function fecharModalExclusao() {
-      document.getElementById('modal-exclusao').style.display = 'none';
-    }
+    function fecharModalExclusao() { document.getElementById('modal-exclusao').style.display = 'none'; }
 
     function executarExclusaoDefinitiva() {
       isDeleting = true;
       fecharModalExclusao();
-      if(!appState.activeId) return;
-      
+      if (!appState.activeId) { isDeleting = false; return; }
+
       const targetId = appState.activeId;
       filaRegistros = filaRegistros.filter(r => r.id !== targetId);
-      
-      if(db) {
+
+      if (db) {
         db.ref('controle_logistico/' + targetId).remove().then(() => {
-           showToast("Caminhão excluído com sucesso.", "fa-trash");
-           appState.activeId = null;
-           isDeleting = false;
-           navTo('patio');
+          showToast("Caminhão excluído com sucesso.", "fa-trash");
+          appState.activeId = null;
+          isDeleting = false;
+          navTo('patio');
         }).catch(err => {
-           isDeleting = false;
-           showToast("Erro ao excluir na nuvem.", "fa-triangle-exclamation");
-           navTo('patio');
+          isDeleting = false;
+          showToast("Erro ao excluir na nuvem.", "fa-triangle-exclamation");
+          navTo('patio');
         });
       } else {
         isDeleting = false;
@@ -823,114 +1360,166 @@
     }
 
     function limparFormularioDOM() {
-      document.getElementById('form-fornecedor').value = ""; 
-      document.getElementById('form-placa').value = ""; 
-      document.getElementById('form-nf').value = ""; 
-      document.getElementById('form-caixas').value = ""; 
-      document.getElementById('form-motivo').value = ""; 
-      document.getElementById('form-conferencia').value = "SIM"; 
-      document.getElementById('form-pesagem').value = "NÃO";
+      document.getElementById('form-fornecedor').value = "";
+      document.getElementById('form-placa').value = "";
+      document.getElementById('form-nf').value = "";
+      document.getElementById('form-caixas').value = "";
+      document.getElementById('form-motivo').value = "";
+      setFlag('pesagem', 'NÃO', true);
+      setFlag('conferencia', 'SIM', true);
+      setFlag('emb_carr', 'NÃO', true);
+      setFlag('emb_desc', 'NÃO', true);
+      atualizarEtapasDinamicas();
     }
 
     function abrirDropdownFornecedor() {
-        document.getElementById('forn-dropdown').classList.remove('hidden');
-        filtrarFornecedores();
+      document.getElementById('forn-dropdown').classList.remove('hidden');
+      filtrarFornecedores();
     }
 
     function fecharDropdownFornecedor() {
-        setTimeout(() => {
-            const drop = document.getElementById('forn-dropdown');
-            if(drop) drop.classList.add('hidden');
-        }, 200); 
+      setTimeout(() => {
+        const drop = document.getElementById('forn-dropdown');
+        if (drop) drop.classList.add('hidden');
+      }, 200);
     }
 
     function renderFornecedores(lista) {
-        const drop = document.getElementById('forn-dropdown');
-        if (!drop) return;
-        if(lista.length === 0) {
-           drop.innerHTML = `<div class="p-3 text-sm text-slate-400 italic text-center">Nenhum encontrado</div>`;
-           return;
-        }
-        drop.innerHTML = lista.map(f => `<div class="p-3 border-b border-slate-100 text-sm font-bold text-slate-700 active:bg-sky-50 cursor-pointer" onmousedown="selecionarFornecedor('${f}')">${f}</div>`).join('');
+      const drop = document.getElementById('forn-dropdown');
+      if (!drop) return;
+      if (lista.length === 0) {
+        drop.innerHTML = `<div class="p-3 text-[12px] text-slate-400 font-bold text-center">Nenhum encontrado</div>`;
+        return;
+      }
+      drop.innerHTML = lista.map(f => `<div class="p-3 border-b border-slate-100 text-[12.5px] font-bold text-slate-700 cursor-pointer" onmousedown="selecionarFornecedor('${f}')">${f}</div>`).join('');
     }
 
     function filtrarFornecedores() {
-        const val = document.getElementById('form-fornecedor').value.toUpperCase();
-        const filtrado = listaFornecedoresApp.filter(f => f.includes(val));
-        renderFornecedores(filtrado);
-        salvarEstadoAtual();
+      const val = document.getElementById('form-fornecedor').value.toUpperCase();
+      renderFornecedores(listaFornecedoresApp.filter(f => f.includes(val)));
+      salvarEstadoAtual();
     }
 
     function selecionarFornecedor(val) {
-        const input = document.getElementById('form-fornecedor');
-        input.value = val;
-        document.getElementById('forn-dropdown').classList.add('hidden');
-        salvarEstadoAtual();
+      document.getElementById('form-fornecedor').value = val;
+      document.getElementById('forn-dropdown').classList.add('hidden');
+      salvarEstadoAtual();
     }
 
-    function onOperadorInput(val) { const opName = val.trim().toUpperCase(); if (operadoresMap[opName]) document.getElementById('form-turno').value = operadoresMap[opName]; salvarEstadoAtual(); }
+    function onOperadorInput(val) {
+      const opName = val.trim().toUpperCase();
+      if (operadoresMap[opName]) document.getElementById('form-turno').value = operadoresMap[opName];
+      salvarEstadoAtual();
+    }
 
     function atualizarEtapasDinamicas() {
-      const teveConferencia = document.getElementById('form-conferencia').value; const tevePesagem = document.getElementById('form-pesagem').value;
-      let novasEtapas = [ { id: 'chegada', txt: 'Registrar\nChegada', icon: 'fa-truck-arrow-right' } ];
+      const teveConferencia = document.getElementById('form-conferencia').value;
+      const tevePesagem = document.getElementById('form-pesagem').value;
 
-      if (tevePesagem === 'SIM') { novasEtapas.push({ id: 'ini_pesag', txt: 'Iniciar\nPesagem', icon: 'fa-scale-balanced' }); novasEtapas.push({ id: 'fim_pesag', txt: 'Fim da\nPesagem', icon: 'fa-check' }); }
-      novasEtapas.push({ id: 'lib_portaria', txt: 'Liberar\nPortaria', icon: 'fa-gate-open' }); 
-      novasEtapas.push({ id: 'ini_desc', txt: 'Iniciar\nDescarga', icon: 'fa-dolly' }); 
-      novasEtapas.push({ id: 'fim_desc', txt: 'Fim da\nDescarga', icon: 'fa-box-check' });
-      if (teveConferencia === 'SIM') { novasEtapas.push({ id: 'ini_conf', txt: 'Iniciar\nConferência', icon: 'fa-clipboard-check' }); novasEtapas.push({ id: 'fim_conf', txt: 'Fim da\nConferência', icon: 'fa-check-double' }); }
-      novasEtapas.push({ id: 'saida', txt: 'Registrar\nSaída', icon: 'fa-flag-checkered' });
+      let etapas = [{ id: 'chegada', txt: 'Registrar chegada', icon: 'fa-truck-arrow-right' }];
 
-      etapasPontoAtivas = novasEtapas; 
-      renderizarListaTempos(); 
+      if (tevePesagem === 'SIM') {
+        etapas.push({ id: 'ini_pesag', txt: 'Iniciar pesagem', icon: 'fa-scale-balanced' });
+        etapas.push({ id: 'fim_pesag', txt: 'Fim da pesagem', icon: 'fa-check' });
+      }
+      etapas.push({ id: 'lib_portaria', txt: 'Liberar portaria', icon: 'fa-gate-open' });
+      etapas.push({ id: 'ini_desc', txt: 'Iniciar descarga', icon: 'fa-dolly' });
+      etapas.push({ id: 'fim_desc', txt: 'Fim da descarga', icon: 'fa-box-open' });
+
+      if (temEmbCarr()) {
+        etapas.push({ id: 'ini_carr', txt: 'Iniciar carreg. embalagem', icon: 'fa-boxes-packing' });
+        etapas.push({ id: 'fim_carr', txt: 'Fim carreg. embalagem', icon: 'fa-box' });
+      }
+      if (temEmbDesc()) {
+        etapas.push({ id: 'ini_emb_desc', txt: 'Iniciar descarreg. embalagem', icon: 'fa-box-open' });
+        etapas.push({ id: 'fim_emb_desc', txt: 'Fim descarreg. embalagem', icon: 'fa-box' });
+      }
+
+      if (teveConferencia === 'SIM') {
+        etapas.push({ id: 'ini_conf', txt: 'Iniciar conferência', icon: 'fa-clipboard-check' });
+        etapas.push({ id: 'fim_conf', txt: 'Fim da conferência', icon: 'fa-check-double' });
+      }
+      etapas.push({ id: 'saida', txt: 'Registrar saída', icon: 'fa-flag-checkered' });
+
+      etapasPontoAtivas = etapas;
+      renderizarListaTempos();
     }
 
     function renderizarListaTempos() {
       const lista = document.getElementById('lista-horarios');
       lista.innerHTML = '';
-      etapasPontoAtivas.forEach((etapa, idx) => {
+      etapasPontoAtivas.forEach((etapa) => {
         lista.innerHTML += `
-          <li id="li-etapa-${etapa.id}" class="flex justify-between items-center py-2.5 px-3 rounded-lg bg-transparent transition-colors duration-300">
-            <div id="div-etapa-${etapa.id}" class="flex items-center gap-3 text-slate-400 font-medium flex-1">
-              <div id="icon-etapa-${etapa.id}" class="w-6 text-center"><i class="fa-solid fa-circle text-[8px]"></i></div>
-              <span class="text-[12px] uppercase tracking-tight">${etapa.txt.replace('\n', ' ')}</span>
+          <li id="li-etapa-${etapa.id}" class="step-row">
+            <div id="div-etapa-${etapa.id}" class="step-name">
+              <div id="icon-etapa-${etapa.id}" class="w-5 text-center"><i class="fa-solid fa-circle text-[7px]"></i></div>
+              <span>${etapa.txt}</span>
             </div>
-            <div>
-              <input type="time" id="input-etapa-${etapa.id}" class="time-input" value="${appState.horarios[etapa.id] || ''}" onchange="atualizarHorarioManual('${etapa.id}', this.value)" oninput="salvarEstadoAtual();" />
-            </div>
+            <input type="time" id="input-etapa-${etapa.id}" class="time-input" value="${appState.horarios[etapa.id] || ''}" onchange="atualizarHorarioManual('${etapa.id}', this.value)" />
           </li>`;
       });
       recalcularEtapaAtual();
       atualizarVisuaisTempos();
     }
 
+    function atualizarProgresso() {
+      const total = etapasPontoAtivas.length;
+      const feitas = etapasPontoAtivas.filter(e => appState.horarios[e.id]).length;
+      const barra = document.getElementById('progresso-barra');
+      const txt = document.getElementById('progresso-texto');
+      const atual = document.getElementById('progresso-etapa-atual');
+      if (barra) barra.style.width = total ? `${Math.round((feitas / total) * 100)}%` : '0%';
+      if (txt) txt.innerText = `${feitas} / ${total}`;
+      if (atual) {
+        atual.innerHTML = etapaAtualIndex < total
+          ? `Próxima etapa: <strong class="text-slate-900">${etapasPontoAtivas[etapaAtualIndex].txt}</strong>`
+          : `<strong style="color:var(--green);">Todas as etapas concluídas</strong>`;
+      }
+    }
+
     function atualizarVisuaisTempos() {
-      const btn = document.getElementById('btn-ponto'); const txt = document.getElementById('txt-ponto'); const icon = document.getElementById('icon-ponto');
-      
+      const btn = document.getElementById('btn-ponto');
+      const txt = document.getElementById('txt-ponto');
+      const icon = document.getElementById('icon-ponto');
+
       etapasPontoAtivas.forEach((etapa, idx) => {
         const inputEl = document.getElementById(`input-etapa-${etapa.id}`);
         const liEl = document.getElementById(`li-etapa-${etapa.id}`);
         const divEl = document.getElementById(`div-etapa-${etapa.id}`);
         const iconEl = document.getElementById(`icon-etapa-${etapa.id}`);
-        
-        if(!inputEl) return;
-        const hora = appState.horarios[etapa.id] || ""; 
-        const isPast = hora !== ""; 
+        if (!inputEl) return;
+
+        const hora = appState.horarios[etapa.id] || "";
+        const isPast = hora !== "";
         const isCurrent = idx === etapaAtualIndex;
-        
-        if (inputEl.value !== hora && document.activeElement !== inputEl) {
-            inputEl.value = hora; 
-        }
-        
-        liEl.className = `flex justify-between items-center py-2.5 px-3 rounded-lg transition-colors duration-300 ${isCurrent ? 'bg-blue-50 border border-blue-100' : 'bg-transparent'}`;
-        divEl.className = `flex items-center gap-3 flex-1 ${isPast ? "text-slate-800 font-black" : (isCurrent ? "text-blue-600 font-bold" : "text-slate-400 font-medium")}`;
-        iconEl.innerHTML = isPast ? '<i class="fa-solid fa-check-circle text-emerald-500 text-lg"></i>' : (isCurrent ? '<i class="fa-solid fa-arrow-right text-blue-500 text-lg animate-pulse"></i>' : '<i class="fa-solid fa-circle text-[8px]"></i>');
+
+        if (inputEl.value !== hora && document.activeElement !== inputEl) inputEl.value = hora;
+
+        liEl.className = `step-row ${isCurrent ? 'atual' : ''}`;
+        divEl.className = 'step-name';
+        divEl.style.color = isPast ? '#0f1729' : (isCurrent ? '#1d4ed8' : '#94a3b8');
+        divEl.style.fontWeight = isPast ? '800' : '700';
+        iconEl.innerHTML = isPast
+          ? '<i class="fa-solid fa-circle-check" style="color:var(--green); font-size:15px;"></i>'
+          : (isCurrent ? '<i class="fa-solid fa-arrow-right" style="color:var(--blue); font-size:13px;"></i>' : '<i class="fa-solid fa-circle text-[7px]"></i>');
         inputEl.className = isPast ? "time-input preenchido" : "time-input";
       });
 
       if (etapaAtualIndex < etapasPontoAtivas.length) {
-        const proxima = etapasPontoAtivas[etapaAtualIndex]; txt.innerHTML = proxima.txt; icon.className = `fa-solid ${proxima.icon} text-4xl mb-2 drop-shadow-md`; btn.disabled = false; btn.className = "btn-ponto bg-etapa-padrao";
-      } else { txt.innerHTML = "OPERAÇÃO<br>CONCLUÍDA"; icon.className = "fa-solid fa-check-double text-4xl mb-2 drop-shadow-md"; btn.disabled = true; btn.className = "btn-ponto bg-etapa-fim opacity-90 cursor-not-allowed"; setTimeout(() => navTo('finalizar'), 1000); }
+        const proxima = etapasPontoAtivas[etapaAtualIndex];
+        txt.innerText = proxima.txt;
+        icon.className = `fa-solid ${proxima.icon}`;
+        btn.disabled = false;
+        btn.className = "btn-ponto bg-etapa-padrao";
+      } else {
+        txt.innerText = "Operação concluída";
+        icon.className = "fa-solid fa-check-double";
+        btn.disabled = true;
+        btn.className = "btn-ponto bg-etapa-fim";
+        setTimeout(() => { if (currentView === 'tempos') navTo('finalizar'); }, 900);
+      }
+
+      atualizarProgresso();
     }
 
     function formatarHoraAtual() { const now = new Date(); return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); }
@@ -939,35 +1528,52 @@
       if (etapaAtualIndex >= etapasPontoAtivas.length) return;
       const etapa = etapasPontoAtivas[etapaAtualIndex];
       appState.horarios[etapa.id] = formatarHoraAtual();
-      showToast(`${etapa.txt.replace('\n', ' ')} Registrado!`, "fa-clock");
-      
-      recalcularEtapaAtual(); 
+      showToast(`${etapa.txt} — ${appState.horarios[etapa.id]}`, "fa-clock");
+      recalcularEtapaAtual();
       atualizarVisuaisTempos();
-      salvarEstadoAtual(); 
+      salvarEstadoAtual();
     }
 
     function atualizarHorarioManual(idEtapa, novoValor) {
-      if(novoValor) appState.horarios[idEtapa] = novoValor; else delete appState.horarios[idEtapa]; 
-      recalcularEtapaAtual(); 
+      if (novoValor) appState.horarios[idEtapa] = novoValor; else delete appState.horarios[idEtapa];
+      recalcularEtapaAtual();
       atualizarVisuaisTempos();
       salvarEstadoAtual();
     }
 
     function recalcularEtapaAtual() {
-      for(let i = 0; i < etapasPontoAtivas.length; i++) { if(!appState.horarios[etapasPontoAtivas[i].id]) { etapaAtualIndex = i; return; } }
-      etapaAtualIndex = etapasPontoAtivas.length; 
+      for (let i = 0; i < etapasPontoAtivas.length; i++) {
+        if (!appState.horarios[etapasPontoAtivas[i].id]) { etapaAtualIndex = i; return; }
+      }
+      etapaAtualIndex = etapasPontoAtivas.length;
     }
 
-    function resetarTempos() { if(confirm("Deseja repor os horários desta operação?")) { appState.horarios = {}; recalcularEtapaAtual(); atualizarVisuaisTempos(); salvarEstadoAtual(); } }
+    function resetarTempos() { document.getElementById('modal-reset').style.display = 'flex'; }
+    function fecharModalReset() { document.getElementById('modal-reset').style.display = 'none'; }
+    function executarResetTempos() {
+      fecharModalReset();
+      appState.horarios = {};
+      recalcularEtapaAtual();
+      atualizarVisuaisTempos();
+      salvarEstadoAtual();
+      showToast("Horários zerados.", "fa-rotate-left");
+    }
 
-    function calcularDiferencaMinutos(hIni, hFim) { if (!hIni || !hFim) return ''; let pI = hIni.split(':'), pF = hFim.split(':'); let mI = parseInt(pI[0]) * 60 + parseInt(pI[1]); let mF = parseInt(pF[0]) * 60 + parseInt(pF[1]); if (mF < mI) mF += 24 * 60; return mF - mI; }
+    function calcularDiferencaMinutos(hIni, hFim) {
+      if (!hIni || !hFim) return '';
+      let pI = hIni.split(':'), pF = hFim.split(':');
+      let mI = parseInt(pI[0]) * 60 + parseInt(pI[1]);
+      let mF = parseInt(pF[0]) * 60 + parseInt(pF[1]);
+      if (mF < mI) mF += 24 * 60;
+      return mF - mI;
+    }
 
     function enviarSyncParcialFirebase(payload) {
-        if (!auth || !auth.currentUser || !db || isDeleting) return;
-        clearTimeout(autoSaveTimeout);
-        autoSaveTimeout = setTimeout(() => {
-          if(!isDeleting) db.ref('controle_logistico/' + payload.id).set(payload).catch(e => console.log('Aguardando rede...'));
-        }, 1000);
+      if (!auth || !auth.currentUser || !db || isDeleting) return;
+      clearTimeout(autoSaveTimeout);
+      autoSaveTimeout = setTimeout(() => {
+        if (!isDeleting) db.ref('controle_logistico/' + payload.id).set(payload).catch(e => console.log('Aguardando rede...'));
+      }, 1000);
     }
 
     function initFirebaseApp() {
@@ -975,189 +1581,214 @@
       if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
       db = firebase.database(); auth = firebase.auth();
 
+      /* Sessão válida somente enquanto o app/aba estiver aberto */
+      try { auth.setPersistence(firebase.auth.Auth.Persistence.SESSION); } catch (e) { console.log('Persistência de sessão indisponível', e); }
+
       auth.onAuthStateChanged((user) => {
         if (user) {
-            resetTimer();
-            document.getElementById('email-export').value = user.email || '';
-            db.ref('cadastros/operadores').once('value').then(snap => {
-               let ops = snap.val(); let arr = Array.isArray(ops) ? ops.filter(o => o) : Object.values(ops || {}); let opProfile = arr.find(o => o && o.email && o.email.toLowerCase() === user.email.toLowerCase());
-               if (opProfile) { document.getElementById('form-operador').value = opProfile.nome; document.getElementById('form-turno').value = opProfile.turno; } else { document.getElementById('form-operador').value = user.email.split('@')[0].toUpperCase(); document.getElementById('form-turno').value = "A"; }
-            });
-            document.getElementById('btn-logout').classList.remove('hidden');
-            if (currentView === 'login') navTo('patio'); 
-        } else { clearTimeout(inactivityTimer); navTo('login'); }
+          resetTimer();
+          iniciarVigilanciaSessao();
+          document.getElementById('email-export').value = user.email || '';
+          operadorLogado = { nome: (user.email || '').split('@')[0].toUpperCase(), email: user.email || '', turno: 'A' };
+          aplicarOperadorLogadoUI();
+
+          db.ref('cadastros/operadores').once('value').then(snap => {
+            let ops = snap.val(); let arr = Array.isArray(ops) ? ops.filter(o => o) : Object.values(ops || {});
+            let opProfile = arr.find(o => o && o.email && o.email.toLowerCase() === user.email.toLowerCase());
+            if (opProfile) {
+              operadorLogado = { nome: (opProfile.nome || '').toUpperCase(), email: user.email, turno: (opProfile.turno || 'A').toUpperCase() };
+              document.getElementById('form-operador').value = operadorLogado.nome;
+              document.getElementById('form-turno').value = operadorLogado.turno;
+            } else {
+              document.getElementById('form-operador').value = operadorLogado.nome;
+              document.getElementById('form-turno').value = "A";
+            }
+            aplicarOperadorLogadoUI();
+          });
+          document.getElementById('btn-logout').classList.remove('hidden');
+          if (currentView === 'login') navTo('patio');
+        } else {
+          clearTimeout(inactivityTimer);
+          clearInterval(sessaoTickTimer);
+          aplicarOperadorLogadoUI();
+          navTo('login');
+        }
       });
 
-      // SINCRONIZAÇÃO COMPARTILHADA DA NUVEM (Lê tudo em tempo real)
       db.ref('controle_logistico').on('value', (snapshot) => {
-          if (snapshot.exists()) {
-              let vals = snapshot.val();
-              filaRegistros = Object.values(vals);
-          } else {
-              filaRegistros = [];
-          }
-          if (currentView === 'patio') renderizarPatio();
+        filaRegistros = snapshot.exists() ? Object.values(snapshot.val()) : [];
+        if (currentView === 'patio') renderizarPatio();
       });
 
-      db.ref('.info/connected').on('value', snap => { 
-        const icon = document.getElementById('sync-status'); 
-        icon.className = snap.val() === true ? 'w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse'; 
+      db.ref('.info/connected').on('value', snap => {
+        const icon = document.getElementById('sync-status');
+        icon.className = snap.val() === true ? 'dot-on' : 'dot-off';
       });
 
-      db.ref('cadastros/operadores').on('value', snap => { const dl = document.getElementById('op-list'); dl.innerHTML = ''; operadoresMap = {}; const arr = Array.isArray(snap.val()) ? snap.val().filter(x=>x) : Object.values(snap.val()||{}); arr.forEach(o => { let nome = (typeof o === 'object' ? o.nome : o).toUpperCase(); operadoresMap[nome] = (typeof o === 'object' ? (o.turno || 'A') : 'A').toUpperCase(); dl.innerHTML += `<option value="${nome}">`; }); });
-      
-      db.ref('cadastros/fornecedores').on('value', snap => { 
-        const arr = Array.isArray(snap.val()) ? snap.val().filter(x=>x) : Object.values(snap.val()||{}); 
+      db.ref('cadastros/operadores').on('value', snap => {
+        const dl = document.getElementById('op-list'); dl.innerHTML = ''; operadoresMap = {};
+        const arr = Array.isArray(snap.val()) ? snap.val().filter(x => x) : Object.values(snap.val() || {});
+        arr.forEach(o => {
+          let nome = (typeof o === 'object' ? o.nome : o).toUpperCase();
+          operadoresMap[nome] = (typeof o === 'object' ? (o.turno || 'A') : 'A').toUpperCase();
+          dl.innerHTML += `<option value="${nome}">`;
+        });
+      });
+
+      db.ref('cadastros/fornecedores').on('value', snap => {
+        const arr = Array.isArray(snap.val()) ? snap.val().filter(x => x) : Object.values(snap.val() || {});
         listaFornecedoresApp = arr.map(f => f.toUpperCase());
         renderFornecedores(listaFornecedoresApp);
       });
     }
 
-    // --- EXPORTAÇÃO AVANÇADA (EXCEL COM DUAS ABAS E FILTRO DE DATA) ---
+    // --- EXPORTAÇÃO (EXCEL COM DUAS ABAS E FILTRO DE DATA) ---
     function prepararDadosExcel(dados) {
-        return dados.map(r => ({
-            "Data": r.data ? r.data.split('-').reverse().join('/') : "",
-            "Turno": r.turno || "",
-            "Fornecedor": r.fornecedor || "",
-            "Placa": r.placa || "",
-            "Doca": r.doca || "",
-            "Operador": r.operador || "",
-            "NF": r.nf || "",
-            "Caixas": parseInt(r.qtd_caixas) || 0,
-            "Chegada": r.chegada || "",
-            "Lib. Portaria": r.lib_portaria || "",
-            "Espera Portaria (m)": r.espera_port || "",
-            "Ini. Descarga": r.ini_desc || "",
-            "Fim Descarga": r.fim_desc || "",
-            "Descarga (m)": r.descarga || "",
-            "Ini. Conferência": r.ini_conf || "",
-            "Fim Conferência": r.fim_conf || "",
-            "Conferência (m)": r.conferencia || "",
-            "Fez Pesagem?": r.fez_pesagem || "",
-            "Ini. Pesagem": r.ini_pesag || "",
-            "Fim Pesagem": r.fim_pesag || "",
-            "Pesagem (m)": r.pesag || "",
-            "Saída": r.saida || "",
-            "Lead Time (m)": r.lead_time || "",
-            "Status": r.status || "",
-            "Motivo Atraso": r.motivo_atraso || ""
-        }));
+      return dados.map(r => ({
+        "Data": r.data ? r.data.split('-').reverse().join('/') : "",
+        "Turno": r.turno || "",
+        "Fornecedor": r.fornecedor || "",
+        "Placa": r.placa || "",
+        "Doca": r.doca || "",
+        "Operador": r.operador || "",
+        "Operador Logado": r.operador_logado || "",
+        "NF": r.nf || "",
+        "Caixas": parseInt(r.qtd_caixas) || 0,
+        "Chegada": r.chegada || "",
+        "Lib. Portaria": r.lib_portaria || "",
+        "Espera Portaria (m)": r.espera_port || "",
+        "Ini. Descarga": r.ini_desc || "",
+        "Fim Descarga": r.fim_desc || "",
+        "Descarga (m)": r.descarga || "",
+        "Carreg. Embalagem?": r.emb_carregamento || (r.chegou_emb === 'SIM' && r.tipo_embalagem === 'CARREGAMENTO' ? 'SIM' : 'NÃO'),
+        "Ini. Carreg. Emb.": r.ini_carr || "",
+        "Fim Carreg. Emb.": r.fim_carr || "",
+        "Carreg. Emb. (m)": r.carreg || "",
+        "Descarr. Embalagem?": r.emb_descarregamento || (r.chegou_emb === 'SIM' && r.tipo_embalagem === 'DESCARREGAMENTO' ? 'SIM' : 'NÃO'),
+        "Ini. Descarr. Emb.": r.ini_emb_desc || "",
+        "Fim Descarr. Emb.": r.fim_emb_desc || "",
+        "Descarr. Emb. (m)": r.desc_emb || "",
+        "Ini. Conferência": r.ini_conf || "",
+        "Fim Conferência": r.fim_conf || "",
+        "Conferência (m)": r.conferencia || "",
+        "Fez Pesagem?": r.fez_pesagem || "",
+        "Ini. Pesagem": r.ini_pesag || "",
+        "Fim Pesagem": r.fim_pesag || "",
+        "Pesagem (m)": r.pesag || "",
+        "Saída": r.saida || "",
+        "Lead Time (m)": r.lead_time || "",
+        "Status": r.status || "",
+        "Motivo Atraso": r.motivo_atraso || ""
+      }));
     }
 
     function obterDadosFiltradosPorData() {
-        const dtIni = document.getElementById('export-data-ini').value;
-        const dtFim = document.getElementById('export-data-fim').value;
-        let filtrados = filaRegistros;
-        if(dtIni) filtrados = filtrados.filter(r => r.data >= dtIni);
-        if(dtFim) filtrados = filtrados.filter(r => r.data <= dtFim);
-        return filtrados;
+      const dtIni = document.getElementById('export-data-ini').value;
+      const dtFim = document.getElementById('export-data-fim').value;
+      let filtrados = filaRegistros;
+      if (dtIni) filtrados = filtrados.filter(r => r.data >= dtIni);
+      if (dtFim) filtrados = filtrados.filter(r => r.data <= dtFim);
+      return [...filtrados].sort((a, b) => marcaTempoRegistro(b) - marcaTempoRegistro(a));
     }
 
     function gerarWorkBookExportacao() {
-        const dados = obterDadosFiltradosPorData();
-        if(dados.length === 0) return null;
+      const dados = obterDadosFiltradosPorData();
+      if (dados.length === 0) return null;
 
-        // Aba 1: Registros Diários com Filtro Automático
-        const dadosFormatados = prepararDadosExcel(dados);
-        const wsRegistros = XLSX.utils.json_to_sheet(dadosFormatados); 
-        wsRegistros['!cols'] = [ {wch: 12}, {wch: 8}, {wch: 25}, {wch: 12}, {wch: 12}, {wch: 20}, {wch: 15}, {wch: 8}, {wch: 10}, {wch: 12}, {wch: 18}, {wch: 12}, {wch: 12}, {wch: 14}, {wch: 15}, {wch: 15}, {wch: 16}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 14}, {wch: 10}, {wch: 14}, {wch: 15}, {wch: 40} ];
-        
-        const range = XLSX.utils.decode_range(wsRegistros['!ref']);
-        wsRegistros['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
+      const dadosFormatados = prepararDadosExcel(dados);
+      const wsRegistros = XLSX.utils.json_to_sheet(dadosFormatados);
+      wsRegistros['!cols'] = [ {wch:12},{wch:8},{wch:25},{wch:12},{wch:12},{wch:20},{wch:20},{wch:15},{wch:8},{wch:10},{wch:13},{wch:18},{wch:13},{wch:13},{wch:13},{wch:19},{wch:17},{wch:17},{wch:17},{wch:20},{wch:18},{wch:18},{wch:18},{wch:15},{wch:15},{wch:16},{wch:13},{wch:12},{wch:12},{wch:13},{wch:10},{wch:14},{wch:14},{wch:40} ];
 
-        // Aba 2: Resumo Gerencial (Tabela Dinâmica Simulada)
-        const resumoAgrupado = {};
-        dados.forEach(r => {
-            const f = r.fornecedor || 'NÃO IDENTIFICADO';
-            if(!resumoAgrupado[f]) resumoAgrupado[f] = { veiculos: 0, caixas: 0, sumLd: 0, atrasos: 0 };
-            resumoAgrupado[f].veiculos++;
-            resumoAgrupado[f].caixas += parseInt(r.qtd_caixas) || 0;
-            const lt = parseInt(r.lead_time);
-            if(!isNaN(lt)) { resumoAgrupado[f].sumLd += lt; if(lt > 120) resumoAgrupado[f].atrasos++; }
-        });
+      const range = XLSX.utils.decode_range(wsRegistros['!ref']);
+      wsRegistros['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
 
-        const arrayResumo = Object.keys(resumoAgrupado).map(f => ({
-            "Transportadora / Fornecedor": f,
-            "Total de Veículos": resumoAgrupado[f].veiculos,
-            "Volume de Caixas": resumoAgrupado[f].caixas,
-            "Média de Lead Time (min)": resumoAgrupado[f].veiculos > 0 ? Math.round(resumoAgrupado[f].sumLd / resumoAgrupado[f].veiculos) : 0,
-            "Ocorrências de Atraso (>120m)": resumoAgrupado[f].atrasos
-        })).sort((a, b) => b["Total de Veículos"] - a["Total de Veículos"]);
+      const resumoAgrupado = {};
+      dados.forEach(r => {
+        const f = r.fornecedor || 'NÃO IDENTIFICADO';
+        if (!resumoAgrupado[f]) resumoAgrupado[f] = { veiculos: 0, caixas: 0, sumLd: 0, atrasos: 0, embC: 0, embD: 0 };
+        resumoAgrupado[f].veiculos++;
+        resumoAgrupado[f].caixas += parseInt(r.qtd_caixas) || 0;
+        if (r.emb_carregamento === 'SIM') resumoAgrupado[f].embC++;
+        if (r.emb_descarregamento === 'SIM') resumoAgrupado[f].embD++;
+        const lt = parseInt(r.lead_time);
+        if (!isNaN(lt)) { resumoAgrupado[f].sumLd += lt; if (lt > 120) resumoAgrupado[f].atrasos++; }
+      });
 
-        const wsResumo = XLSX.utils.json_to_sheet(arrayResumo, {origin: "A3"});
-        XLSX.utils.sheet_add_aoa(wsResumo, [["RESUMO GERENCIAL (TABELA DINÂMICA)"], ["Análise Consolidada por Transportadora no Período"]], {origin: "A1"});
-        
-        wsResumo['!merges'] = [
-            { s: {r: 0, c: 0}, e: {r: 0, c: 4} }, 
-            { s: {r: 1, c: 0}, e: {r: 1, c: 4} }  
-        ];
-        wsResumo['!cols'] = [ {wch: 35}, {wch: 18}, {wch: 18}, {wch: 25}, {wch: 25} ];
+      const arrayResumo = Object.keys(resumoAgrupado).map(f => ({
+        "Transportadora / Fornecedor": f,
+        "Total de Veículos": resumoAgrupado[f].veiculos,
+        "Volume de Caixas": resumoAgrupado[f].caixas,
+        "Carreg. Embalagem": resumoAgrupado[f].embC,
+        "Descarr. Embalagem": resumoAgrupado[f].embD,
+        "Média de Lead Time (min)": resumoAgrupado[f].veiculos > 0 ? Math.round(resumoAgrupado[f].sumLd / resumoAgrupado[f].veiculos) : 0,
+        "Ocorrências de Atraso (>120m)": resumoAgrupado[f].atrasos
+      })).sort((a, b) => b["Total de Veículos"] - a["Total de Veículos"]);
 
-        const wb = XLSX.utils.book_new(); 
-        XLSX.utils.book_append_sheet(wb, wsResumo, "Tabela Dinâmica");
-        XLSX.utils.book_append_sheet(wb, wsRegistros, "Dados Diários");
-        
-        return wb;
+      const wsResumo = XLSX.utils.json_to_sheet(arrayResumo, { origin: "A3" });
+      XLSX.utils.sheet_add_aoa(wsResumo, [["RESUMO GERENCIAL (TABELA DINÂMICA)"], ["Análise Consolidada por Transportadora no Período"]], { origin: "A1" });
+      wsResumo['!merges'] = [ { s: {r:0,c:0}, e: {r:0,c:6} }, { s: {r:1,c:0}, e: {r:1,c:6} } ];
+      wsResumo['!cols'] = [ {wch:35},{wch:18},{wch:18},{wch:18},{wch:19},{wch:25},{wch:25} ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, wsResumo, "Tabela Dinâmica");
+      XLSX.utils.book_append_sheet(wb, wsRegistros, "Dados Diários");
+      return wb;
     }
 
     function baixarExcel() {
       const wb = gerarWorkBookExportacao();
-      if(!wb) { showToast("Nenhum registro encontrado neste período.", "fa-circle-exclamation"); return; }
+      if (!wb) { showToast("Nenhum registro encontrado neste período.", "fa-circle-exclamation"); return; }
       const hj = new Date();
       const fileName = `App_Logistica_${hj.getFullYear()}-${hj.getMonth()+1}-${hj.getDate()}.xlsx`;
-      XLSX.writeFile(wb, fileName); 
+      XLSX.writeFile(wb, fileName);
       showToast("Download do Excel concluído!", "fa-file-excel");
     }
 
     async function enviarPorEmail() {
       const emailDestino = document.getElementById('email-export').value;
-      if(!emailDestino) { showToast("Informe um e-mail de destino.", "fa-triangle-exclamation"); return; }
-      
+      if (!emailDestino) { showToast("Informe um e-mail de destino.", "fa-triangle-exclamation"); return; }
+
       const wb = gerarWorkBookExportacao();
-      if(!wb) { showToast("Nenhum registro encontrado neste período.", "fa-circle-exclamation"); return; }
+      if (!wb) { showToast("Nenhum registro encontrado neste período.", "fa-circle-exclamation"); return; }
 
       baixarExcel();
 
       try {
-          const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
-          const blob = new Blob([wbout], {type: 'application/octet-stream'});
-          const file = new File([blob], "Relatorio_Logistica_HL.xlsx", {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/octet-stream' });
+        const file = new File([blob], "Relatorio_Logistica_HL.xlsx", { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-              await navigator.share({
-                  title: 'Relatório Logístico HL',
-                  text: 'Segue em anexo o relatório exportado do sistema.',
-                  files: [file]
-              });
-              showToast("Opções de envio abertas!", "fa-share-nodes");
-              return; 
-          }
-      } catch (err) {
-          console.log("Compartilhamento nativo cancelado ou não suportado", err);
-      }
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ title: 'Relatório Logístico HL', text: 'Segue em anexo o relatório exportado do sistema.', files: [file] });
+          showToast("Opções de envio abertas!", "fa-share-nodes");
+          return;
+        }
+      } catch (err) { console.log("Compartilhamento nativo cancelado ou não suportado", err); }
 
       setTimeout(() => {
-          const assunto = encodeURIComponent("Relatório Logístico - HL Mando");
-          const corpo = encodeURIComponent(`Olá,\n\nSegue o relatório logístico.\n\n(DICA: O arquivo Excel acabou de ser baixado no seu dispositivo. Por favor, anexe-o neste e-mail antes de enviar).\n\nEnviado para: ${emailDestino}`);
-          window.location.href = `mailto:${emailDestino}?subject=${assunto}&body=${corpo}`;
-          showToast("App de E-mail aberto.", "fa-envelope-open");
+        const assunto = encodeURIComponent("Relatório Logístico - HL Mando");
+        const corpo = encodeURIComponent(`Olá,\n\nSegue o relatório logístico.\n\n(DICA: O arquivo Excel acabou de ser baixado no seu dispositivo. Por favor, anexe-o neste e-mail antes de enviar).\n\nEnviado para: ${emailDestino}`);
+        window.location.href = `mailto:${emailDestino}?subject=${assunto}&body=${corpo}`;
+        showToast("App de E-mail aberto.", "fa-envelope-open");
       }, 800);
     }
 
-    async function sincronizarFilaManual() {
-      showToast("Sincronizado com a nuvem!", "fa-cloud-arrow-up");
-    }
+    async function sincronizarFilaManual() { showToast("Sincronizado com a nuvem!", "fa-cloud-arrow-up"); }
 
     window.onload = function() {
-      initFirebaseApp(); 
-      const loginEmail = document.getElementById('login-email'); if(loginEmail) loginEmail.addEventListener('blur', function() { this.value = formatarEmail(this.value); });
-      
+      initFirebaseApp();
+      marcarAtividade();
+      sincronizarTodosSegs();
+      atualizarChipSessao();
+
+      const loginEmail = document.getElementById('login-email');
+      if (loginEmail) loginEmail.addEventListener('blur', function() { this.value = formatarEmail(this.value); });
+
       document.querySelectorAll('#view-dados input, #view-dados select, #form-motivo').forEach(el => {
-         el.addEventListener('input', salvarEstadoAtual);
-         el.addEventListener('change', salvarEstadoAtual);
+        el.addEventListener('input', salvarEstadoAtual);
+        el.addEventListener('change', salvarEstadoAtual);
       });
     };
   </script>
 </body>
 </html>
-
