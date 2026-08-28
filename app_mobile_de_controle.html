@@ -21,8 +21,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
 
-  <!-- SheetJS para Excel Avançado -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- SheetJS para Excel Avançado (DEFER ADICIONADO PARA NÃO TRAVAR O COLETOR) -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
     :root {
@@ -722,7 +722,7 @@
             <input type="date" id="export-data-fim" class="mobile-input text-xs" style="padding:9px;" />
           </div>
         </div>
-        <p class="text-[9px] text-slate-400 font-bold mb-3">Em branco = exporta toda a base.</p>
+        <p class="text-[9px] text-slate-400 font-bold mb-3">Em branco = exporta toda a base (apenas os últimos carregados).</p>
 
         <label class="mobile-label">E-mail destino</label>
         <input type="email" id="email-export" class="mobile-input normal-case text-sm mb-3" placeholder="email@exemplo.com" />
@@ -763,7 +763,7 @@
     </div>
   </nav>
 
-  <!-- Modal de Cadastro / Criar Conta (Suporta Nome de Usuário e E-mail) -->
+  <!-- Modal de Cadastro / Criar Conta -->
   <div id="modal-cadastro-usuario" class="modal-overlay">
     <div class="modal-card bg-white rounded-2xl p-5 max-w-sm w-full border border-slate-200">
       <div class="flex items-center justify-between mb-4">
@@ -830,6 +830,32 @@
   </div>
 
   <script>
+    // === Service Worker Dinâmico para Cache Offline ===
+    // Isso fará o Tailwind, Firebase e FontAwesome carregarem da memória do celular, economizando muita internet
+    const swCode = `
+      const CACHE_NAME = 'hl-logistica-cache-v1';
+      self.addEventListener('install', e => self.skipWaiting());
+      self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+      self.addEventListener('fetch', e => {
+        if (e.request.method !== 'GET') return;
+        e.respondWith(
+          caches.match(e.request).then(cached => {
+            const fetched = fetch(e.request).then(res => {
+              const cacheCopy = res.clone();
+              caches.open(CACHE_NAME).then(c => c.put(e.request, cacheCopy));
+              return res;
+            }).catch(() => cached);
+            return cached || fetched;
+          })
+        );
+      });
+    `;
+    const blob = new Blob([swCode], { type: 'application/javascript' });
+    const swUrl = URL.createObjectURL(blob);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register(swUrl).then(() => console.log("Cache Offline / PWA Ativado!"));
+    }
+
     let appState = { activeId: null, horarios: {} };
     let filaRegistros = [];
     let etapasPontoAtivas = [];
@@ -903,7 +929,7 @@
       const restante = Math.max(0, INACTIVITY_TIME_MS - tempoInativoMs());
       const m = Math.floor(restante / 60000);
       const s = Math.floor((restante % 60000) / 1000);
-      txt.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      txt.innerText = \`\${String(m).padStart(2, '0')}:\${String(s).padStart(2, '0')}\`;
       if (restante <= 60000) chip.classList.add('alerta'); else chip.classList.remove('alerta');
     }
 
@@ -924,7 +950,7 @@
     function showToast(msg, icon = 'fa-circle-info') {
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${msg}</span>`;
+      toast.innerHTML = \`<i class="fa-solid \${icon}"></i> <span>\${msg}</span>\`;
       document.body.appendChild(toast);
       toast.offsetHeight;
       toast.classList.add('show');
@@ -977,9 +1003,9 @@
 
     function setToday() {
       const now = new Date(); const ano = now.getFullYear(); const mes = String(now.getMonth() + 1).padStart(2, '0'); const dia = String(now.getDate()).padStart(2, '0');
-      document.getElementById('form-data').value = `${ano}-${mes}-${dia}`;
+      document.getElementById('form-data').value = \`\${ano}-\${mes}-\${dia}\`;
       const h = String(now.getHours()).padStart(2, '0'); const m = String(now.getMinutes()).padStart(2, '0');
-      document.getElementById('form-hora').value = `${h}:${m}`;
+      document.getElementById('form-hora').value = \`\${h}:\${m}\`;
       salvarEstadoAtual();
     }
 
@@ -1009,13 +1035,12 @@
         emailFinal = emailFinal.replace(/[^a-z0-9._-]/g, '') + '@hlcompany.com';
       }
 
-      // Validação: Verifica se o usuário já existe na base mestre antes de criar
+      // Validação aprimorada
       db.ref('cadastros/operadores').once('value').then(snap => {
         let ops = snap.val(); 
-        let arr = Array.isArray(ops) ? ops.filter(o => o) : Object.values(ops || {});
+        let arr = Array.isArray(ops) ? ops.filter(Boolean) : Object.values(ops || {}).filter(Boolean);
         
         let operadorAutorizado = arr.find(o => {
-            if (!o) return false;
             let u = (typeof o === 'object' ? (o.usuario || '') : '').trim().toLowerCase();
             let e = (typeof o === 'object' ? (o.email || '') : '').trim().toLowerCase();
             return (u && u === targetU) || (e && e === targetU) || (e && e === emailFinal);
@@ -1026,9 +1051,9 @@
             return;
         }
 
-        // Se o operador está autorizado pelo Master Hub, prossegue com a criação da credencial
         auth.createUserWithEmailAndPassword(emailFinal, senha).then((userCredential) => {
-          document.getElementById('email-export').value = userCredential.user.email || '';
+          const emailExp = document.getElementById('email-export');
+          if (emailExp) emailExp.value = userCredential.user.email || '';
           fecharModalCadastro();
           showToast("Acesso validado e vinculado com sucesso!", "fa-check-circle");
         }).catch(error => {
@@ -1054,7 +1079,7 @@
       const inputId = FLAG_INPUTS[nome];
       if (!inputId) return;
       const input = document.getElementById(inputId);
-      input.value = valor;
+      if (input) input.value = valor;
       atualizarSegUI(nome);
 
       if (nome === 'emb_carr' && valor !== 'SIM') { delete appState.horarios.ini_carr; delete appState.horarios.fim_carr; }
@@ -1084,8 +1109,14 @@
       atualizarDicaEmbalagem();
     }
 
-    function temEmbCarr() { return document.getElementById('form-emb-carr').value === 'SIM'; }
-    function temEmbDesc() { return document.getElementById('form-emb-desc').value === 'SIM'; }
+    function temEmbCarr() { 
+      const el = document.getElementById('form-emb-carr');
+      return el ? el.value === 'SIM' : false; 
+    }
+    function temEmbDesc() { 
+      const el = document.getElementById('form-emb-desc');
+      return el ? el.value === 'SIM' : false; 
+    }
 
     function atualizarDicaEmbalagem() {
       const hint = document.getElementById('emb-hint');
@@ -1123,14 +1154,15 @@
       const el = document.getElementById('form-operador');
       if (!el) return;
       el.value = operadorLogado.nome || '';
-      if (operadorLogado.turno) document.getElementById('form-turno').value = operadorLogado.turno;
+      const formTurno = document.getElementById('form-turno');
+      if (operadorLogado.turno && formTurno) formTurno.value = operadorLogado.turno;
       salvarEstadoAtual();
       showToast('Operador logado aplicado ao registro.', 'fa-user-check');
     }
 
     function navTo(viewId) {
       document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
-      const target = document.getElementById(`view-${viewId}`);
+      const target = document.getElementById(\`view-\${viewId}\`);
       if (target) target.classList.add('active');
       currentView = viewId;
 
@@ -1140,7 +1172,7 @@
       } else {
         if (nav) nav.style.display = 'flex';
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        const btn = document.getElementById(`nav-btn-${viewId}`);
+        const btn = document.getElementById(\`nav-btn-\${viewId}\`);
         if (btn) btn.classList.add('active');
       }
 
@@ -1149,7 +1181,7 @@
       if (viewId === 'patio') { renderizarPatio(); desbloquearTabs(false); }
       else if (viewId === 'tempos') { atualizarEtapasDinamicas(); }
 
-      const alvoScroll = document.getElementById(`view-${viewId}`);
+      const alvoScroll = document.getElementById(\`view-\${viewId}\`);
       if (alvoScroll) alvoScroll.scrollTo({ top: 0, behavior: 'smooth' });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1157,6 +1189,7 @@
     function desbloquearTabs(liberar) {
       ['nav-btn-dados', 'nav-btn-tempos', 'nav-btn-finalizar'].forEach(id => {
         const el = document.getElementById(id);
+        if (!el) return;
         if (liberar) el.classList.remove('opacity-50', 'pointer-events-none');
         else el.classList.add('opacity-50', 'pointer-events-none');
       });
@@ -1165,11 +1198,13 @@
     document.getElementById('login-senha').addEventListener('keydown', function(event) { if (event.key === 'Enter') { event.preventDefault(); fazerLogin(); } });
 
     function fazerLogin() {
-      const userRaw = document.getElementById('login-email').value; const senha = document.getElementById('login-senha').value;
+      const userRaw = document.getElementById('login-email').value; 
+      const senha = document.getElementById('login-senha').value;
       if (!userRaw || !senha) { showToast("Preencha usuário/e-mail e senha.", "fa-circle-exclamation"); return; }
       const emailFinal = formatarEmail(userRaw);
       auth.signInWithEmailAndPassword(emailFinal, senha).then((userCredential) => {
-        document.getElementById('email-export').value = userCredential.user.email || '';
+        const exp = document.getElementById('email-export');
+        if (exp) exp.value = userCredential.user.email || '';
         showToast("Login efetuado com sucesso!", "fa-check-circle");
       }).catch(error => {
         showToast(error.code === 'auth/invalid-credential' ? "Usuário/e-mail ou senha incorretos." : "Erro: " + error.message, "fa-circle-xmark");
@@ -1179,8 +1214,10 @@
     function logout(mensagemToast = "Sessão terminada.") {
       if (auth) {
         auth.signOut().then(() => {
-          document.getElementById('btn-logout').classList.add('hidden');
-          document.getElementById('login-senha').value = '';
+          const btnLout = document.getElementById('btn-logout');
+          if (btnLout) btnLout.classList.add('hidden');
+          const loginSenha = document.getElementById('login-senha');
+          if (loginSenha) loginSenha.value = '';
           clearTimeout(inactivityTimer);
           appState.activeId = null;
           operadorLogado = { nome: '---', email: '', turno: 'A' };
@@ -1209,6 +1246,8 @@
       const empty = document.getElementById('empty-patio');
       const contador = document.getElementById('contador-patio');
       const busca = (document.getElementById('patio-busca')?.value || '').trim().toUpperCase();
+
+      if (!lista || !empty || !contador) return;
 
       lista.innerHTML = '';
       contador.innerText = filaRegistros.length;
@@ -1241,27 +1280,27 @@
           : '<span class="chip chip-blue"><i class="fa-solid fa-clock"></i> Em operação</span>';
 
         const chips = [];
-        if (reg.doca) chips.push(`<span class="chip chip-gray"><i class="fa-solid fa-warehouse"></i> ${reg.doca}</span>`);
-        if (reg.operador) chips.push(`<span class="chip chip-gray"><i class="fa-regular fa-user"></i> ${reg.operador}</span>`);
+        if (reg.doca) chips.push(\`<span class="chip chip-gray"><i class="fa-solid fa-warehouse"></i> \${reg.doca}</span>\`);
+        if (reg.operador) chips.push(\`<span class="chip chip-gray"><i class="fa-regular fa-user"></i> \${reg.operador}</span>\`);
         if (reg.fez_pesagem === 'SIM') chips.push('<span class="chip chip-amber"><i class="fa-solid fa-scale-balanced"></i> Pesagem</span>');
         if (reg.emb_carregamento === 'SIM') chips.push('<span class="chip chip-violet"><i class="fa-solid fa-boxes-packing"></i> Carreg. emb.</span>');
         if (reg.emb_descarregamento === 'SIM') chips.push('<span class="chip chip-teal"><i class="fa-solid fa-box-open"></i> Descarr. emb.</span>');
 
-        lista.innerHTML += `
-          <div class="truck-card ${isFim ? 'fim' : ''}" onclick="abrirRegistro('${reg.id}')">
+        lista.innerHTML += \`
+          <div class="truck-card \${isFim ? 'fim' : ''}" onclick="abrirRegistro('\${reg.id}')">
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0 flex-1">
-                <p class="placa m-0">${reg.placa || 'SEM PLACA'}</p>
-                <p class="text-[11px] text-slate-500 font-bold mt-1 mb-0 truncate">${reg.fornecedor || 'Fornecedor não informado'}</p>
+                <p class="placa m-0">\${reg.placa || 'SEM PLACA'}</p>
+                <p class="text-[11px] text-slate-500 font-bold mt-1 mb-0 truncate">\${reg.fornecedor || 'Fornecedor não informado'}</p>
               </div>
-              <div class="flex-shrink-0">${status}</div>
+              <div class="flex-shrink-0">\${status}</div>
             </div>
-            <div class="flex flex-wrap gap-1.5">${chips.join(' ')}</div>
+            <div class="flex flex-wrap gap-1.5">\${chips.join(' ')}</div>
             <div class="flex items-center justify-between gap-2 pt-2" style="border-top:1px solid #eef1f6;">
-              <p class="text-[10px] font-bold text-slate-500 truncate m-0 min-w-0 flex-1">${descreverUltimaAcao(reg)}</p>
+              <p class="text-[10px] font-bold text-slate-500 truncate m-0 min-w-0 flex-1">\${descreverUltimaAcao(reg)}</p>
               <i class="fa-solid fa-chevron-right text-slate-300 text-[10px] flex-shrink-0"></i>
             </div>
-          </div>`;
+          </div>\`;
       });
     }
 
@@ -1282,7 +1321,7 @@
         ['chegada', 'Chegada registrada']
       ];
       for (const [campo, texto] of mapa) {
-        if (reg[campo]) return `${texto} às ${reg[campo]}`;
+        if (reg[campo]) return \`\${texto} às \${reg[campo]}\`;
       }
       return 'Registro criado — sem horários';
     }
@@ -1291,9 +1330,13 @@
       limparFormularioDOM();
       appState.activeId = "REG_" + Date.now();
       appState.horarios = {};
+      
+      const opField = document.getElementById('form-operador');
+      const turnoField = document.getElementById('form-turno');
+
       if (operadorLogado.nome && operadorLogado.nome !== '---') {
-        document.getElementById('form-operador').value = operadorLogado.nome;
-        document.getElementById('form-turno').value = operadorLogado.turno || 'A';
+        if (opField) opField.value = operadorLogado.nome;
+        if (turnoField) turnoField.value = operadorLogado.turno || 'A';
       }
       salvarEstadoAtual();
       desbloquearTabs(true);
@@ -1316,16 +1359,18 @@
       };
       Object.keys(appState.horarios).forEach(key => { if (!appState.horarios[key]) delete appState.horarios[key]; });
 
-      document.getElementById('form-data').value = reg.data || '';
-      document.getElementById('form-hora').value = reg.hora || '';
-      document.getElementById('form-turno').value = reg.turno || 'A';
-      document.getElementById('form-operador').value = reg.operador || '';
-      document.getElementById('form-fornecedor').value = reg.fornecedor || '';
-      document.getElementById('form-placa').value = reg.placa || '';
-      document.getElementById('form-doca').value = reg.doca || 'Rec';
-      document.getElementById('form-nf').value = reg.nf || '';
-      document.getElementById('form-caixas').value = reg.qtd_caixas || '';
-      document.getElementById('form-motivo').value = reg.motivo_atraso || '';
+      const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; }
+      
+      setVal('form-data', reg.data || '');
+      setVal('form-hora', reg.hora || '');
+      setVal('form-turno', reg.turno || 'A');
+      setVal('form-operador', reg.operador || '');
+      setVal('form-fornecedor', reg.fornecedor || '');
+      setVal('form-placa', reg.placa || '');
+      setVal('form-doca', reg.doca || 'Rec');
+      setVal('form-nf', reg.nf || '');
+      setVal('form-caixas', reg.qtd_caixas || '');
+      setVal('form-motivo', reg.motivo_atraso || '');
 
       setFlag('pesagem', reg.fez_pesagem === 'SIM' ? 'SIM' : 'NÃO', true);
       setFlag('conferencia', reg.fez_conferencia === 'NÃO' ? 'NÃO' : 'SIM', true);
@@ -1349,9 +1394,12 @@
       if (!appState.activeId || isDeleting) return;
 
       const h = appState.horarios;
-      const op = document.getElementById('form-operador').value.trim().toUpperCase();
-      const forn = document.getElementById('form-fornecedor').value.trim().toUpperCase();
-      const placa = document.getElementById('form-placa').value.trim().toUpperCase();
+      
+      const getVal = (id) => { const el = document.getElementById(id); return el ? el.value : ''; }
+      
+      const op = getVal('form-operador').trim().toUpperCase();
+      const forn = getVal('form-fornecedor').trim().toUpperCase();
+      const placa = getVal('form-placa').trim().toUpperCase();
       const embC = temEmbCarr() ? 'SIM' : 'NÃO';
       const embD = temEmbDesc() ? 'SIM' : 'NÃO';
 
@@ -1363,21 +1411,21 @@
       const payload = {
         id: appState.activeId,
         status: h.saida ? 'FINALIZADO' : 'EM_ANDAMENTO',
-        data: document.getElementById('form-data').value,
-        hora: document.getElementById('form-hora').value,
-        turno: document.getElementById('form-turno').value,
+        data: getVal('form-data'),
+        hora: getVal('form-hora'),
+        turno: getVal('form-turno'),
         operador: op, conferente: op, fornecedor: forn, placa: placa,
         operador_logado: operadorLogado.nome || '',
         email_logado: operadorLogado.email || '',
-        doca: document.getElementById('form-doca').value,
-        nf: document.getElementById('form-nf').value.trim().toUpperCase(),
-        qtd_caixas: document.getElementById('form-caixas').value,
+        doca: getVal('form-doca'),
+        nf: getVal('form-nf').trim().toUpperCase(),
+        qtd_caixas: getVal('form-caixas'),
         chegada: h.chegada || "", lib_portaria: h.lib_portaria || "",
         ini_desc: h.ini_desc || "", fim_desc: h.fim_desc || "",
         ini_conf: h.ini_conf || "", fim_conf: h.fim_conf || "",
         saida: h.saida || "",
-        fez_pesagem: document.getElementById('form-pesagem').value,
-        fez_conferencia: document.getElementById('form-conferencia').value,
+        fez_pesagem: getVal('form-pesagem'),
+        fez_conferencia: getVal('form-conferencia'),
         ini_pesag: h.ini_pesag || "", fim_pesag: h.fim_pesag || "",
         emb_carregamento: embC,
         emb_descarregamento: embD,
@@ -1392,7 +1440,7 @@
         conferencia: calcularDiferencaMinutos(h.ini_conf, h.fim_conf),
         pesag: calcularDiferencaMinutos(h.ini_pesag, h.fim_pesag),
         lead_time: calcularDiferencaMinutos(h.chegada, h.saida),
-        motivo_atraso: document.getElementById('form-motivo').value.trim().toUpperCase(),
+        motivo_atraso: getVal('form-motivo').trim().toUpperCase(),
         updated_at: Date.now()
       };
 
@@ -1404,17 +1452,25 @@
     }
 
     function atualizarHeadersAtivos() {
-      const p = document.getElementById('form-placa').value.trim().toUpperCase() || 'NOVO CAMINHÃO';
-      document.getElementById('header-placa-ativa').innerText = p;
-      document.getElementById('header-tempos-placa').innerText = p;
+      const placaEl = document.getElementById('form-placa');
+      const p = (placaEl ? placaEl.value.trim().toUpperCase() : '') || 'NOVO CAMINHÃO';
+      
+      const p1 = document.getElementById('header-placa-ativa');
+      const p2 = document.getElementById('header-tempos-placa');
+      if (p1) p1.innerText = p;
+      if (p2) p2.innerText = p;
     }
 
     function confirmarExclusaoAtual() {
       if (!appState.activeId) { showToast("Nenhum registro selecionado.", "fa-circle-exclamation"); return; }
-      document.getElementById('modal-exclusao').style.display = 'flex';
+      const modal = document.getElementById('modal-exclusao');
+      if (modal) modal.style.display = 'flex';
     }
 
-    function fecharModalExclusao() { document.getElementById('modal-exclusao').style.display = 'none'; }
+    function fecharModalExclusao() { 
+      const modal = document.getElementById('modal-exclusao');
+      if (modal) modal.style.display = 'none'; 
+    }
 
     function executarExclusaoDefinitiva() {
       isDeleting = true;
@@ -1444,11 +1500,12 @@
     }
 
     function limparFormularioDOM() {
-      document.getElementById('form-fornecedor').value = "";
-      document.getElementById('form-placa').value = "";
-      document.getElementById('form-nf').value = "";
-      document.getElementById('form-caixas').value = "";
-      document.getElementById('form-motivo').value = "";
+      const resetVal = (id) => { const el = document.getElementById(id); if (el) el.value = ''; }
+      resetVal('form-fornecedor');
+      resetVal('form-placa');
+      resetVal('form-nf');
+      resetVal('form-caixas');
+      resetVal('form-motivo');
       setFlag('pesagem', 'NÃO', true);
       setFlag('conferencia', 'SIM', true);
       setFlag('emb_carr', 'NÃO', true);
@@ -1457,7 +1514,8 @@
     }
 
     function abrirDropdownFornecedor() {
-      document.getElementById('forn-dropdown').classList.remove('hidden');
+      const drop = document.getElementById('forn-dropdown');
+      if (drop) drop.classList.remove('hidden');
       filtrarFornecedores();
     }
 
@@ -1472,33 +1530,42 @@
       const drop = document.getElementById('forn-dropdown');
       if (!drop) return;
       if (lista.length === 0) {
-        drop.innerHTML = `<div class="p-3 text-[12px] text-slate-400 font-bold text-center">Nenhum encontrado</div>`;
+        drop.innerHTML = \`<div class="p-3 text-[12px] text-slate-400 font-bold text-center">Nenhum encontrado</div>\`;
         return;
       }
-      drop.innerHTML = lista.map(f => `<div class="p-3 border-b border-slate-100 text-[12.5px] font-bold text-slate-700 cursor-pointer" onmousedown="selecionarFornecedor('${f}')">${f}</div>`).join('');
+      drop.innerHTML = lista.map(f => \`<div class="p-3 border-b border-slate-100 text-[12.5px] font-bold text-slate-700 cursor-pointer" onmousedown="selecionarFornecedor('\${f}')">\${f}</div>\`).join('');
     }
 
     function filtrarFornecedores() {
-      const val = document.getElementById('form-fornecedor').value.toUpperCase();
+      const fEl = document.getElementById('form-fornecedor');
+      if (!fEl) return;
+      const val = fEl.value.toUpperCase();
       renderFornecedores(listaFornecedoresApp.filter(f => f.includes(val)));
       salvarEstadoAtual();
     }
 
     function selecionarFornecedor(val) {
-      document.getElementById('form-fornecedor').value = val;
-      document.getElementById('forn-dropdown').classList.add('hidden');
+      const fEl = document.getElementById('form-fornecedor');
+      if (fEl) fEl.value = val;
+      const drop = document.getElementById('forn-dropdown');
+      if (drop) drop.classList.add('hidden');
       salvarEstadoAtual();
     }
 
     function onOperadorInput(val) {
       const opName = val.trim().toUpperCase();
-      if (operadoresMap[opName]) document.getElementById('form-turno').value = operadoresMap[opName];
+      if (operadoresMap[opName]) {
+        const tEl = document.getElementById('form-turno');
+        if (tEl) tEl.value = operadoresMap[opName];
+      }
       salvarEstadoAtual();
     }
 
     function atualizarEtapasDinamicas() {
-      const teveConferencia = document.getElementById('form-conferencia').value;
-      const tevePesagem = document.getElementById('form-pesagem').value;
+      const pEl = document.getElementById('form-pesagem');
+      const cEl = document.getElementById('form-conferencia');
+      const teveConferencia = cEl ? cEl.value : 'SIM';
+      const tevePesagem = pEl ? pEl.value : 'NÃO';
 
       let etapas = [{ id: 'chegada', txt: 'Registrar chegada', icon: 'fa-truck-arrow-right' }];
 
@@ -1531,16 +1598,17 @@
 
     function renderizarListaTempos() {
       const lista = document.getElementById('lista-horarios');
+      if (!lista) return;
       lista.innerHTML = '';
       etapasPontoAtivas.forEach((etapa) => {
-        lista.innerHTML += `
-          <li id="li-etapa-${etapa.id}" class="step-row">
-            <div id="div-etapa-${etapa.id}" class="step-name">
-              <div id="icon-etapa-${etapa.id}" class="w-5 text-center"><i class="fa-solid fa-circle text-[7px]"></i></div>
-              <span>${etapa.txt}</span>
+        lista.innerHTML += \`
+          <li id="li-etapa-\${etapa.id}" class="step-row">
+            <div id="div-etapa-\${etapa.id}" class="step-name">
+              <div id="icon-etapa-\${etapa.id}" class="w-5 text-center"><i class="fa-solid fa-circle text-[7px]"></i></div>
+              <span>\${etapa.txt}</span>
             </div>
-            <input type="time" id="input-etapa-${etapa.id}" class="time-input" value="${appState.horarios[etapa.id] || ''}" onchange="atualizarHorarioManual('${etapa.id}', this.value)" />
-          </li>`;
+            <input type="time" id="input-etapa-\${etapa.id}" class="time-input" value="\${appState.horarios[etapa.id] || ''}" onchange="atualizarHorarioManual('\${etapa.id}', this.value)" />
+          </li>\`;
       });
       recalcularEtapaAtual();
       atualizarVisuaisTempos();
@@ -1552,12 +1620,12 @@
       const barra = document.getElementById('progresso-barra');
       const txt = document.getElementById('progresso-texto');
       const atual = document.getElementById('progresso-etapa-atual');
-      if (barra) barra.style.width = total ? `${Math.round((feitas / total) * 100)}%` : '0%';
-      if (txt) txt.innerText = `${feitas} / ${total}`;
+      if (barra) barra.style.width = total ? \`\${Math.round((feitas / total) * 100)}%\` : '0%';
+      if (txt) txt.innerText = \`\${feitas} / \${total}\`;
       if (atual) {
         atual.innerHTML = etapaAtualIndex < total
-          ? `Próxima etapa: <strong class="text-slate-900">${etapasPontoAtivas[etapaAtualIndex].txt}</strong>`
-          : `<strong style="color:var(--green);">Todas as etapas concluídas</strong>`;
+          ? \`Próxima etapa: <strong class="text-slate-900">\${etapasPontoAtivas[etapaAtualIndex].txt}</strong>\`
+          : \`<strong style="color:var(--green);">Todas as etapas concluídas</strong>\`;
       }
     }
 
@@ -1565,13 +1633,14 @@
       const btn = document.getElementById('btn-ponto');
       const txt = document.getElementById('txt-ponto');
       const icon = document.getElementById('icon-ponto');
+      if (!btn || !txt || !icon) return;
 
       etapasPontoAtivas.forEach((etapa, idx) => {
-        const inputEl = document.getElementById(`input-etapa-${etapa.id}`);
-        const liEl = document.getElementById(`li-etapa-${etapa.id}`);
-        const divEl = document.getElementById(`div-etapa-${etapa.id}`);
-        const iconEl = document.getElementById(`icon-etapa-${etapa.id}`);
-        if (!inputEl) return;
+        const inputEl = document.getElementById(\`input-etapa-\${etapa.id}\`);
+        const liEl = document.getElementById(\`li-etapa-\${etapa.id}\`);
+        const divEl = document.getElementById(\`div-etapa-\${etapa.id}\`);
+        const iconEl = document.getElementById(\`icon-etapa-\${etapa.id}\`);
+        if (!inputEl || !liEl || !divEl || !iconEl) return;
 
         const hora = appState.horarios[etapa.id] || "";
         const isPast = hora !== "";
@@ -1579,7 +1648,7 @@
 
         if (inputEl.value !== hora && document.activeElement !== inputEl) inputEl.value = hora;
 
-        liEl.className = `step-row ${isCurrent ? 'atual' : ''}`;
+        liEl.className = \`step-row \${isCurrent ? 'atual' : ''}\`;
         divEl.className = 'step-name';
         divEl.style.color = isPast ? '#0f1729' : (isCurrent ? '#1d4ed8' : '#94a3b8');
         divEl.style.fontWeight = isPast ? '800' : '700';
@@ -1592,7 +1661,7 @@
       if (etapaAtualIndex < etapasPontoAtivas.length) {
         const proxima = etapasPontoAtivas[etapaAtualIndex];
         txt.innerText = proxima.txt;
-        icon.className = `fa-solid ${proxima.icon}`;
+        icon.className = \`fa-solid \${proxima.icon}\`;
         btn.disabled = false;
         btn.className = "btn-ponto bg-etapa-padrao";
       } else {
@@ -1611,7 +1680,7 @@
       if (etapaAtualIndex >= etapasPontoAtivas.length) return;
       const etapa = etapasPontoAtivas[etapaAtualIndex];
       appState.horarios[etapa.id] = formatarHoraAtual();
-      showToast(`${etapa.txt} — ${appState.horarios[etapa.id]}`, "fa-clock");
+      showToast(\`\${etapa.txt} — \${appState.horarios[etapa.id]}\`, "fa-clock");
       recalcularEtapaAtual();
       atualizarVisuaisTempos();
       salvarEstadoAtual();
@@ -1631,8 +1700,14 @@
       etapaAtualIndex = etapasPontoAtivas.length;
     }
 
-    function resetarTempos() { document.getElementById('modal-reset').style.display = 'flex'; }
-    function fecharModalReset() { document.getElementById('modal-reset').style.display = 'none'; }
+    function resetarTempos() { 
+      const modal = document.getElementById('modal-reset');
+      if (modal) modal.style.display = 'flex'; 
+    }
+    function fecharModalReset() { 
+      const modal = document.getElementById('modal-reset');
+      if (modal) modal.style.display = 'none'; 
+    }
     function executarResetTempos() {
       fecharModalReset();
       appState.horarios = {};
@@ -1659,8 +1734,19 @@
       }, 1000);
     }
 
+    /* ============================================================
+       INICIALIZAÇÃO DO FIREBASE (100% Blindado e Otimizado)
+       ============================================================ */
     function initFirebaseApp() {
-      const firebaseConfig = { apiKey: "AIzaSyBQ7_k7huhS8oAyKp0OsbEajXFmrNxcrlo", authDomain: "kyro-7cb7a.firebaseapp.com", databaseURL: "https://kyro-7cb7a-default-rtdb.firebaseio.com", projectId: "kyro-7cb7a", storageBucket: "kyro-7cb7a.firebasestorage.app", messagingSenderId: "368737182812", appId: "1:368737182812:web:7be81b22a1a1fec5c97299" };
+      const firebaseConfig = { 
+        apiKey: "AIzaSyBQ7_k7huhS8oAyKp0OsbEajXFmrNxcrlo", 
+        authDomain: "kyro-7cb7a.firebaseapp.com", 
+        databaseURL: "https://kyro-7cb7a-default-rtdb.firebaseio.com", 
+        projectId: "kyro-7cb7a", 
+        storageBucket: "kyro-7cb7a.firebasestorage.app", 
+        messagingSenderId: "368737182812", 
+        appId: "1:368737182812:web:7be81b22a1a1fec5c97299" 
+      };
       if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
       db = firebase.database(); auth = firebase.auth();
 
@@ -1670,26 +1756,42 @@
         if (user) {
           resetTimer();
           iniciarVigilanciaSessao();
-          document.getElementById('email-export').value = user.email || '';
+          const emailExp = document.getElementById('email-export');
+          if (emailExp) emailExp.value = user.email || '';
           
           let emailPart = (user.email || '').split('@')[0];
           operadorLogado = { nome: emailPart.toUpperCase(), email: user.email || '', turno: 'A' };
           aplicarOperadorLogadoUI();
 
           db.ref('cadastros/operadores').once('value').then(snap => {
-            let ops = snap.val(); let arr = Array.isArray(ops) ? ops.filter(o => o) : Object.values(ops || {});
-            let opProfile = arr.find(o => o && o.email && o.email.toLowerCase() === user.email.toLowerCase());
+            let ops = snap.val(); 
+            let arr = Array.isArray(ops) ? ops.filter(Boolean) : Object.values(ops || {}).filter(Boolean);
+            
+            let opProfile = arr.find(o => {
+              let e = (typeof o === 'object' ? (o.email || '') : '').toLowerCase();
+              let u = (typeof o === 'object' ? (o.usuario || '') : '').toLowerCase();
+              let userMail = (user.email || '').toLowerCase();
+              return (e && e === userMail) || (u && userMail.startsWith(u + '@'));
+            });
+
             if (opProfile) {
-              operadorLogado = { nome: (opProfile.nome || emailPart).toUpperCase(), email: user.email, turno: (opProfile.turno || 'A').toUpperCase() };
-              document.getElementById('form-operador').value = operadorLogado.nome;
-              document.getElementById('form-turno').value = operadorLogado.turno;
-            } else {
-              document.getElementById('form-operador').value = operadorLogado.nome;
-              document.getElementById('form-turno').value = "A";
+              operadorLogado = { 
+                nome: (typeof opProfile === 'object' ? (opProfile.nome || emailPart) : String(opProfile)).toUpperCase(), 
+                email: user.email, 
+                turno: (typeof opProfile === 'object' ? (opProfile.turno || 'A') : 'A').toUpperCase() 
+              };
             }
+            
+            const formOp = document.getElementById('form-operador');
+            const formTurno = document.getElementById('form-turno');
+            if (formOp) formOp.value = operadorLogado.nome;
+            if (formTurno) formTurno.value = operadorLogado.turno;
+
             aplicarOperadorLogadoUI();
-          });
-          document.getElementById('btn-logout').classList.remove('hidden');
+          }).catch(err => console.log('Erro ignorado ao puxar perfil: ', err));
+          
+          const btnLout = document.getElementById('btn-logout');
+          if (btnLout) btnLout.classList.remove('hidden');
           if (currentView === 'login') navTo('patio');
         } else {
           clearTimeout(inactivityTimer);
@@ -1699,29 +1801,42 @@
         }
       });
 
-      db.ref('controle_logistico').on('value', (snapshot) => {
+      // OTIMIZAÇÃO DE INTERNET: Puxar apenas os últimos 150 registros
+      db.ref('controle_logistico')
+        .orderByChild('updated_at')
+        .limitToLast(150)
+        .on('value', (snapshot) => {
         filaRegistros = snapshot.exists() ? Object.values(snapshot.val()) : [];
         if (currentView === 'patio') renderizarPatio();
       });
 
       db.ref('.info/connected').on('value', snap => {
         const icon = document.getElementById('sync-status');
-        icon.className = snap.val() === true ? 'dot-on' : 'dot-off';
+        if (icon) icon.className = snap.val() === true ? 'dot-on' : 'dot-off';
       });
 
+      // OTIMIZAÇÃO/FAIL-SAFE: Evita quebra por dados em branco
       db.ref('cadastros/operadores').on('value', snap => {
-        const dl = document.getElementById('op-list'); dl.innerHTML = ''; operadoresMap = {};
-        const arr = Array.isArray(snap.val()) ? snap.val().filter(x => x) : Object.values(snap.val() || {});
+        const dl = document.getElementById('op-list'); 
+        if (dl) dl.innerHTML = ''; 
+        operadoresMap = {};
+        const ops = snap.val();
+        const arr = Array.isArray(ops) ? ops.filter(Boolean) : Object.values(ops || {}).filter(Boolean);
+        
         arr.forEach(o => {
-          let nome = (typeof o === 'object' ? o.nome : o).toUpperCase();
-          operadoresMap[nome] = (typeof o === 'object' ? (o.turno || 'A') : 'A').toUpperCase();
-          dl.innerHTML += `<option value="${nome}">`;
+          let nome = (typeof o === 'object' ? (o.nome || '') : String(o)).trim().toUpperCase();
+          if (nome) {
+            operadoresMap[nome] = (typeof o === 'object' ? (o.turno || 'A') : 'A').toUpperCase();
+            if (dl) dl.innerHTML += \`<option value="\${nome}">\`;
+          }
         });
       });
 
+      // OTIMIZAÇÃO/FAIL-SAFE: Evita quebra por fornecedores mal formatados
       db.ref('cadastros/fornecedores').on('value', snap => {
-        const arr = Array.isArray(snap.val()) ? snap.val().filter(x => x) : Object.values(snap.val() || {});
-        listaFornecedoresApp = arr.map(f => f.toUpperCase());
+        const fornData = snap.val();
+        const arr = Array.isArray(fornData) ? fornData.filter(Boolean) : Object.values(fornData || {}).filter(Boolean);
+        listaFornecedoresApp = arr.map(f => String(f).trim().toUpperCase()).filter(f => f);
         renderFornecedores(listaFornecedoresApp);
       });
     }
@@ -1766,8 +1881,10 @@
     }
 
     function obterDadosFiltradosPorData() {
-      const dtIni = document.getElementById('export-data-ini').value;
-      const dtFim = document.getElementById('export-data-fim').value;
+      const dtIniEl = document.getElementById('export-data-ini');
+      const dtFimEl = document.getElementById('export-data-fim');
+      const dtIni = dtIniEl ? dtIniEl.value : '';
+      const dtFim = dtFimEl ? dtFimEl.value : '';
       let filtrados = filaRegistros;
       if (dtIni) filtrados = filtrados.filter(r => r.data >= dtIni);
       if (dtFim) filtrados = filtrados.filter(r => r.data <= dtFim);
@@ -1813,17 +1930,29 @@
     }
 
     function baixarExcel() {
+      if (typeof XLSX === 'undefined') {
+          showToast("Carregando gerador de Excel, aguarde...", "fa-clock");
+          setTimeout(baixarExcel, 1500);
+          return;
+      }
       const wb = gerarWorkBookExportacao();
       if (!wb) { showToast("Nenhum registro encontrado neste período.", "fa-circle-exclamation"); return; }
       const hj = new Date();
-      const fileName = `App_Logistica_${hj.getFullYear()}-${hj.getMonth()+1}-${hj.getDate()}.xlsx`;
+      const fileName = \`App_Logistica_\${hj.getFullYear()}-\${hj.getMonth()+1}-\${hj.getDate()}.xlsx\`;
       XLSX.writeFile(wb, fileName);
       showToast("Download do Excel concluído!", "fa-file-excel");
     }
 
     async function enviarPorEmail() {
-      const emailDestino = document.getElementById('email-export').value;
+      const emailEl = document.getElementById('email-export');
+      const emailDestino = emailEl ? emailEl.value : '';
       if (!emailDestino) { showToast("Informe um e-mail de destino.", "fa-triangle-exclamation"); return; }
+      
+      if (typeof XLSX === 'undefined') {
+          showToast("Gerador carregando...", "fa-clock");
+          setTimeout(enviarPorEmail, 1500);
+          return;
+      }
 
       const wb = gerarWorkBookExportacao();
       if (!wb) { showToast("Nenhum registro encontrado neste período.", "fa-circle-exclamation"); return; }
@@ -1844,8 +1973,14 @@
 
       setTimeout(() => {
         const assunto = encodeURIComponent("Relatório Logístico - HL Mando");
-        const corpo = encodeURIComponent(`Olá,\n\nSegue o relatório logístico.\n\n(O arquivo Excel acabou de ser baixado no seu dispositivo para anexo).\n\nEnviado para: ${emailDestino}`);
-        window.location.href = `mailto:${emailDestino}?subject=${assunto}&body=${corpo}`;
+        const corpo = encodeURIComponent(\`Olá,
+
+Segue o relatório logístico.
+
+(O arquivo Excel acabou de ser baixado no seu dispositivo para anexo).
+
+Enviado para: \${emailDestino}\`);
+        window.location.href = \`mailto:\${emailDestino}?subject=\${assunto}&body=\${corpo}\`;
         showToast("App de E-mail aberto.", "fa-envelope-open");
       }, 800);
     }
@@ -1864,4 +1999,3 @@
   </script>
 </body>
 </html>
-
