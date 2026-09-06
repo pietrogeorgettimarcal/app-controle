@@ -330,6 +330,25 @@
     .dot-off { width: 8px; height: 8px; border-radius: 99px; background: #ef4444; }
 
     input[type="date"], input[type="time"] { -webkit-appearance: none; }
+
+    /* ===== CONFERÊNCIA + CALCULADORA + COPIAR (ADICIONADO) ===== */
+#view-conf .conf-cab{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--ink,#0f172a);color:#fff;border-radius:14px;padding:12px 14px;margin:0 0 12px}
+#view-conf .conf-cab h2{margin:0;font-size:17px;font-weight:900;letter-spacing:-.02em;color:#fff}
+#view-conf .conf-cab p{margin:2px 0 0;font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.14em}
+.calc-display{background:var(--ink,#0f172a);color:#fff;border-radius:12px;padding:13px 14px;font-size:26px;font-weight:800;text-align:right;margin-bottom:10px;min-height:54px;word-break:break-all;font-variant-numeric:tabular-nums}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.calc-btn{border:1px solid var(--line,#e2e8f0);background:#fff;border-radius:10px;padding:12px 0;font-size:17px;font-weight:800;color:#0f172a;cursor:pointer;font-family:inherit}
+.calc-btn:active{transform:scale(.96);background:#eef2f7}
+.calc-op{background:#eef4ff;color:#2563eb}
+.calc-fn{background:#fff1f2;color:#e11d48}
+.calc-igual{background:#2563eb;color:#fff;border-color:#2563eb}
+.conf-preview{background:#eef4ff;color:#1e40af;border-radius:10px;padding:9px 12px;margin-top:10px;font-size:13.5px;font-weight:700;text-align:center}
+.conf-preview strong{font-size:20px}
+.conf-item{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line,#e2e8f0);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.conf-item b{display:block;font-size:13px;color:#0f172a}
+.conf-item span{font-size:11.5px;color:#64748b;font-weight:600}
+.conf-item small{font-size:11px;color:#94a3b8}
+.conf-total-bar{background:var(--ink,#0f172a);color:#fff;border-radius:12px;padding:11px;text-align:center;font-weight:800;font-size:14px;margin:10px 0}
   </style>
 </head>
 <body>
@@ -740,12 +759,74 @@
         <button onclick="navTo('patio')" class="btn-large btn-dark">
           <i class="fa-solid fa-list-check"></i> Voltar ao pátio
         </button>
+        <button type="button" onclick="copiarCaminhao()" class="btn-large btn-dark">
+  <i class="fa-solid fa-clone"></i> Copiar caminhão (dados e horários)
+</button>
         <button onclick="confirmarExclusaoAtual()" class="btn-large btn-danger-outline text-[12.5px]">
           <i class="fa-solid fa-trash-can"></i> Excluir este caminhão
         </button>
       </div>
     </div>
   </main>
+
+  <!-- ============ CONFERÊNCIA (ADICIONADO) ============ -->
+<main id="view-conf" class="view-container">
+  <div class="wrap">
+    <div class="conf-cab">
+      <div>
+        <h2>Conferência</h2>
+        <p id="conf-placa-info">NENHUM CAMINHÃO</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="block-label"><i class="fa-solid fa-calculator"></i> Calculadora</div>
+      <div class="calc-display" id="calc-display">0</div>
+      <div class="calc-grid">
+        <button type="button" class="calc-btn calc-fn" onclick="calcAcao('C')">C</button>
+        <button type="button" class="calc-btn calc-op" onclick="calcAcao('/')">/</button>
+        <button type="button" class="calc-btn calc-op" onclick="calcAcao('*')">*</button>
+        <button type="button" class="calc-btn calc-fn" onclick="calcAcao('DEL')">DEL</button>
+        <button type="button" class="calc-btn" onclick="calcAcao('7')">7</button>
+        <button type="button" class="calc-btn" onclick="calcAcao('8')">8</button>
+        <button type="button" class="calc-btn" onclick="calcAcao('9')">9</button>
+        <button type="button" class="calc-btn calc-op" onclick="calcAcao('-')">-</button>
+        <button type="button" class="calc-btn" onclick="calcAcao('4')">4</button>
+        <button type="button" class="calc-btn" onclick="calcAcao('5')">5</button>
+        <button type="button" class="calc-btn" onclick="calcAcao('6')">6</button>
+        <button type="button" class="calc-btn calc-op" onclick="calcAcao('+')">+</button>
+        <button type="button" class="calc-btn" onclick="calcAcao('1')">1</button>
+        <button type="button" class="calc-btn" onclick="calcAcao('2')">2</button>
+        <button type="button" class="calc-btn" onclick="calcAcao('3')">3</button>
+        <button type="button" class="calc-btn calc-igual" onclick="calcAcao('=')">=</button>
+        <button type="button" class="calc-btn" style="grid-column:span 2" onclick="calcAcao('0')">0</button>
+        <button type="button" class="calc-btn" onclick="calcAcao('.')">.</button>
+        <button type="button" class="calc-btn calc-igual" onclick="calcAcao('=')">=</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="block-label"><i class="fa-solid fa-boxes-stacked"></i> Item conferido</div>
+      <label class="mobile-label">Part number</label>
+      <input type="text" id="conf-part" list="conf-parts-list" class="mobile-input text-sm" placeholder="Digite ou selecione o part number">
+      <datalist id="conf-parts-list"></datalist>
+      <label class="mobile-label">Quantidade</label>
+      <input type="number" id="conf-qtd" inputmode="numeric" min="0" class="mobile-input text-sm" placeholder="0" oninput="confAtualizarPreview()">
+      <label class="mobile-label">Múltiplo por caixa</label>
+      <input type="number" id="conf-multiplo" inputmode="numeric" min="1" value="1" class="mobile-input text-sm" oninput="confAtualizarPreview()">
+      <div class="conf-preview" id="conf-preview">Caixas: <strong>0</strong></div>
+      <button type="button" onclick="confAdicionar()" style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:800;font-size:14px;margin-top:12px;font-family:inherit">
+        <i class="fa-solid fa-plus"></i> Adicionar item
+      </button>
+    </div>
+
+    <div id="conf-lista"></div>
+    <div class="conf-total-bar" id="conf-total">Total de caixas: 0</div>
+    <button type="button" onclick="confContinuar()" style="width:100%;background:#16a34a;color:#fff;border:none;border-radius:12px;padding:14px;font-weight:800;font-size:14px;font-family:inherit">
+      <i class="fa-solid fa-arrow-right"></i> Continuar para horários
+    </button>
+  </div>
+</main>
 
   <nav class="bottom-nav" id="main-bottom-nav">
     <div onclick="navTo('patio')" class="nav-item" id="nav-btn-patio">
@@ -754,6 +835,9 @@
     <div onclick="navTo('dados')" class="nav-item opacity-50 pointer-events-none" id="nav-btn-dados">
       <i class="fa-solid fa-clipboard-list"></i> Dados
     </div>
+    <div onclick="abrirConferencia()" class="nav-item" id="nav-btn-conf">
+  <i class="fa-solid fa-clipboard-check"></i> Conf.
+</div>
     <div onclick="navTo('tempos')" class="nav-item opacity-50 pointer-events-none" id="nav-btn-tempos">
       <i class="fa-solid fa-stopwatch"></i> Horários
     </div>
@@ -827,6 +911,7 @@
       </div>
     </div>
   </div>
+  
 
   <script>
     let appState = { activeId: null, horarios: {} };
@@ -1921,6 +2006,234 @@
         el.addEventListener('change', salvarEstadoAtual);
       });
     };
+
+    /* ================================================================
+   CORREÇÃO: Conferência + Calculadora + Copiar caminhão
+   Usa as variáveis reais do app: appState.activeId, filaRegistros,
+   salvarEstadoAtual(), navTo(), showToast(), etapasPontoAtivas.
+   ================================================================ */
+
+/* Ajuste aqui quando receber os valores reais */
+var PART_NUMBERS = ['PART-001', 'PART-002', 'PART-003'];
+var MULTIPLO_PADRAO = 1;
+
+if (!appState.conferencias) appState.conferencias = [];
+var confProtectTimer = null;
+
+function normalizarConf(c) {
+  if (!c) return [];
+  if (Array.isArray(c)) return c;
+  return Object.keys(c).map(function (k) { return c[k]; });
+}
+
+/* Calculo de caixas: quantidade / multiplo, arredondado para cima */
+function calcularCaixas(qtd, mult) {
+  qtd = Number(qtd) || 0;
+  mult = Number(mult) || MULTIPLO_PADRAO;
+  if (mult <= 0) mult = MULTIPLO_PADRAO;
+  if (qtd <= 0) return 0;
+  return Math.ceil(qtd / mult);
+}
+
+/* Registro em edicao: usa appState.activeId + filaRegistros do app real */
+function confRegistroAtual() {
+  if (!appState || !appState.activeId) return null;
+  var r = null;
+  if (typeof filaRegistros !== 'undefined' && filaRegistros) {
+    for (var i = 0; i < filaRegistros.length; i++) {
+      if (filaRegistros[i] && String(filaRegistros[i].id) === String(appState.activeId)) {
+        r = filaRegistros[i];
+        break;
+      }
+    }
+  }
+  if (!r) {
+    r = {
+      id: appState.activeId,
+      placa: (document.getElementById('form-placa') || {}).value || '',
+      fornecedor: (document.getElementById('form-fornecedor') || {}).value || '',
+      turno: (document.getElementById('form-turno') || {}).value || 'A',
+      operador: (document.getElementById('form-operador') || {}).value || '',
+      doca: (document.getElementById('form-doca') || {}).value || 'Rec',
+      nf: (document.getElementById('form-nf') || {}).value || '',
+      qtd_caixas: (document.getElementById('form-qtd-caixas') || {}).value || '',
+      fez_pesagem: (document.getElementById('form-pesagem') || {}).value || 'NÃO',
+      teve_conferencia: (document.getElementById('form-conferencia') || {}).value || 'NÃO'
+    };
+  }
+  return r;
+}
+
+function confPlacaAtiva() {
+  var r = confRegistroAtual();
+  if (r && r.placa) return r.placa;
+  var el = document.getElementById('header-placa-ativa');
+  if (el && el.textContent && el.textContent !== 'NENHUM SELECIONADO') return el.textContent;
+  return '';
+}
+
+function confAtualizarPreview() {
+  var q = document.getElementById('conf-qtd');
+  var m = document.getElementById('conf-multiplo');
+  var el = document.getElementById('conf-preview');
+  if (!el) return;
+  el.innerHTML = 'Caixas: <strong>' + calcularCaixas(q ? q.value : 0, m ? m.value : 0) + '</strong>';
+}
+
+/* ---------- Abrir tela de conferencia ---------- */
+function abrirConferencia() {
+  var r = confRegistroAtual();
+  if (!r) { alert('Abra ou crie um caminhão antes de fazer a conferência.'); return; }
+  appState.conferencias = normalizarConf(r.conferencias);
+  document.querySelectorAll('.view-container').forEach(function (el) { el.classList.remove('active'); });
+  var conf = document.getElementById('view-conf');
+  if (conf) conf.classList.add('active');
+  currentView = 'conf';
+  document.querySelectorAll('#main-bottom-nav .nav-item').forEach(function (n) { n.classList.remove('active'); });
+  var nb = document.getElementById('nav-btn-conf');
+  if (nb) nb.classList.add('active');
+  document.getElementById('conf-placa-info').textContent = confPlacaAtiva() || 'CAMINHÃO';
+  confRender();
+  window.scrollTo(0, 0);
+}
+
+function confRender() {
+  var lista = document.getElementById('conf-lista');
+  if (!lista) return;
+  lista.innerHTML = '';
+  var total = 0;
+  appState.conferencias.forEach(function (it, i) {
+    var cx = calcularCaixas(it.quantidade, it.multiplo);
+    total += cx;
+    var div = document.createElement('div');
+    div.className = 'conf-item';
+    div.innerHTML =
+      '<div style="min-width:0"><b>' + (it.partNumber || '') + '</b>' +
+      '<span>Qtd: ' + it.quantidade + ' | Múltiplo: ' + it.multiplo + '/caixa</span></div>' +
+      '<div style="text-align:right"><small>caixas</small><b style="font-size:15px">' + cx + '</b></div>' +
+      '<button type="button" onclick="confRemover(' + i + ')" style="background:#fff1f2;color:#e11d48;border:none;border-radius:8px;width:28px;height:28px;font-weight:800;cursor:pointer"><i class="fa-solid fa-xmark"></i></button>';
+    lista.appendChild(div);
+  });
+  var tot = document.getElementById('conf-total');
+  if (tot) tot.textContent = 'Total de caixas: ' + total;
+}
+
+function confAdicionar() {
+  var r = confRegistroAtual();
+  if (!r) { alert('Abra ou crie um caminhão antes de adicionar itens.'); return; }
+  var pn = (document.getElementById('conf-part').value || '').trim();
+  var qtd = Number(document.getElementById('conf-qtd').value) || 0;
+  var mult = Number(document.getElementById('conf-multiplo').value) || MULTIPLO_PADRAO;
+  if (!pn) { alert('Informe o part number.'); return; }
+  if (qtd <= 0) { alert('Informe a quantidade.'); return; }
+  appState.conferencias.push({ partNumber: pn, quantidade: qtd, multiplo: mult });
+  document.getElementById('conf-part').value = '';
+  document.getElementById('conf-qtd').value = '';
+  confAtualizarPreview();
+  confRender();
+  confSalvarNoRegistro();
+}
+
+function confRemover(i) {
+  appState.conferencias.splice(i, 1);
+  confRender();
+  confSalvarNoRegistro();
+}
+
+/* Salva conferencias via update e protege contra o set do autosave,
+   que sobrescreve o registro inteiro e apagaria o campo conferencias. */
+function confSalvarNoRegistro() {
+  if (!appState || !appState.activeId) return;
+  var lista = (appState.conferencias || []).slice();
+  var ref = db.ref('controle_logistico/' + appState.activeId);
+  ref.update({ conferencias: lista }).catch(function () {});
+  clearTimeout(confProtectTimer);
+  confProtectTimer = setTimeout(function () {
+    ref.update({ conferencias: lista }).catch(function () {});
+  }, 1300);
+}
+
+function confContinuar() {
+  confSalvarNoRegistro();
+  if (typeof navTo === 'function') navTo('tempos');
+}
+
+/* ---------- Calculadora ---------- */
+var calcExpr = '';
+var calcMostra = '0';
+
+function calcPintar() {
+  var el = document.getElementById('calc-display');
+  if (el) el.textContent = calcMostra;
+}
+
+function calcAcao(v) {
+  if (v === 'C') { calcExpr = ''; calcMostra = '0'; }
+  else if (v === 'DEL') { calcExpr = calcExpr.slice(0, -1); calcMostra = calcExpr || '0'; }
+  else if (v === '=') {
+    if (!calcExpr) return;
+    try {
+      var r = Function('"use strict"; return (' + calcExpr + ');')();
+      calcMostra = String(Math.round(r * 1e10) / 1e10);
+      calcExpr = calcMostra;
+    } catch (e) { calcMostra = 'Erro'; calcExpr = ''; }
+  } else { calcExpr += v; calcMostra = calcExpr; }
+  calcPintar();
+}
+
+/* ---------- Copiar caminhao (novo contêiner) ---------- */
+function copiarCaminhao() {
+  var origem = confRegistroAtual();
+  if (!origem) { alert('Abra ou crie um caminhão antes de copiar.'); return; }
+  if (!confirm('Copiar este caminhão como novo registro, com os mesmos dados e horários?')) return;
+
+  var novo = {};
+  for (var k in origem) {
+    if (Object.prototype.hasOwnProperty.call(origem, k)) novo[k] = origem[k];
+  }
+  delete novo.id;
+  delete novo.updated_at;
+  novo.status = 'EM_ANDAMENTO';
+  novo.conferencias = (appState.conferencias || []).slice();
+
+  /* Copia os horários registrados para o novo registro */
+  if (typeof etapasPontoAtivas !== 'undefined' && etapasPontoAtivas) {
+    etapasPontoAtivas.forEach(function (e) {
+      if (origem[e.id]) novo[e.id] = origem[e.id];
+    });
+  }
+
+  var ref = db.ref('controle_logistico').push();
+  ref.set(novo).then(function () {
+    appState.activeId = ref.key;
+    appState.horarios = {};
+    if (typeof etapasPontoAtivas !== 'undefined' && etapasPontoAtivas) {
+      etapasPontoAtivas.forEach(function (e) {
+        if (novo[e.id]) appState.horarios[e.id] = novo[e.id];
+      });
+    }
+    appState.conferencias = normalizarConf(novo.conferencias);
+    if (typeof showToast === 'function') showToast('Caminhão copiado com dados e horários.', 'fa-clone');
+    else alert('Caminhão copiado com dados e horários.');
+    if (typeof desbloquearTabs === 'function') desbloquearTabs(true);
+    if (typeof atualizarHeadersAtivos === 'function') atualizarHeadersAtivos();
+    if (typeof navTo === 'function') navTo('dados');
+  }).catch(function () {
+    alert('Não foi possível copiar agora. Verifique a internet.');
+  });
+}
+
+/* ---------- Inicializacao: preenche lista de part numbers ---------- */
+(function () {
+  var dl = document.getElementById('conf-parts-list');
+  if (dl) {
+    var opt = '';
+    for (var i = 0; i < PART_NUMBERS.length; i++) {
+      opt += '<option value="' + PART_NUMBERS[i] + '"></option>';
+    }
+    dl.innerHTML = opt;
+  }
+})();
   </script>
 </body>
 </html>
