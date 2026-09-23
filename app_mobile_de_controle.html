@@ -1,775 +1,380 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, interactive-widget=resizes-content">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0f1729">
-  <meta name="mobile-web-app-capable" content="yes">
-  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2800/2800118.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, interactive-widget=resizes-content">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>App Logística - HL Mando</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --ink: #0f172a;
+  --blue: #2563eb;
+  --green: #16a34a;
+  --sky: #0284c7;
+  --rose: #e11d48;
+  --slate: #64748b;
+  --bg: #f1f5f9;
+  --line: #e2e8f0;
+  --white: #ffffff;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+[hidden] { display: none !important; }
 
-  <title>App Logística - HL Mando</title>
+.view-container { display: none; }
+.view-container.active { display: block; }
+.wrap { max-width: 480px; margin: 0 auto; padding: 16px 16px 110px; }
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+.app-top { background: var(--ink); color: #fff; }
+.app-head { max-width: 480px; margin: 0 auto; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+.brand-mark { width: 38px; height: 38px; border-radius: 12px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.op-strip { max-width: 480px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,.08); }
+.op-avatar { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.12); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; }
+.tag-dark { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.1); color: #cbd5e1; border-radius: 999px; padding: 4px 10px; font-size: 10.5px; font-weight: 700; }
+.dot-off { width: 8px; height: 8px; border-radius: 99px; background: #ef4444; }
+.dot-on { width: 8px; height: 8px; border-radius: 99px; background: #22c55e; }
 
-  <!-- Firebase Compat -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+.card { background: var(--white); border-radius: 14px; box-shadow: 0 2px 8px rgba(15,23,42,.08); padding: 16px; margin-bottom: 14px; }
+.block-label { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--slate); font-weight: 800; margin-bottom: 12px; }
+.mobile-label { display: block; font-size: 12px; font-weight: 700; color: var(--slate); margin: 10px 0 4px; }
+.mobile-input { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 15px; font-family: inherit; background: #fff; color: var(--ink); }
+.mobile-input:focus { outline: 2px solid var(--blue); outline-offset: -1px; border-color: transparent; }
+.page-title { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.page-title .bar { width: 4px; height: 28px; border-radius: 4px; background: var(--blue); }
+.page-title h2 { font-size: 20px; font-weight: 900; margin: 0; letter-spacing: -.02em; }
+.page-title p { font-size: 12px; color: var(--slate); font-weight: 700; margin: 0; }
 
-  <!-- SheetJS para Excel Avançado -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+.btn-large { width: 100%; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; margin-bottom: 10px; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-dark { background: var(--ink); color: #fff; }
+.btn-soft { background: #eef2f7; color: var(--ink); }
+.btn-green { background: var(--green); color: #fff; }
+.btn-sky { background: var(--sky); color: #fff; }
+.btn-danger-outline { background: transparent; color: var(--rose); border: 1.5px solid var(--rose); }
+.btn-mini { border: none; background: #eef2f7; color: var(--ink); border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.btn-mini.danger { background: #fee2e2; color: var(--rose); }
 
-  <style>
-    :root {
-      --ink: #0f1729;
-      --ink-2: #1c2942;
-      --blue: #1d4ed8;
-      --blue-soft: #eef4ff;
-      --green: #0f9d58;
-      --amber: #b45309;
-      --rose: #dc2626;
-      --bg: #f4f6fa;
-      --card: #ffffff;
-      --line: #e2e8f0;
-      --text: #111827;
-      --muted: #6b7280;
-    }
+.seg { display: flex; background: var(--bg); border-radius: 10px; padding: 3px; gap: 3px; }
+.seg button { flex: 1; border: none; background: transparent; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 700; color: var(--slate); cursor: pointer; font-family: inherit; }
+.seg button.on { background: var(--white); color: var(--blue); box-shadow: 0 1px 4px rgba(15,23,42,.12); }
 
-    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+.truck-card { background: var(--white); border-radius: 14px; box-shadow: 0 2px 8px rgba(15,23,42,.08); padding: 14px; margin-bottom: 10px; cursor: pointer; border-left: 4px solid var(--blue); }
+.truck-card.fim { border-left-color: var(--green); }
+.truck-card .placa { font-size: 18px; font-weight: 900; letter-spacing: 1px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; background: var(--bg); color: var(--ink); font-size: 11px; font-weight: 700; border-radius: 999px; padding: 4px 10px; }
+.chip-gray { background: #e2e8f0; color: #334155; }
+.chip-blue { background: #dbeafe; color: var(--blue); }
+.chip-green { background: #dcfce7; color: var(--green); }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      margin: 0; padding: 0;
-      height: 100vh; height: 100dvh;
-      display: flex; flex-direction: column;
-      overflow: hidden;
-      touch-action: pan-y;
-    }
+.progress-track { height: 10px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--green); border-radius: 999px; transition: width .3s; }
+.ponto-zone { display: flex; justify-content: center; padding: 10px 0; }
+.btn-ponto { width: 100px; height: 100px; border-radius: 50%; background: var(--blue); color: #fff; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 8px 24px rgba(37,99,235,.35); font-size: 12px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.btn-ponto:active { transform: scale(.96); }
+.time-input { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font-size: 14px; width: 110px; font-family: inherit; }
+.time-input.preenchido { border-color: var(--green); background: #f0fdf4; }
 
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-thumb { background: #c8d0dc; border-radius: 99px; }
-    ::-webkit-scrollbar-track { background: transparent; }
+#view-conf .conf-cab, #view-multiplos .conf-cab { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--ink); color: #fff; border-radius: 14px; padding: 12px 14px; margin: 0 0 12px; }
+#view-conf .conf-cab h2, #view-multiplos .conf-cab h2 { margin: 0; font-size: 17px; font-weight: 900; letter-spacing: -.02em; color: #fff; }
+#view-conf .conf-cab p, #view-multiplos .conf-cab p { margin: 2px 0 0; font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; }
+.calc-display { background: var(--ink); color: #fff; border-radius: 12px; padding: 13px 14px; font-size: 26px; font-weight: 800; text-align: right; margin-bottom: 10px; min-height: 54px; word-break: break-all; font-variant-numeric: tabular-nums; }
+.calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.calc-btn { border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 12px 0; font-size: 17px; font-weight: 800; color: var(--ink); cursor: pointer; font-family: inherit; }
+.calc-btn:active { transform: scale(.96); background: #eef2f7; }
+.calc-op { background: #eef4ff; color: var(--blue); }
+.calc-fn { background: #fff1f2; color: var(--rose); }
+.calc-igual { background: var(--blue); color: #fff; border-color: var(--blue); }
+.conf-preview { background: #eef4ff; color: #1e40af; border-radius: 10px; padding: 9px 12px; margin-top: 10px; font-size: 13.5px; font-weight: 700; text-align: center; }
+.conf-preview strong { font-size: 20px; }
+.conf-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; background: #fff; }
+.conf-item b { display: block; font-size: 13px; color: var(--ink); }
+.conf-item span { font-size: 11.5px; color: var(--slate); font-weight: 600; }
+.conf-item small { font-size: 11px; color: #94a3b8; }
+.conf-total-bar { background: var(--ink); color: #fff; border-radius: 12px; padding: 11px; text-align: center; font-weight: 800; font-size: 14px; margin: 10px 0; }
 
-    .view-container {
-      flex: 1; overflow-y: auto; overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: 130px;
-      display: none;
-      animation: fade .25s ease;
-      width: 100%;
-    }
-    .view-container.active { display: block; }
-    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--white); border-top: 1px solid var(--line); display: none; justify-content: space-around; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); z-index: 50; }
+.bottom-nav.show { display: flex; }
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--slate); font-size: 10px; font-weight: 700; cursor: pointer; padding: 4px 8px; }
+.nav-item i { font-size: 16px; }
+.nav-item.active { color: var(--blue); }
+.nav-item.opacity-50 { opacity: .4; }
+.nav-item.pointer-events-none { pointer-events: none; }
 
-    /* ---------------- Topo ---------------- */
-    .app-top { flex-shrink: 0; z-index: 60; }
-    .app-head {
-      background: var(--ink);
-      padding: 12px 16px;
-      display: flex; align-items: center; justify-content: space-between;
-      padding-top: max(env(safe-area-inset-top), 12px);
-    }
-    .brand-mark {
-      width: 34px; height: 34px; border-radius: 9px;
-      background: var(--blue); color: #fff;
-      display: flex; align-items: center; justify-content: center; font-size: 15px;
-    }
-    .op-strip {
-      background: var(--ink-2);
-      border-top: 1px solid rgba(255,255,255,.06);
-      padding: 8px 14px;
-      display: none; align-items: center; justify-content: space-between; gap: 10px;
-    }
-    .op-strip.show { display: flex; }
-    .op-avatar {
-      width: 30px; height: 30px; border-radius: 8px;
-      background: #2f4570; color: #dbe6ff;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 10.5px; font-weight: 800; letter-spacing: .5px; flex-shrink: 0;
-    }
-    .tag-dark {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
-      color: #cbd5e1; font-size: 9.5px; font-weight: 800;
-      padding: 4px 8px; border-radius: 7px; letter-spacing: .4px; white-space: nowrap;
-    }
-    .tag-dark.alerta { background: rgba(220,38,38,.2); border-color: rgba(248,113,113,.4); color: #fecaca; }
-
-    /* ---------------- Estrutura de conteúdo ---------------- */
-    .wrap { max-width: 480px; margin: 0 auto; padding: 16px 14px 0; }
-
-    .page-title { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-    .page-title .bar { width: 4px; height: 32px; border-radius: 4px; background: var(--blue); }
-    .page-title h2 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.3px; }
-    .page-title p { margin: 2px 0 0; font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 16px;
-    }
-    .card + .card { margin-top: 12px; }
-
-    .block-label {
-      font-size: 10px; font-weight: 800; color: var(--muted);
-      text-transform: uppercase; letter-spacing: .9px;
-      display: flex; align-items: center; gap: 6px;
-      padding-bottom: 8px; margin-bottom: 12px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    /* ---------------- Inputs ---------------- */
-    .mobile-input {
-      width: 100%; padding: 12px 13px;
-      font-size: 16px !important;
-      border: 1px solid #cfd8e3; border-radius: 10px;
-      background: #fff; color: var(--text);
-      font-weight: 700; text-transform: uppercase;
-      outline: none; appearance: none;
-      transition: border-color .15s, box-shadow .15s;
-    }
-    .mobile-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,78,216,.12); }
-    .mobile-input::placeholder { color: #9aa5b4; font-weight: 600; }
-    .mobile-input:disabled { background: #f1f3f7; color: #94a3b8; }
-
-    .mobile-label {
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: 10px; font-weight: 800; color: var(--muted);
-      margin-bottom: 5px; text-transform: uppercase; letter-spacing: .6px;
-    }
-
-    /* Segmentado SIM / NÃO / Login */
-    .seg { display: flex; background: #eef1f6; border: 1px solid #dfe5ee; border-radius: 10px; padding: 3px; gap: 3px; }
-    .seg button {
-      flex: 1; border: 0; background: transparent; cursor: pointer;
-      font-size: 11.5px; font-weight: 800; color: #64748b;
-      padding: 9px 4px; border-radius: 8px; letter-spacing: .4px;
-      transition: all .15s;
-    }
-    .seg button.on { background: #fff; color: var(--blue); box-shadow: 0 1px 3px rgba(15,23,41,.14); }
-    .seg button.on.yes { color: #0f9d58; }
-    .seg.compact button { padding: 8px 4px; font-size: 11px; }
-
-    /* ---------------- Botões ---------------- */
-    .btn-large {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; padding: 15px; border-radius: 12px;
-      font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: .6px;
-      border: 1px solid transparent; cursor: pointer;
-      transition: transform .1s, filter .15s;
-    }
-    .btn-large:active { transform: scale(.98); }
-    .btn-primary { background: var(--blue); color: #fff; }
-    .btn-dark { background: var(--ink); color: #fff; }
-    .btn-soft { background: #fff; color: #334155; border-color: #cfd8e3; }
-    .btn-danger-outline { background: #fff; color: var(--rose); border-color: #f3bcbc; }
-    .btn-green { background: var(--green); color: #fff; }
-    .btn-sky { background: #0369a1; color: #fff; }
-
-    .btn-mini {
-      border: 1px solid #cfd8e3; background: #fff; color: #475569;
-      font-size: 10.5px; font-weight: 800; padding: 8px 11px; border-radius: 9px;
-      text-transform: uppercase; letter-spacing: .4px; cursor: pointer;
-    }
-    .btn-mini.danger { border-color: #f3bcbc; color: var(--rose); background: #fff5f5; }
-
-    /* ---------------- Nav inferior ---------------- */
-    .bottom-nav {
-      position: fixed; bottom: 0; left: 0; width: 100%;
-      background: #fff; border-top: 1px solid var(--line);
-      display: none; justify-content: space-around;
-      padding: 7px 6px; padding-bottom: max(env(safe-area-inset-bottom), 8px);
-      z-index: 50;
-    }
-    .nav-item {
-      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
-      font-size: 9.5px; font-weight: 800; color: #94a3b8;
-      padding: 7px 2px; border-radius: 10px; cursor: pointer;
-      text-transform: uppercase; letter-spacing: .4px;
-      transition: background .15s, color .15s;
-      min-width: 0; text-align: center; line-height: 1.15;
-    }
-    .nav-item i { font-size: 16px; }
-    .nav-item.active { color: var(--blue); background: var(--blue-soft); }
-
-    /* ---------------- Cartão do caminhão ---------------- */
-    .truck-card {
-      background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--blue);
-      border-radius: 12px; padding: 13px 14px;
-      display: flex; flex-direction: column; gap: 9px; cursor: pointer;
-      transition: transform .1s, border-color .15s;
-    }
-    .truck-card:active { transform: scale(.99); }
-    .truck-card.fim { border-left-color: var(--green); background: #fcfefd; }
-
-    .placa { font-size: 17px; font-weight: 900; letter-spacing: -.2px; color: #0f1729; line-height: 1; }
-
-    .chip {
-      display: inline-flex; align-items: center; gap: 4px;
-      font-size: 9.5px; font-weight: 800; padding: 3px 7px; border-radius: 6px;
-      text-transform: uppercase; letter-spacing: .3px; border: 1px solid;
-    }
-    .chip-blue { background: #eef4ff; color: #1d4ed8; border-color: #dbe6ff; }
-    .chip-green { background: #ecfdf3; color: #0f7c46; border-color: #ccf0dc; }
-    .chip-gray { background: #f4f6fa; color: #5b6779; border-color: #e2e8f0; }
-    .chip-amber { background: #fef6e7; color: #a15c07; border-color: #f8e3bd; }
-    .chip-violet { background: #f4f1ff; color: #5b34d6; border-color: #e3dcff; }
-    .chip-teal { background: #ecfbfb; color: #0d7490; border-color: #cceff3; }
-
-    /* ---------------- Stats ---------------- */
-    .stat {
-      background: #fff; border: 1px solid var(--line); border-radius: 12px;
-      padding: 11px 13px;
-    }
-    .stat span { font-size: 9.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
-    .stat strong { display: block; font-size: 21px; font-weight: 900; line-height: 1.15; margin-top: 2px; }
-
-    /* ---------------- Progresso ---------------- */
-    .progress-track { height: 7px; background: #e6ebf3; border-radius: 99px; overflow: hidden; }
-    .progress-fill { height: 100%; width: 0%; background: var(--blue); border-radius: 99px; transition: width .3s ease; }
-
-    /* ---------------- Botão de ponto (redondo) ---------------- */
-    .ponto-zone {
-      display: flex; flex-direction: column; align-items: center; gap: 9px;
-      margin: 6px 0 16px;
-    }
-    .btn-ponto {
-      position: relative;
-      width: min(clamp(140px, 46vw, 186px), 38vh);
-      aspect-ratio: 1 / 1;
-      border-radius: 50%;
-      border: 0; cursor: pointer; color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 12px 26px -10px rgba(15,23,41,.5), inset 0 0 0 6px rgba(255,255,255,.16);
-      transition: transform .12s, box-shadow .2s, background .2s;
-    }
-    .btn-ponto::after {
-      content: ''; position: absolute; inset: -9px; border-radius: 50%;
-      border: 2px solid currentColor; opacity: .3;
-      animation: ringPulse 2.2s ease-out infinite; pointer-events: none;
-    }
-    @keyframes ringPulse {
-      0% { transform: scale(.95); opacity: .35; }
-      70% { transform: scale(1.07); opacity: 0; }
-      100% { opacity: 0; }
-    }
-    .btn-ponto:active { transform: scale(.95); }
-    .ponto-inner {
-      display: flex; flex-direction: column; align-items: center; gap: 7px;
-      padding: 0 15px; max-width: 100%;
-    }
-    .ponto-inner i { font-size: clamp(25px, 8.4vw, 34px); line-height: 1; }
-    .ponto-inner span {
-      font-size: clamp(10px, 3.1vw, 12.5px); font-weight: 900;
-      text-transform: uppercase; letter-spacing: .4px; line-height: 1.2;
-      text-align: center; word-break: break-word;
-    }
-    .bg-etapa-padrao { background: var(--blue); }
-    .bg-etapa-fim { background: var(--green); }
-    .btn-ponto:disabled { cursor: not-allowed; }
-    .btn-ponto:disabled::after { display: none; }
-    .ponto-hint {
-      font-size: 9.5px; font-weight: 800; color: var(--muted); margin: 0;
-      text-transform: uppercase; letter-spacing: .6px; text-align: center;
-    }
-
-    /* ---------------- Linha do tempo ---------------- */
-    .time-input {
-      background: #f4f6fa; border: 1px solid #dbe2ec; color: #475569;
-      border-radius: 9px; padding: 7px 8px;
-      font-weight: 800; font-size: 14px; text-align: center;
-      width: 88px; min-width: 0; flex: 0 0 auto;
-      outline: none; appearance: none;
-    }
-    .time-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,78,216,.12); }
-    .time-input.preenchido { background: #ecfdf3; border-color: #bfe8d0; color: #0f7c46; }
-
-    .step-row {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      padding: 10px 11px; border-radius: 10px;
-      border: 1px solid transparent;
-    }
-    .step-row.atual { background: var(--blue-soft); border-color: #d7e4ff; }
-    .step-name { display: flex; align-items: center; gap: 9px; flex: 1 1 auto; min-width: 0; }
-    .step-name span {
-      font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px;
-      line-height: 1.25; overflow-wrap: anywhere;
-    }
-
-    /* ---------------- Modal ---------------- */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(15,23,41,.55);
-      display: none; align-items: center; justify-content: center; z-index: 100;
-      padding: clamp(14px, 5vw, 24px);
-      backdrop-filter: blur(2px);
-    }
-    .modal-card { animation: pop .18s ease; }
-    @keyframes pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
-
-    /* ---------------- Toast ---------------- */
-    .toast {
-      position: fixed; bottom: 92px; left: 50%; transform: translate(-50%, 16px);
-      background: var(--ink); color: #fff;
-      padding: 11px 16px; border-radius: 11px;
-      font-size: 12.5px; font-weight: 700; z-index: 200;
-      display: flex; align-items: center; gap: 9px;
-      max-width: 88%; opacity: 0; transition: all .25s ease;
-      border: 1px solid rgba(255,255,255,.1);
-    }
-    .toast.show { opacity: 1; transform: translate(-50%, 0); }
-
-    .dot-on { width: 8px; height: 8px; border-radius: 99px; background: #22c55e; }
-    .dot-off { width: 8px; height: 8px; border-radius: 99px; background: #ef4444; }
-
-    input[type="date"], input[type="time"] { -webkit-appearance: none; }
-
-    /* ===== CONFERÊNCIA + CALCULADORA + COPIAR (ADICIONADO) ===== */
-#view-conf .conf-cab{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--ink,#0f172a);color:#fff;border-radius:14px;padding:12px 14px;margin:0 0 12px}
-#view-conf .conf-cab h2{margin:0;font-size:17px;font-weight:900;letter-spacing:-.02em;color:#fff}
-#view-conf .conf-cab p{margin:2px 0 0;font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.14em}
-.calc-display{background:var(--ink,#0f172a);color:#fff;border-radius:12px;padding:13px 14px;font-size:26px;font-weight:800;text-align:right;margin-bottom:10px;min-height:54px;word-break:break-all;font-variant-numeric:tabular-nums}
-.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.calc-btn{border:1px solid var(--line,#e2e8f0);background:#fff;border-radius:10px;padding:12px 0;font-size:17px;font-weight:800;color:#0f172a;cursor:pointer;font-family:inherit}
-.calc-btn:active{transform:scale(.96);background:#eef2f7}
-.calc-op{background:#eef4ff;color:#2563eb}
-.calc-fn{background:#fff1f2;color:#e11d48}
-.calc-igual{background:#2563eb;color:#fff;border-color:#2563eb}
-.conf-preview{background:#eef4ff;color:#1e40af;border-radius:10px;padding:9px 12px;margin-top:10px;font-size:13.5px;font-weight:700;text-align:center}
-.conf-preview strong{font-size:20px}
-.conf-item{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line,#e2e8f0);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff}
-.conf-item b{display:block;font-size:13px;color:#0f172a}
-.conf-item span{font-size:11.5px;color:#64748b;font-weight:600}
-.conf-item small{font-size:11px;color:#94a3b8}
-.conf-total-bar{background:var(--ink,#0f172a);color:#fff;border-radius:12px;padding:11px;text-align:center;font-weight:800;font-size:14px;margin:10px 0}
-  </style>
+.modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.55); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 100; }
+.modal-overlay.open { display: flex; }
+.modal-card { background: var(--white); border-radius: 18px; padding: 20px; width: 100%; max-width: 380px; }
+</style>
 </head>
 <body>
-  <div class="app-top">
-    <header class="app-head">
-      <div class="flex items-center gap-2.5">
-        <div class="brand-mark"><i class="fa-solid fa-truck-fast"></i></div>
-        <div class="leading-tight">
-          <h1 class="text-white font-black text-[14px] tracking-tight m-0">HL LOGÍSTICA</h1>
-          <div class="flex items-center gap-1.5 mt-0.5">
-            <div id="sync-status" class="dot-off"></div>
-            <p class="text-[8.5px] text-slate-400 font-bold uppercase tracking-[.16em] m-0">Controle de Pátio</p>
-          </div>
-        </div>
-      </div>
-      <button onclick="logout('Sessão encerrada com segurança.')" id="btn-logout" class="hidden w-9 h-9 flex items-center justify-center bg-white/10 border border-white/15 rounded-lg text-rose-300">
-        <i class="fa-solid fa-power-off"></i>
-      </button>
-    </header>
 
-    <!-- Operador logado + tempo restante de sessão -->
-    <div id="user-bar" class="op-strip">
-      <div class="flex items-center gap-2.5 min-w-0">
-        <div id="operador-avatar" class="op-avatar">--</div>
-        <div class="leading-tight min-w-0">
-          <p class="text-[8px] uppercase tracking-[.16em] font-bold text-slate-400 m-0">Operador logado</p>
-          <p id="operador-nome" class="text-[12.5px] font-black text-white truncate max-w-[150px] m-0">---</p>
+<div class="app-top">
+  <header class="app-head">
+    <div class="flex items-center gap-2.5">
+      <div class="brand-mark"><i class="fa-solid fa-truck-fast"></i></div>
+      <div class="leading-tight">
+        <h1 class="text-white font-black text-[14px] tracking-tight m-0">HL LOGÍSTICA</h1>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <div id="sync-status" class="dot-off"></div>
+          <p class="text-[8.5px] text-slate-400 font-bold uppercase tracking-[.16em] m-0">Controle de Pátio</p>
         </div>
       </div>
-      <div class="flex items-center gap-1.5">
-        <span class="tag-dark"><i class="fa-solid fa-layer-group"></i> <span id="turno-chip-txt">TURNO A</span></span>
-        <span id="sessao-chip" class="tag-dark" title="Encerra automaticamente após 10 min sem uso"><i class="fa-regular fa-clock"></i> <span id="sessao-restante">10:00</span></span>
+    </div>
+    <button onclick="logout('Sessão encerrada com segurança.')" id="btn-logout" class="hidden w-9 h-9 flex items-center justify-center bg-white/10 border border-white/15 rounded-lg text-rose-300" title="Sair">
+      <i class="fa-solid fa-power-off"></i>
+    </button>
+  </header>
+  <div id="user-bar" class="op-strip">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <div id="operador-avatar" class="op-avatar">--</div>
+      <div class="leading-tight min-w-0">
+        <p class="text-[8px] uppercase tracking-[.16em] font-bold text-slate-400 m-0">Operador logado</p>
+        <p id="operador-nome" class="text-[12.5px] font-black text-white truncate max-w-[150px] m-0">---</p>
       </div>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <span class="tag-dark"><i class="fa-solid fa-layer-group"></i> <span id="turno-chip-txt">TURNO A</span></span>
+      <span id="sessao-chip" class="tag-dark" title="Encerra automaticamente após 10 min sem uso"><i class="fa-regular fa-clock"></i> <span id="sessao-restante">10:00</span></span>
     </div>
   </div>
+</div>
 
-  <!-- ============ LOGIN ============ -->
-  <main id="view-login" class="view-container active">
-    <div class="wrap" style="max-width:400px;">
-      <div class="text-center mt-8 mb-6">
-        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:var(--ink); color:#fff;">
-          <i class="fa-solid fa-right-to-bracket text-2xl"></i>
-        </div>
-        <h2 class="font-black text-[26px] text-slate-900 tracking-tight m-0">Acesso ao sistema</h2>
-        <p class="text-slate-500 font-bold text-[12.5px] mt-1.5">Identifique-se com usuário ou e-mail</p>
+<!-- ============ LOGIN ============ -->
+<main id="view-login" class="view-container active">
+  <div class="wrap" style="max-width:400px;">
+    <div class="text-center mt-8 mb-6">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:var(--ink); color:#fff;">
+        <i class="fa-solid fa-right-to-bracket text-2xl"></i>
       </div>
-
-      <div class="card">
-        <div class="seg mb-4" id="seg-login-tipo">
-          <button type="button" id="btn-login-user" onclick="setLoginType('USER')" class="on">NOME DE USUÁRIO</button>
-          <button type="button" id="btn-login-email" onclick="setLoginType('EMAIL')">E-MAIL</button>
-        </div>
-
-        <div class="mb-4">
-          <label class="mobile-label" id="label-login-input">Nome de usuário</label>
-          <div class="relative">
-            <i class="fa-regular fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-            <input type="text" id="login-email" class="mobile-input pl-10 normal-case" placeholder="ex: joao.silva" />
-          </div>
-          <p id="hint-login" class="text-[9.5px] text-slate-400 font-bold mt-2">Você pode usar seu nome de usuário ou apelido cadastrado.</p>
-        </div>
-        <div class="mb-5">
-          <label class="mobile-label">Senha</label>
-          <div class="relative">
-            <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-            <input type="password" id="login-senha" class="mobile-input pl-10 pr-10 normal-case" placeholder="••••••••" />
-            <button type="button" onclick="toggleSenha()" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg text-slate-400">
-              <i id="icon-senha" class="fa-regular fa-eye"></i>
-            </button>
-          </div>
-        </div>
-        <div class="space-y-2.5">
-          <button onclick="fazerLogin()" class="btn-large btn-primary">Entrar</button>
-          <button onclick="abrirModalCadastro()" class="btn-large btn-soft"><i class="fa-solid fa-key"></i> Criar acesso (Requer liberação)</button>
-        </div>
-      </div>
-
-      <p class="text-center text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mt-5 leading-relaxed">
-        <i class="fa-solid fa-shield-halved"></i> Sessão encerrada após 10 min sem uso<br>ou ao fechar o aplicativo
-      </p>
+      <h2 class="font-black text-[26px] text-slate-900 tracking-tight m-0">Acesso ao sistema</h2>
+      <p class="text-slate-500 font-bold text-[12.5px] mt-1.5">Identifique-se com usuário ou e-mail</p>
     </div>
-  </main>
-
-  <!-- ============ PÁTIO ============ -->
-  <main id="view-patio" class="view-container">
-    <div class="wrap">
-      <div class="flex items-start justify-between mb-3">
-        <div class="page-title mb-0">
-          <div class="bar"></div>
-          <div>
-            <h2>Pátio</h2>
-            <p>Caminhões registrados</p>
-          </div>
-        </div>
-        <div class="chip chip-gray" style="padding:7px 10px; font-size:11px;">
-          <i class="fa-solid fa-truck"></i> <span id="contador-patio">0</span>
-        </div>
+    <div class="card">
+      <div class="seg mb-4" id="seg-login-tipo">
+        <button type="button" id="btn-login-user" onclick="setLoginType('USER')" class="on">NOME DE USUÁRIO</button>
+        <button type="button" id="btn-login-email" onclick="setLoginType('EMAIL')">E-MAIL</button>
       </div>
-
-      <div class="grid grid-cols-2 gap-2.5 mb-3">
-        <div class="stat">
-          <span>Em operação</span>
-          <strong style="color:var(--blue);" id="stat-andamento">0</strong>
+      <div class="mb-4">
+        <label class="mobile-label" id="label-login-input">Nome de usuário</label>
+        <div class="relative">
+          <i class="fa-regular fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <input type="text" id="login-email" class="mobile-input pl-10 normal-case" placeholder="ex: joao.silva" />
         </div>
-        <div class="stat">
-          <span>Concluídos</span>
-          <strong style="color:var(--green);" id="stat-concluido">0</strong>
+        <p id="hint-login" class="text-[9.5px] text-slate-400 font-bold mt-2">Você pode usar seu nome de usuário ou apelido cadastrado.</p>
+      </div>
+      <div class="mb-5">
+        <label class="mobile-label">Senha</label>
+        <div class="relative">
+          <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <input type="password" id="login-senha" class="mobile-input pl-10 pr-10" placeholder="••••••••" />
+          <i id="icon-senha" onclick="toggleSenha()" class="fa-regular fa-eye absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm cursor-pointer"></i>
         </div>
       </div>
-
-      <div class="relative mb-3">
-        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-        <input type="text" id="patio-busca" oninput="renderizarPatio()" class="mobile-input pl-10 text-sm" placeholder="BUSCAR PLACA, FORNECEDOR, NF..." />
-      </div>
-
-      <button onclick="iniciarNovoRegistro()" class="btn-large btn-dark mb-4">
-        <i class="fa-solid fa-plus"></i> Novo caminhão
-      </button>
-
-      <p class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-        <i class="fa-solid fa-arrow-down-wide-short"></i> Última ação registrada primeiro
-      </p>
-
-      <div id="lista-patio" class="space-y-2.5">
-        <!-- Renderizado dinamicamente -->
-      </div>
-
-      <div id="empty-patio" class="text-center py-12 hidden">
-        <div class="w-14 h-14 bg-white text-slate-300 rounded-xl flex items-center justify-center mx-auto mb-3 border border-slate-200">
-          <i class="fa-solid fa-wind text-xl"></i>
-        </div>
-        <p class="text-slate-400 font-bold text-[13px]">Nenhum caminhão encontrado.</p>
-      </div>
+      <button onclick="fazerLogin()" class="btn-large btn-primary">Entrar</button>
+      <button onclick="abrirModalCadastro()" class="btn-large btn-soft"><i class="fa-solid fa-key"></i> Criar acesso (Requer liberação)</button>
     </div>
-  </main>
+  </div>
+</main>
 
-  <!-- ============ DADOS ============ -->
-  <main id="view-dados" class="view-container">
-    <div class="wrap">
-      <div class="page-title">
+<!-- ============ PÁTIO ============ -->
+<main id="view-patio" class="view-container">
+  <div class="wrap">
+    <div class="flex items-start justify-between mb-3">
+      <div class="page-title mb-0">
         <div class="bar"></div>
         <div>
-          <h2>Dados do veículo</h2>
-          <p id="header-placa-ativa">NENHUM SELECIONADO</p>
+          <h2>Pátio</h2>
+          <p>Caminhões registrados</p>
         </div>
       </div>
-
-      <!-- Identificação -->
-      <div class="card">
-        <div class="block-label"><i class="fa-regular fa-calendar"></i> Identificação</div>
-
-        <div class="grid grid-cols-2 gap-2.5 mb-3">
-          <div>
-            <label class="mobile-label">
-              Data
-              <span onclick="setToday()" class="cursor-pointer" style="color:var(--blue);">HOJE</span>
-            </label>
-            <input type="date" id="form-data" class="mobile-input text-sm" />
-          </div>
-          <div>
-            <label class="mobile-label">Hora início</label>
-            <input type="time" id="form-hora" class="mobile-input text-sm" />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2.5 mb-3">
-          <div>
-            <label class="mobile-label">Turno</label>
-            <div class="relative">
-              <select id="form-turno" class="mobile-input text-sm pr-7">
-                <option value="A">TURNO A</option>
-                <option value="B">TURNO B</option>
-                <option value="C">TURNO C</option>
-                <option value="D">TURNO D</option>
-                <option value="E">TURNO E</option>
-              </select>
-              <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"></i>
-            </div>
-          </div>
-          <div>
-            <label class="mobile-label">Operador</label>
-            <input type="text" id="form-operador" list="op-list" onchange="onOperadorInput(this.value)" class="mobile-input text-sm" placeholder="NOME..." />
-            <datalist id="op-list"></datalist>
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between gap-2 rounded-lg px-3 py-2" style="background:#f4f6fa; border:1px solid var(--line);">
-          <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide truncate m-0">
-            <i class="fa-solid fa-id-badge" style="color:var(--blue);"></i> Logado: <span id="dados-operador-logado" class="text-slate-900 font-black">---</span>
-          </p>
-          <button type="button" onclick="usarOperadorLogado()" class="btn-mini">Usar</button>
-        </div>
-      </div>
-
-      <!-- Carga -->
-      <div class="card">
-        <div class="block-label"><i class="fa-solid fa-truck-ramp-box"></i> Carga e veículo</div>
-
-        <div class="relative mb-3">
-          <label class="mobile-label">Fornecedor / Transportadora</label>
-          <div class="relative">
-            <input type="text" id="form-fornecedor" class="mobile-input text-sm pr-9" placeholder="EX: SADA, JSL..." autocomplete="off" onfocus="abrirDropdownFornecedor()" onblur="fecharDropdownFornecedor()" oninput="filtrarFornecedores()" />
-            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] cursor-pointer" onclick="document.getElementById('form-fornecedor').focus()"></i>
-          </div>
-          <div id="forn-dropdown" class="hidden absolute z-50 w-full bg-white border border-slate-200 mt-1 rounded-xl shadow-xl max-h-48 overflow-y-auto"></div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2.5 mb-3">
-          <div>
-            <label class="mobile-label">Placa</label>
-            <input type="text" id="form-placa" class="mobile-input text-sm" placeholder="ABC-1234" />
-          </div>
-          <div>
-            <label class="mobile-label">Doca</label>
-            <div class="relative">
-              <select id="form-doca" class="mobile-input text-sm pr-7">
-                <option value="Rec">REC</option>
-                <option value="Exp">EXP</option>
-                <option value="Container">CONT.</option>
-                <option value="Doca 1">D1</option>
-                <option value="Doca 2">D2</option>
-              </select>
-              <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"></i>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2.5">
-          <div>
-            <label class="mobile-label">Nota fiscal</label>
-            <input type="text" inputmode="text" id="form-nf" class="mobile-input text-sm normal-case" placeholder="Nº NF" oninput="this.value = this.value.replace(/[^0-9\-]/g, ''); salvarEstadoAtual();" />
-          </div>
-          <div>
-            <label class="mobile-label">Volume (caixas)</label>
-            <input type="text" inputmode="decimal" id="form-caixas" class="mobile-input text-sm" placeholder="QTD" oninput="this.value = this.value.replace(/[^0-9,]/g, ''); salvarEstadoAtual();" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Etapas da operação -->
-      <div class="card">
-        <div class="block-label"><i class="fa-solid fa-list-check"></i> O que essa operação teve?</div>
-
-        <div class="grid grid-cols-2 gap-2.5 mb-4">
-          <div>
-            <label class="mobile-label">Pesagem</label>
-            <div class="seg compact" id="seg-pesagem">
-              <button type="button" onclick="setFlag('pesagem','NÃO')">NÃO</button>
-              <button type="button" onclick="setFlag('pesagem','SIM')">SIM</button>
-            </div>
-            <input type="hidden" id="form-pesagem" value="NÃO" />
-          </div>
-          <div>
-            <label class="mobile-label">Conferência</label>
-            <div class="seg compact" id="seg-conferencia">
-              <button type="button" onclick="setFlag('conferencia','NÃO')">NÃO</button>
-              <button type="button" onclick="setFlag('conferencia','SIM')">SIM</button>
-            </div>
-            <input type="hidden" id="form-conferencia" value="SIM" />
-          </div>
-        </div>
-
-        <div class="rounded-xl p-3.5" style="background:#faf9ff; border:1px solid #e7e2ff;">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="w-7 h-7 rounded-lg flex items-center justify-center text-[12px]" style="background:#ece7ff; color:#5b34d6;">
-              <i class="fa-solid fa-boxes-packing"></i>
-            </div>
-            <div class="leading-tight">
-              <p class="text-[10.5px] font-black uppercase tracking-wider m-0" style="color:#4c2bc0;">Embalagem</p>
-              <p class="text-[9px] font-bold text-violet-400 m-0">Marque cada uma de forma independente</p>
-            </div>
-          </div>
-
-          <div class="space-y-2.5">
-            <div>
-              <label class="mobile-label" style="color:#5b34d6;">Carregamento de embalagem</label>
-              <div class="seg compact" id="seg-emb_carr">
-                <button type="button" onclick="setFlag('emb_carr','NÃO')">NÃO</button>
-                <button type="button" onclick="setFlag('emb_carr','SIM')">SIM</button>
-              </div>
-              <input type="hidden" id="form-emb-carr" value="NÃO" />
-            </div>
-            <div>
-              <label class="mobile-label" style="color:#5b34d6;">Descarregamento de embalagem</label>
-              <div class="seg compact" id="seg-emb_desc">
-                <button type="button" onclick="setFlag('emb_desc','NÃO')">NÃO</button>
-                <button type="button" onclick="setFlag('emb_desc','SIM')">SIM</button>
-              </div>
-              <input type="hidden" id="form-emb-desc" value="NÃO" />
-            </div>
-          </div>
-
-          <p id="emb-hint" class="text-[9.5px] font-bold mt-3 mb-0 leading-snug" style="color:#7c5cd6;">
-            Pode ter só carregamento, só descarregamento, os dois ou nenhum.
-          </p>
-        </div>
-      </div>
-
-      <div class="mt-4 space-y-2.5">
-        <button onclick="navTo('tempos')" class="btn-large btn-primary">
-          Avançar para horários <i class="fa-solid fa-arrow-right"></i>
-        </button>
-        <button onclick="confirmarExclusaoAtual()" class="btn-large btn-danger-outline text-[12.5px]">
-          <i class="fa-solid fa-trash-can"></i> Excluir este registro
-        </button>
+      <div class="chip chip-gray" style="padding:7px 10px; font-size:11px;">
+        <i class="fa-solid fa-truck"></i> <span id="contador-patio">0</span>
       </div>
     </div>
-  </main>
+    <div class="relative mb-3">
+      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+      <input type="text" id="patio-busca" oninput="renderizarPatio()" class="mobile-input pl-10 text-sm" placeholder="BUSCAR PLACA, FORNECEDOR, NF..." />
+    </div>
+    <button onclick="iniciarNovoRegistro()" class="btn-large btn-dark mb-4">
+      <i class="fa-solid fa-plus"></i> Novo caminhão
+    </button>
+    <p class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
+      <i class="fa-solid fa-arrow-down-wide-short"></i> Última ação registrada primeiro
+    </p>
+    <div id="lista-patio"></div>
+    <div id="empty-patio" class="hidden text-center py-10">
+      <i class="fa-solid fa-truck-ramp-box text-3xl text-slate-300 mb-3"></i>
+      <p class="text-slate-400 font-bold text-[13px]">Nenhum caminhão encontrado.</p>
+    </div>
+  </div>
+</main>
 
-  <!-- ============ HORÁRIOS ============ -->
-  <main id="view-tempos" class="view-container">
-    <div class="wrap">
-      <div class="flex items-start justify-between mb-3">
-        <div class="page-title mb-0">
-          <div class="bar"></div>
-          <div>
-            <h2>Horários</h2>
-            <p id="header-tempos-placa">PLACA</p>
-          </div>
-        </div>
-        <div class="flex gap-1.5">
-          <button onclick="resetarTempos()" class="btn-mini"><i class="fa-solid fa-rotate-left"></i> Zerar</button>
-          <button onclick="confirmarExclusaoAtual()" class="btn-mini danger" title="Excluir este registro"><i class="fa-solid fa-trash-can"></i></button>
-        </div>
-      </div>
-
-      <div class="card mb-3">
-        <div class="flex justify-between items-center mb-2">
-          <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider m-0">Progresso da operação</p>
-          <p id="progresso-texto" class="text-[11px] font-black m-0" style="color:var(--blue);">0 / 0</p>
-        </div>
-        <div class="progress-track"><div id="progresso-barra" class="progress-fill"></div></div>
-        <p id="progresso-etapa-atual" class="text-[10.5px] font-bold text-slate-500 mt-2.5 mb-0">Próxima etapa: —</p>
-      </div>
-
-      <div class="ponto-zone">
-        <button id="btn-ponto" onclick="registrarProximaEtapa()" class="btn-ponto bg-etapa-padrao">
-          <span class="ponto-inner">
-            <i id="icon-ponto" class="fa-solid fa-truck-arrow-right"></i>
-            <span id="txt-ponto">Registrar chegada</span>
-          </span>
-        </button>
-        <p class="ponto-hint"><i class="fa-solid fa-hand-pointer"></i> Toque para marcar a hora atual</p>
-      </div>
-
-      <div class="card" style="padding:10px;">
-        <div class="block-label" style="margin:6px 6px 8px; padding-bottom:8px;"><i class="fa-regular fa-clock"></i> Linha do tempo</div>
-        <ul id="lista-horarios" class="m-0 p-0 list-none space-y-1">
-          <!-- Horários dinâmicos -->
-        </ul>
-      </div>
-      <p class="text-center text-[9.5px] text-slate-400 font-bold mt-3 mb-5">Toque em um horário para ajustar manualmente.</p>
-
-      <div class="mt-4 space-y-2.5">
-        <button onclick="navTo('finalizar')" class="btn-large btn-primary mb-4">
-          Avançar para Finalizar <i class="fa-solid fa-flag-checkered"></i>
-        </button>
+<!-- ============ DADOS ============ -->
+<main id="view-dados" class="view-container">
+  <div class="wrap">
+    <div class="page-title">
+      <div class="bar"></div>
+      <div>
+        <h2>Dados do veículo</h2>
+        <p id="header-placa-ativa">NENHUM SELECIONADO</p>
       </div>
     </div>
-  </main>
 
-  <!-- ============ FINALIZAR ============ -->
-  <main id="view-finalizar" class="view-container">
-    <div class="wrap">
-      <div class="rounded-2xl p-5 text-center mb-3 text-white" style="background:var(--green);">
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2.5" style="background:rgba(255,255,255,.18);">
-          <i class="fa-solid fa-flag-checkered text-xl"></i>
+    <div class="card">
+      <div class="block-label"><i class="fa-regular fa-calendar"></i> Identificação</div>
+      <div class="grid grid-cols-2 gap-2.5 mb-3">
+        <div>
+          <label class="mobile-label">Data <span onclick="setToday()" class="cursor-pointer" style="color:var(--blue);">HOJE</span></label>
+          <input type="date" id="form-data" class="mobile-input text-sm" />
         </div>
-        <h2 class="font-black text-[19px] uppercase m-0 tracking-tight">Concluir registro</h2>
-        <p class="text-[11.5px] font-bold m-0 mt-1" style="color:#dcfce7;">Exporte os dados ou volte ao pátio</p>
-      </div>
-
-      <div class="card">
-        <div class="block-label" style="color:var(--rose);"><i class="fa-solid fa-triangle-exclamation"></i> Houve atraso? Motivo</div>
-        <textarea id="form-motivo" class="mobile-input normal-case resize-none" style="min-height:88px; padding:11px;" placeholder="Descreva brevemente o motivo de qualquer atraso..."></textarea>
-      </div>
-
-      <div class="card">
-        <div class="block-label"><i class="fa-solid fa-file-export"></i> Exportar dados (Excel / e-mail)</div>
-
-        <label class="mobile-label">Período</label>
-        <div class="grid grid-cols-2 gap-2.5 mb-1">
-          <div>
-            <span class="text-[9px] font-black text-slate-400">DE</span>
-            <input type="date" id="export-data-ini" class="mobile-input text-xs" style="padding:9px;" />
-          </div>
-          <div>
-            <span class="text-[9px] font-black text-slate-400">ATÉ</span>
-            <input type="date" id="export-data-fim" class="mobile-input text-xs" style="padding:9px;" />
-          </div>
-        </div>
-        <p class="text-[9px] text-slate-400 font-bold mb-3">Em branco = exporta toda a base.</p>
-
-        <label class="mobile-label">E-mail destino</label>
-        <input type="email" id="email-export" class="mobile-input normal-case text-sm mb-3" placeholder="email@exemplo.com" />
-
-        <div class="grid grid-cols-2 gap-2.5">
-          <button onclick="baixarExcel()" class="btn-large btn-green text-[11.5px]" style="padding:12px;">
-            <i class="fa-solid fa-download"></i> Excel
-          </button>
-          <button onclick="enviarPorEmail()" class="btn-large btn-sky text-[11.5px]" style="padding:12px;">
-            <i class="fa-solid fa-envelope"></i> E-mail
-          </button>
+        <div>
+          <label class="mobile-label">Hora início</label>
+          <input type="time" id="form-hora" class="mobile-input text-sm" />
         </div>
       </div>
-
-      <div class="mt-4 space-y-2.5">
-        <button onclick="navTo('patio')" class="btn-large btn-dark">
-          <i class="fa-solid fa-list-check"></i> Voltar ao pátio
-        </button>
-        <button type="button" onclick="copiarCaminhao()" class="btn-large btn-dark">
-  <i class="fa-solid fa-clone"></i> Copiar caminhão (dados e horários)
-</button>
-        <button onclick="confirmarExclusaoAtual()" class="btn-large btn-danger-outline text-[12.5px]">
-          <i class="fa-solid fa-trash-can"></i> Excluir este caminhão
-        </button>
+      <div class="grid grid-cols-2 gap-2.5 mb-3">
+        <div>
+          <label class="mobile-label">Turno</label>
+          <select id="form-turno" class="mobile-input text-sm pr-7">
+            <option value="A">TURNO A</option>
+            <option value="B">TURNO B</option>
+            <option value="C">TURNO C</option>
+            <option value="D">TURNO D</option>
+            <option value="E">TURNO E</option>
+          </select>
+        </div>
+        <div>
+          <label class="mobile-label">Operador</label>
+          <input type="text" id="form-operador" class="mobile-input text-sm" list="lista-operadores" placeholder="Digite ou escolha" />
+          <datalist id="lista-operadores"></datalist>
+        </div>
+      </div>
+      <div class="flex items-center justify-between gap-2 rounded-lg px-3 py-2" style="background:#f4f6fa; border:1px solid var(--line);">
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide truncate m-0">
+          <i class="fa-solid fa-id-badge" style="color:var(--blue);"></i> Logado: <span id="dados-operador-logado" class="text-slate-900 font-black">---</span>
+        </p>
+        <button type="button" onclick="usarOperadorLogado()" class="btn-mini">Usar</button>
       </div>
     </div>
-  </main>
 
-  <!-- ============ CONFERÊNCIA (ADICIONADO) ============ -->
+    <div class="card">
+      <div class="block-label"><i class="fa-solid fa-truck-ramp-box"></i> Carga e veículo</div>
+      <div class="mb-3">
+        <label class="mobile-label">Fornecedor / Transportadora</label>
+        <input type="text" id="form-fornecedor" class="mobile-input text-sm" oninput="filtrarFornecedores()" placeholder="Digite ou escolha" />
+        <div id="forn-dropdown" class="hidden absolute z-20 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 max-h-48 overflow-auto"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5 mb-3">
+        <div>
+          <label class="mobile-label">Placa</label>
+          <input type="text" id="form-placa" class="mobile-input text-sm" placeholder="ABC-1234" />
+        </div>
+        <div>
+          <label class="mobile-label">Container (se houver)</label>
+          <input type="text" id="form-container" class="mobile-input text-sm" placeholder="Nº do container" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <div>
+          <label class="mobile-label">Doca</label>
+          <select id="form-doca" class="mobile-input text-sm pr-7">
+            <option value="Rec">REC</option>
+            <option value="Exp">EXP</option>
+            <option value="Container">CONT.</option>
+            <option value="Doca 1">D1</option>
+            <option value="Doca 2">D2</option>
+          </select>
+        </div>
+        <div>
+          <label class="mobile-label">Volume (caixas)</label>
+          <input type="text" id="form-qtd-caixas" class="mobile-input text-sm" placeholder="0" />
+        </div>
+      </div>
+      <div>
+        <label class="mobile-label">Nota fiscal</label>
+        <input type="text" id="form-nf" class="mobile-input text-sm" placeholder="Nº NF" />
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="block-label"><i class="fa-solid fa-list-check"></i> O que essa operação teve?</div>
+      <div class="grid grid-cols-2 gap-2.5 mb-4">
+        <div>
+          <label class="mobile-label">Pesagem</label>
+          <div class="seg compact" id="seg-pesagem">
+            <button type="button" onclick="setFlag('fez_pesagem','NÃO')" class="on">NÃO</button>
+            <button type="button" onclick="setFlag('fez_pesagem','SIM')">SIM</button>
+          </div>
+          <input type="hidden" id="form-pesagem" value="NÃO" />
+        </div>
+        <div>
+          <label class="mobile-label">Conferência</label>
+          <div class="seg compact" id="seg-conferencia">
+            <button type="button" onclick="setFlag('teve_conferencia','NÃO')" class="on">NÃO</button>
+            <button type="button" onclick="setFlag('teve_conferencia','SIM')">SIM</button>
+          </div>
+          <input type="hidden" id="form-conferencia" value="NÃO" />
+        </div>
+      </div>
+      <div class="flex items-center gap-2 mb-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:#f3e8ff;">
+          <i class="fa-solid fa-boxes-stacked text-sm" style="color:#7c3aed;"></i>
+        </div>
+        <div class="leading-tight">
+          <p class="text-[10.5px] font-black uppercase tracking-wider m-0" style="color:#4c2bc0;">Embalagem</p>
+          <p class="text-[9px] font-bold text-violet-400 m-0">Marque cada uma de forma independente</p>
+        </div>
+      </div>
+      <div class="space-y-2.5">
+        <div>
+          <label class="mobile-label" style="color:#5b34d6;">Carregamento de embalagem</label>
+          <div class="seg compact" id="seg-emb_carr">
+            <button type="button" onclick="setFlag('emb_carr','NÃO')" class="on">NÃO</button>
+            <button type="button" onclick="setFlag('emb_carr','SIM')">SIM</button>
+          </div>
+          <input type="hidden" id="form-emb-carr" value="NÃO" />
+        </div>
+        <div>
+          <label class="mobile-label" style="color:#5b34d6;">Descarregamento de embalagem</label>
+          <div class="seg compact" id="seg-emb_desc">
+            <button type="button" onclick="setFlag('emb_desc','NÃO')" class="on">NÃO</button>
+            <button type="button" onclick="setFlag('emb_desc','SIM')">SIM</button>
+          </div>
+          <input type="hidden" id="form-emb-desc" value="NÃO" />
+        </div>
+      </div>
+      <p id="emb-hint" class="text-[9.5px] font-bold mt-3 mb-0 leading-snug" style="color:#7c5cd6;">
+        Pode ter só carregamento, só descarregamento, os dois ou nenhum.
+      </p>
+    </div>
+
+    <div class="mt-4 space-y-2.5">
+      <button onclick="salvarEIrParaHorarios()" class="btn-large btn-primary">
+        Avançar para horários <i class="fa-solid fa-arrow-right"></i>
+      </button>
+      <button type="button" onclick="copiarCaminhao()" class="btn-large btn-dark">
+        <i class="fa-solid fa-clone"></i> Copiar caminhão (dados e horários)
+      </button>
+      <button onclick="confirmarExclusaoAtual()" class="btn-large btn-danger-outline text-[12.5px]">
+        <i class="fa-solid fa-trash-can"></i> Excluir este registro
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- ============ CONFERÊNCIA ============ -->
 <main id="view-conf" class="view-container">
   <div class="wrap">
     <div class="conf-cab">
@@ -807,1226 +412,837 @@
 
     <div class="card">
       <div class="block-label"><i class="fa-solid fa-boxes-stacked"></i> Item conferido</div>
-      <label class="mobile-label">Part number</label>
-      <input type="text" id="conf-part" list="conf-parts-list" class="mobile-input text-sm" placeholder="Digite ou selecione o part number">
+      <label class="mobile-label">Part number (digite ou selecione)</label>
+      <input type="text" id="conf-part" list="conf-parts-list" class="mobile-input text-sm" placeholder="Digite ou selecione o part number" oninput="confAutoMultiplo()">
       <datalist id="conf-parts-list"></datalist>
-      <label class="mobile-label">Quantidade</label>
+      <label class="mobile-label">Quantidade total</label>
       <input type="number" id="conf-qtd" inputmode="numeric" min="0" class="mobile-input text-sm" placeholder="0" oninput="confAtualizarPreview()">
-      <label class="mobile-label">Múltiplo por caixa</label>
+      <label class="mobile-label">Múltiplo por caixa (auto do cadastro)</label>
       <input type="number" id="conf-multiplo" inputmode="numeric" min="1" value="1" class="mobile-input text-sm" oninput="confAtualizarPreview()">
       <div class="conf-preview" id="conf-preview">Caixas: <strong>0</strong></div>
-      <button type="button" onclick="confAdicionar()" style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:800;font-size:14px;margin-top:12px;font-family:inherit">
+      <div class="conf-preview" id="conf-aviso" style="display:none;background:#fef3c7;color:#92400e;">
+        Quantidade menor que o múltiplo: sobra caixa incompleta.
+      </div>
+      <button type="button" onclick="confAdicionar()" style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:800;font-size:14px;margin-top:12px;font-family:inherit;">
         <i class="fa-solid fa-plus"></i> Adicionar item
       </button>
     </div>
 
     <div id="conf-lista"></div>
     <div class="conf-total-bar" id="conf-total">Total de caixas: 0</div>
-    <button type="button" onclick="confContinuar()" style="width:100%;background:#16a34a;color:#fff;border:none;border-radius:12px;padding:14px;font-weight:800;font-size:14px;font-family:inherit">
+    <button type="button" onclick="confContinuar()" style="width:100%;background:#16a34a;color:#fff;border:none;border-radius:12px;padding:14px;font-weight:800;font-size:14px;font-family:inherit;">
       <i class="fa-solid fa-arrow-right"></i> Continuar para horários
     </button>
   </div>
 </main>
 
-  <nav class="bottom-nav" id="main-bottom-nav">
-    <div onclick="navTo('patio')" class="nav-item" id="nav-btn-patio">
-      <i class="fa-solid fa-list-check"></i> Pátio
+<!-- ============ MÚLTIPLOS POR CAIXA ============ -->
+<main id="view-multiplos" class="view-container">
+  <div class="wrap">
+    <div class="conf-cab">
+      <div>
+        <h2>Múltiplos por caixa</h2>
+        <p id="mult-info">Sincronizado com o cadastro de produtos</p>
+      </div>
     </div>
-    <div onclick="navTo('dados')" class="nav-item opacity-50 pointer-events-none" id="nav-btn-dados">
-      <i class="fa-solid fa-clipboard-list"></i> Dados
-    </div>
-    <div onclick="abrirConferencia()" class="nav-item" id="nav-btn-conf">
-  <i class="fa-solid fa-clipboard-check"></i> Conf.
-</div>
-    <div onclick="navTo('tempos')" class="nav-item opacity-50 pointer-events-none" id="nav-btn-tempos">
-      <i class="fa-solid fa-stopwatch"></i> Horários
-    </div>
-    <div onclick="navTo('finalizar')" class="nav-item opacity-50 pointer-events-none" id="nav-btn-finalizar">
-      <i class="fa-solid fa-flag-checkered"></i> Finalizar
-    </div>
-  </nav>
 
-  <!-- Modal de Cadastro / Criar Conta (Suporta Nome de Usuário e E-mail) -->
-  <div id="modal-cadastro-usuario" class="modal-overlay">
-    <div class="modal-card bg-white rounded-2xl p-5 max-w-sm w-full border border-slate-200">
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-2">
-          <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-            <i class="fa-solid fa-user-check"></i>
-          </div>
-          <div>
-            <h3 class="font-black text-[16px] text-slate-900 m-0">Validar Acesso</h3>
-            <p class="text-[10px] font-bold text-slate-400 m-0 uppercase">Requer cadastro prévio</p>
-          </div>
+    <div class="card">
+      <div class="block-label"><i class="fa-solid fa-cubes"></i> Cadastrar múltiplo</div>
+      <label class="mobile-label">Part number (digite ou selecione)</label>
+      <input type="text" id="mult-part" list="mult-parts-list" class="mobile-input text-sm" placeholder="Digite ou selecione do cadastro">
+      <datalist id="mult-parts-list"></datalist>
+      <label class="mobile-label">Múltiplo por caixa</label>
+      <div style="display:flex;gap:8px;">
+        <input type="number" id="mult-valor" inputmode="numeric" min="1" value="1" class="mobile-input text-sm" style="flex:1;">
+        <button type="button" onclick="multSalvar()" style="background:#2563eb;color:#fff;border:none;border-radius:12px;padding:10px 18px;font-weight:800;font-size:14px;font-family:inherit;">Salvar</button>
+      </div>
+      <div class="conf-preview" id="mult-preview"></div>
+    </div>
+
+    <h3 class="block-label">Múltiplos cadastrados</h3>
+    <div id="mult-lista"></div>
+  </div>
+</main>
+
+<!-- ============ HORÁRIOS ============ -->
+<main id="view-tempos" class="view-container">
+  <div class="wrap">
+    <div class="flex items-start justify-between mb-3">
+      <div class="page-title mb-0">
+        <div class="bar"></div>
+        <div>
+          <h2>Horários</h2>
+          <p id="header-tempos-placa">PLACA</p>
         </div>
-        <button onclick="fecharModalCadastro()" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center">
-          <i class="fa-solid fa-xmark"></i>
+      </div>
+      <div class="flex gap-1.5">
+        <button onclick="resetarTempos()" class="btn-mini"><i class="fa-solid fa-rotate-left"></i> Zerar</button>
+        <button onclick="confirmarExclusaoAtual()" class="btn-mini danger" title="Excluir este registro"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider m-0">Progresso da operação</p>
+        <p id="progresso-texto" class="text-[11px] font-black m-0" style="color:var(--blue);">0 / 0</p>
+      </div>
+      <div class="progress-track"><div id="progresso-barra" class="progress-fill"></div></div>
+      <p id="progresso-etapa-atual" class="text-[10.5px] font-bold text-slate-500 mt-2.5 mb-0">Próxima etapa: —</p>
+    </div>
+
+    <div class="ponto-zone">
+      <button id="btn-ponto" onclick="registrarProximaEtapa()" class="btn-ponto bg-etapa-padrao">
+        <i class="fa-solid fa-clock text-xl"></i>
+        <span id="btn-ponto-texto">Registrar chegada</span>
+      </button>
+    </div>
+    <p class="text-center text-[9.5px] text-slate-400 font-bold mt-3 mb-5">Toque em um horário para ajustar manualmente.</p>
+
+    <div id="lista-tempos"></div>
+
+    <div class="mt-4 space-y-2.5">
+      <button onclick="navTo('finalizar')" class="btn-large btn-primary mb-4">
+        Avançar para Finalizar <i class="fa-solid fa-flag-checkered"></i>
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- ============ FINALIZAR ============ -->
+<main id="view-finalizar" class="view-container">
+  <div class="wrap">
+    <div class="rounded-2xl p-4 mb-4 flex items-center gap-3" style="background:linear-gradient(135deg,#15803d,#16a34a);">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-white/15 text-white">
+        <i class="fa-solid fa-flag-checkered text-xl"></i>
+      </div>
+      <div>
+        <h2 class="font-black text-[19px] uppercase m-0 tracking-tight text-white">Concluir registro</h2>
+        <p class="text-[11.5px] font-bold m-0 mt-1" style="color:#dcfce7;">Exporte os dados ou volte ao pátio</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="block-label"><i class="fa-solid fa-clock-rotate-left"></i> Houve atraso? Motivo</div>
+      <textarea id="form-motivo" class="mobile-input normal-case resize-none" style="min-height:88px; padding:11px;" placeholder="Descreva brevemente o motivo de qualquer atraso..."></textarea>
+    </div>
+
+    <div class="card">
+      <div class="block-label"><i class="fa-solid fa-file-export"></i> Exportar dados (Excel / e-mail)</div>
+      <label class="mobile-label">Período</label>
+      <div class="grid grid-cols-2 gap-2.5 mb-1">
+        <div>
+          <span class="text-[9px] font-black text-slate-400">DE</span>
+          <input type="date" id="export-data-ini" class="mobile-input text-xs" style="padding:9px;" />
+        </div>
+        <div>
+          <span class="text-[9px] font-black text-slate-400">ATÉ</span>
+          <input type="date" id="export-data-fim" class="mobile-input text-xs" style="padding:9px;" />
+        </div>
+      </div>
+      <p class="text-[9px] text-slate-400 font-bold mb-3">Em branco = exporta toda a base.</p>
+      <label class="mobile-label">E-mail destino</label>
+      <input type="email" id="email-export" class="mobile-input normal-case text-sm mb-3" placeholder="email@exemplo.com" />
+      <div class="grid grid-cols-2 gap-2.5">
+        <button onclick="baixarExcel()" class="btn-large btn-green text-[11.5px]" style="padding:12px;">
+          <i class="fa-solid fa-download"></i> Excel
+        </button>
+        <button onclick="enviarPorEmail()" class="btn-large btn-sky text-[11.5px]" style="padding:12px;">
+          <i class="fa-solid fa-envelope"></i> E-mail
         </button>
       </div>
+    </div>
 
-      <div class="space-y-3 mb-4">
-        <div>
-          <label class="mobile-label">Usuário ou E-mail autorizado</label>
-          <input type="text" id="cad-usuario" class="mobile-input text-sm normal-case" placeholder="ex: joao.silva ou joao@empresa.com" />
+    <div class="mt-4 space-y-2.5">
+      <button onclick="navTo('patio')" class="btn-large btn-dark">
+        <i class="fa-solid fa-list-check"></i> Voltar ao pátio
+      </button>
+      <button onclick="confirmarExclusaoAtual()" class="btn-large btn-danger-outline text-[12.5px]">
+        <i class="fa-solid fa-trash-can"></i> Excluir este caminhão
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- ============ NAVEGAÇÃO INFERIOR ============ -->
+<nav class="bottom-nav" id="main-bottom-nav">
+  <div onclick="navTo('patio')" class="nav-item" id="nav-btn-patio">
+    <i class="fa-solid fa-list-check"></i> Pátio
+  </div>
+  <div onclick="navTo('dados')" class="nav-item opacity-50 pointer-events-none" id="nav-btn-dados">
+    <i class="fa-solid fa-clipboard-list"></i> Dados
+  </div>
+  <div onclick="abrirConferencia()" class="nav-item" id="nav-btn-conf">
+    <i class="fa-solid fa-clipboard-check"></i> Conf.
+  </div>
+  <div onclick="abrirMultiplos()" class="nav-item" id="nav-btn-multiplos">
+    <i class="fa-solid fa-cubes"></i> Mult.
+  </div>
+  <div onclick="navTo('tempos')" class="nav-item opacity-50 pointer-events-none" id="nav-btn-tempos">
+    <i class="fa-solid fa-stopwatch"></i> Horários
+  </div>
+  <div onclick="navTo('finalizar')" class="nav-item opacity-50 pointer-events-none" id="nav-btn-finalizar">
+    <i class="fa-solid fa-flag-checkered"></i> Finalizar
+  </div>
+</nav>
+
+<!-- Modal de Cadastro -->
+<div id="modal-cadastro-usuario" class="modal-overlay">
+  <div class="modal-card">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+          <i class="fa-solid fa-user-check"></i>
         </div>
         <div>
-          <label class="mobile-label">Crie uma Senha (mínimo 6 char)</label>
-          <input type="password" id="cad-senha" class="mobile-input text-sm normal-case" placeholder="••••••••" />
+          <h3 class="font-black text-[16px] text-slate-900 m-0">Validar Acesso</h3>
+          <p class="text-[10px] font-bold text-slate-400 m-0 uppercase">Requer cadastro prévio</p>
         </div>
       </div>
-
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="fecharModalCadastro()" class="py-2.5 px-3 bg-slate-100 text-slate-700 font-bold text-[11.5px] rounded-xl">Cancelar</button>
-        <button onclick="executarCadastro()" class="py-2.5 px-3 text-white font-bold text-[11.5px] rounded-xl" style="background:var(--blue);">Validar e Criar</button>
-      </div>
+    </div>
+    <label class="mobile-label">Usuário ou E-mail autorizado</label>
+    <input type="text" id="cad-email" class="mobile-input text-sm normal-case mb-3" placeholder="ex: joao.silva ou email@exemplo.com" />
+    <label class="mobile-label">Crie uma Senha (mínimo 6 caracteres)</label>
+    <input type="password" id="cad-senha" class="mobile-input text-sm normal-case" placeholder="••••••••" />
+    <div class="grid grid-cols-2 gap-2 mt-4">
+      <button onclick="fecharModalCadastro()" class="py-2.5 px-3 bg-slate-100 text-slate-700 font-bold text-[11.5px] rounded-xl">Cancelar</button>
+      <button onclick="executarCadastro()" class="py-2.5 px-3 text-white font-bold text-[11.5px] rounded-xl" style="background:var(--blue);">Validar e Criar</button>
     </div>
   </div>
+</div>
 
-  <!-- Modal de exclusão -->
-  <div id="modal-exclusao" class="modal-overlay">
-    <div class="modal-card bg-white rounded-2xl p-5 max-w-xs w-full text-center border border-slate-200">
-      <div class="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-3 text-lg" style="background:#fee2e2; color:var(--rose);">
-        <i class="fa-solid fa-trash-can"></i>
-      </div>
-      <h3 class="font-black text-[17px] text-slate-900 mb-1 m-0">Excluir registro?</h3>
-      <p class="text-[11.5px] text-slate-500 mb-4 mt-1.5">O caminhão será apagado permanentemente da nuvem.</p>
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="fecharModalExclusao()" class="py-2.5 px-3 bg-slate-100 text-slate-700 font-bold text-[11.5px] rounded-lg">Cancelar</button>
-        <button onclick="executarExclusaoDefinitiva()" class="py-2.5 px-3 text-white font-bold text-[11.5px] rounded-lg" style="background:var(--rose);">Sim, excluir</button>
-      </div>
+<!-- Modal de exclusão -->
+<div id="modal-exclusao" class="modal-overlay">
+  <div class="modal-card text-center">
+    <div class="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-3 text-lg" style="background:#fee2e2; color:var(--rose);">
+      <i class="fa-solid fa-trash-can"></i>
+    </div>
+    <h3 class="font-black text-[17px] text-slate-900 mb-1 m-0">Excluir registro?</h3>
+    <p class="text-[11.5px] text-slate-500 mb-4 mt-1.5">O caminhão será apagado permanentemente da nuvem.</p>
+    <div class="grid grid-cols-2 gap-2">
+      <button onclick="fecharModalExclusao()" class="py-2.5 px-3 bg-slate-100 text-slate-700 font-bold text-[11.5px] rounded-lg">Cancelar</button>
+      <button onclick="executarExclusaoDefinitiva()" class="py-2.5 px-3 text-white font-bold text-[11.5px] rounded-lg" style="background:var(--rose);">Sim, excluir</button>
     </div>
   </div>
+</div>
 
-  <!-- Modal para zerar horários -->
-  <div id="modal-reset" class="modal-overlay">
-    <div class="modal-card bg-white rounded-2xl p-5 max-w-xs w-full text-center border border-slate-200">
-      <div class="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-3 text-lg" style="background:#fef3c7; color:var(--amber);">
-        <i class="fa-solid fa-rotate-left"></i>
-      </div>
-      <h3 class="font-black text-[17px] text-slate-900 mb-1 m-0">Zerar horários?</h3>
-      <p class="text-[11.5px] text-slate-500 mb-4 mt-1.5">Todos os horários desta operação serão apagados.</p>
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="fecharModalReset()" class="py-2.5 px-3 bg-slate-100 text-slate-700 font-bold text-[11.5px] rounded-lg">Cancelar</button>
-        <button onclick="executarResetTempos()" class="py-2.5 px-3 text-white font-bold text-[11.5px] rounded-lg" style="background:#d97706;">Sim, zerar</button>
-      </div>
+<!-- Modal de reset -->
+<div id="modal-reset" class="modal-overlay">
+  <div class="modal-card text-center">
+    <div class="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-3 text-lg" style="background:#fef3c7; color:#d97706;">
+      <i class="fa-solid fa-rotate-left"></i>
+    </div>
+    <h3 class="font-black text-[17px] text-slate-900 mb-1 m-0">Zerar horários?</h3>
+    <p class="text-[11.5px] text-slate-500 mb-4 mt-1.5">Todos os horários desta operação serão apagados.</p>
+    <div class="grid grid-cols-2 gap-2">
+      <button onclick="fecharModalReset()" class="py-2.5 px-3 bg-slate-100 text-slate-700 font-bold text-[11.5px] rounded-lg">Cancelar</button>
+      <button onclick="executarResetTempos()" class="py-2.5 px-3 text-white font-bold text-[11.5px] rounded-lg" style="background:#d97706;">Sim, zerar</button>
     </div>
   </div>
-  
-
-  <script>
-    let appState = { activeId: null, horarios: {} };
-    let filaRegistros = [];
-    let etapasPontoAtivas = [];
-    let etapaAtualIndex = 0;
-    let operadoresMap = {};
-    let listaFornecedoresApp = [];
-    let db = null;
-    let auth = null;
-    let currentView = 'login';
-    let autoSaveTimeout = null;
-    let isDeleting = false;
-    let loginMode = 'USER';
-
-    /* Operador logado */
-    let operadorLogado = { nome: '---', email: '', turno: 'A' };
-
-    /* ============================================================
-       SESSÃO: 10 MIN DE INATIVIDADE
-       ============================================================ */
-    const INACTIVITY_TIME_MS = 10 * 60 * 1000;
-    const LS_LAST_ACT = 'hl_last_activity';
-    let inactivityTimer = null;
-    let sessaoTickTimer = null;
-    let lastActivityTime = Date.now();
-
-    function marcarAtividade() {
-      lastActivityTime = Date.now();
-      try { localStorage.setItem(LS_LAST_ACT, String(lastActivityTime)); } catch (e) {}
-    }
-
-    function tempoInativoMs() {
-      let base = lastActivityTime;
-      try {
-        const salvo = parseInt(localStorage.getItem(LS_LAST_ACT) || '0', 10);
-        if (!isNaN(salvo) && salvo > base) base = salvo;
-      } catch (e) {}
-      return Date.now() - base;
-    }
-
-    function checkInactivityAndLogout() {
-      if (auth && auth.currentUser && tempoInativoMs() >= INACTIVITY_TIME_MS) {
-        logout("Sessão encerrada: 10 minutos sem atividade.");
-        return true;
-      }
-      return false;
-    }
-
-    function resetTimer() {
-      marcarAtividade();
-      clearTimeout(inactivityTimer);
-      if (auth && auth.currentUser) {
-        inactivityTimer = setTimeout(checkInactivityAndLogout, INACTIVITY_TIME_MS);
-      }
-      atualizarChipSessao();
-    }
-
-    function iniciarVigilanciaSessao() {
-      clearInterval(sessaoTickTimer);
-      sessaoTickTimer = setInterval(() => {
-        if (!auth || !auth.currentUser) return;
-        if (checkInactivityAndLogout()) return;
-        atualizarChipSessao();
-      }, 1000);
-    }
-
-    function atualizarChipSessao() {
-      const chip = document.getElementById('sessao-chip');
-      const txt = document.getElementById('sessao-restante');
-      if (!chip || !txt) return;
-      if (!auth || !auth.currentUser) { txt.innerText = '10:00'; chip.classList.remove('alerta'); return; }
-      const restante = Math.max(0, INACTIVITY_TIME_MS - tempoInativoMs());
-      const m = Math.floor(restante / 60000);
-      const s = Math.floor((restante % 60000) / 1000);
-      txt.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-      if (restante <= 60000) chip.classList.add('alerta'); else chip.classList.remove('alerta');
-    }
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && auth && auth.currentUser) {
-        if (!checkInactivityAndLogout()) resetTimer();
-      }
-    });
-
-    ['touchstart', 'mousemove', 'mousedown', 'keypress', 'scroll', 'input', 'click'].forEach(evt => {
-      document.addEventListener(evt, resetTimer, true);
-    });
-
-    window.addEventListener('pagehide', (e) => {
-      if (!e.persisted) { try { sessionStorage.setItem('hl_sessao_fechando', '1'); } catch (err) {} }
-    });
-
-    function showToast(msg, icon = 'fa-circle-info') {
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${msg}</span>`;
-      document.body.appendChild(toast);
-      toast.offsetHeight;
-      toast.classList.add('show');
-      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000);
-    }
-
-    function setLoginType(type) {
-      loginMode = type;
-      const btnUser = document.getElementById('btn-login-user');
-      const btnEmail = document.getElementById('btn-login-email');
-      const label = document.getElementById('label-login-input');
-      const input = document.getElementById('login-email');
-      const hint = document.getElementById('hint-login');
-
-      if (!btnUser || !btnEmail) return;
-
-      if (type === 'USER') {
-        btnUser.classList.add('on');
-        btnEmail.classList.remove('on');
-        if (label) label.innerText = 'Nome de usuário';
-        if (input) input.placeholder = 'ex: joao.silva';
-        if (hint) hint.innerText = 'Você pode usar seu nome de usuário ou apelido cadastrado.';
-      } else {
-        btnEmail.classList.add('on');
-        btnUser.classList.remove('on');
-        if (label) label.innerText = 'E-mail completo';
-        if (input) input.placeholder = 'ex: email@exemplo.com';
-        if (hint) hint.innerText = 'Digite seu endereço de e-mail cadastrado.';
-      }
-    }
-
-    function toggleSenha() {
-      const inp = document.getElementById('login-senha');
-      const ic = document.getElementById('icon-senha');
-      if (!inp) return;
-      if (inp.type === 'password') { inp.type = 'text'; ic.className = 'fa-regular fa-eye-slash'; }
-      else { inp.type = 'password'; ic.className = 'fa-regular fa-eye'; }
-    }
-
-    function formatarEmail(valor) {
-      let v = valor.trim().toLowerCase();
-      if (!v) return v;
-      if (loginMode === 'USER' || !v.includes('@')) {
-        let cleanUser = v.replace(/[^a-z0-9._-]/g, '');
-        return cleanUser + '@hlcompany.com';
-      }
-      return v;
-    }
-
-    function setToday() {
-      const now = new Date(); const ano = now.getFullYear(); const mes = String(now.getMonth() + 1).padStart(2, '0'); const dia = String(now.getDate()).padStart(2, '0');
-      document.getElementById('form-data').value = `${ano}-${mes}-${dia}`;
-      const h = String(now.getHours()).padStart(2, '0'); const m = String(now.getMinutes()).padStart(2, '0');
-      document.getElementById('form-hora').value = `${h}:${m}`;
-      salvarEstadoAtual();
-    }
-
-    /* ---------- Modais de Cadastro ---------- */
-    function abrirModalCadastro() {
-      document.getElementById('cad-usuario').value = '';
-      document.getElementById('cad-senha').value = '';
-      document.getElementById('modal-cadastro-usuario').style.display = 'flex';
-    }
-
-    function fecharModalCadastro() {
-      document.getElementById('modal-cadastro-usuario').style.display = 'none';
-    }
-
-    function executarCadastro() {
-      const userRaw = document.getElementById('cad-usuario').value.trim();
-      const senha = document.getElementById('cad-senha').value.trim();
-
-      if (!userRaw || !senha) {
-        showToast("Preencha o nome de usuário/e-mail e a senha.", "fa-circle-exclamation");
-        return;
-      }
-
-      let targetU = userRaw.toLowerCase();
-      let emailFinal = targetU;
-      if (!emailFinal.includes('@')) {
-        emailFinal = emailFinal.replace(/[^a-z0-9._-]/g, '') + '@hlcompany.com';
-      }
-
-      // Validação: Verifica se o usuário já existe na base mestre antes de criar
-      db.ref('cadastros/operadores').once('value').then(snap => {
-        let ops = snap.val(); 
-        let arr = Array.isArray(ops) ? ops.filter(Boolean) : Object.values(ops || {}).filter(Boolean);
-        
-        let targetE = emailFinal.toLowerCase();
-
-        let operadorAutorizado = arr.find(o => {
-            let u = (typeof o === 'object' && o.usuario) ? String(o.usuario).trim().toLowerCase() : '';
-            let e = (typeof o === 'object' && o.email) ? String(o.email).trim().toLowerCase() : '';
-            return (u && u === targetU) || (e && e === targetU) || (e && e === targetE);
-        });
-
-        if (!operadorAutorizado) {
-            showToast("Usuário não cadastrado. Fale com o admin.", "fa-hand");
-            return;
-        }
-
-        // Se o operador está autorizado pelo Master Hub, prossegue com a criação da credencial
-        auth.createUserWithEmailAndPassword(emailFinal, senha).then((userCredential) => {
-          document.getElementById('email-export').value = userCredential.user.email || '';
-          fecharModalCadastro();
-          showToast("Acesso validado e vinculado com sucesso!", "fa-check-circle");
-        }).catch(error => {
-          let msg = "Erro ao cadastrar: " + error.message;
-          if (error.code === 'auth/email-already-in-use') msg = "Esta credencial já existe! Tente fazer Login.";
-          if (error.code === 'auth/weak-password') msg = "A senha deve ter pelo menos 6 caracteres.";
-          showToast(msg, "fa-circle-xmark");
-        });
-      }).catch(err => {
-        showToast("Erro ao verificar autorização.", "fa-triangle-exclamation");
-      });
-    }
-
-    /* ---------- Botões SIM / NÃO ---------- */
-    const FLAG_INPUTS = {
-      pesagem: 'form-pesagem',
-      conferencia: 'form-conferencia',
-      emb_carr: 'form-emb-carr',
-      emb_desc: 'form-emb-desc'
-    };
-
-    function setFlag(nome, valor, silencioso = false) {
-      const inputId = FLAG_INPUTS[nome];
-      if (!inputId) return;
-      const input = document.getElementById(inputId);
-      input.value = valor;
-      atualizarSegUI(nome);
-
-      if (nome === 'emb_carr' && valor !== 'SIM') { delete appState.horarios.ini_carr; delete appState.horarios.fim_carr; }
-      if (nome === 'emb_desc' && valor !== 'SIM') { delete appState.horarios.ini_emb_desc; delete appState.horarios.fim_emb_desc; }
-      if (nome === 'pesagem' && valor !== 'SIM') { delete appState.horarios.ini_pesag; delete appState.horarios.fim_pesag; }
-      if (nome === 'conferencia' && valor !== 'SIM') { delete appState.horarios.ini_conf; delete appState.horarios.fim_conf; }
-
-      atualizarDicaEmbalagem();
-      if (!silencioso) { atualizarEtapasDinamicas(); salvarEstadoAtual(); }
-    }
-
-    function atualizarSegUI(nome) {
-      const seg = document.getElementById('seg-' + nome);
-      const input = document.getElementById(FLAG_INPUTS[nome]);
-      if (!seg || !input) return;
-      const val = input.value;
-      const botoes = seg.querySelectorAll('button');
-      botoes.forEach(b => {
-        const bv = b.innerText.trim().toUpperCase();
-        const ativo = (bv === 'SIM' && val === 'SIM') || (bv !== 'SIM' && val !== 'SIM');
-        b.className = ativo ? (bv === 'SIM' ? 'on yes' : 'on') : '';
-      });
-    }
-
-    function sincronizarTodosSegs(silencioso = true) {
-      Object.keys(FLAG_INPUTS).forEach(n => atualizarSegUI(n));
-      atualizarDicaEmbalagem();
-    }
-
-    function temEmbCarr() { return document.getElementById('form-emb-carr').value === 'SIM'; }
-    function temEmbDesc() { return document.getElementById('form-emb-desc').value === 'SIM'; }
-
-    function atualizarDicaEmbalagem() {
-      const hint = document.getElementById('emb-hint');
-      if (!hint) return;
-      const c = temEmbCarr(), d = temEmbDesc();
-      if (c && d) hint.innerText = 'Carregamento e descarregamento serão cronometrados separadamente.';
-      else if (c) hint.innerText = 'Somente o carregamento de embalagem entra na linha do tempo.';
-      else if (d) hint.innerText = 'Somente o descarregamento de embalagem entra na linha do tempo.';
-      else hint.innerText = 'Pode ter só carregamento, só descarregamento, os dois ou nenhum.';
-    }
-
-    /* ---------- Operador logado ---------- */
-    function aplicarOperadorLogadoUI() {
-      const barra = document.getElementById('user-bar');
-      const nomeEl = document.getElementById('operador-nome');
-      const avatarEl = document.getElementById('operador-avatar');
-      const turnoTxt = document.getElementById('turno-chip-txt');
-      const dadosEl = document.getElementById('dados-operador-logado');
-
-      const logado = !!(auth && auth.currentUser);
-      if (barra) barra.classList.toggle('show', logado && currentView !== 'login');
-
-      const nome = operadorLogado.nome || '---';
-      if (nomeEl) nomeEl.innerText = nome;
-      if (dadosEl) dadosEl.innerText = nome;
-      if (turnoTxt) turnoTxt.innerText = 'TURNO ' + (operadorLogado.turno || 'A');
-      if (avatarEl) {
-        const partes = nome.split(/[\s._-]+/).filter(Boolean);
-        const ini = partes.length > 1 ? (partes[0][0] + partes[1][0]) : nome.substring(0, 2);
-        avatarEl.innerText = (ini || '--').toUpperCase();
-      }
-    }
-
-    function usarOperadorLogado() {
-      const el = document.getElementById('form-operador');
-      if (!el) return;
-      el.value = operadorLogado.nome || '';
-      if (operadorLogado.turno) document.getElementById('form-turno').value = operadorLogado.turno;
-      salvarEstadoAtual();
-      showToast('Operador logado aplicado ao registro.', 'fa-user-check');
-    }
-
-    function navTo(viewId) {
-      document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
-      const target = document.getElementById(`view-${viewId}`);
-      if (target) target.classList.add('active');
-      currentView = viewId;
-
-      const nav = document.getElementById('main-bottom-nav');
-      if (viewId === 'login') {
-        if (nav) nav.style.display = 'none';
-      } else {
-        if (nav) nav.style.display = 'flex';
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        const btn = document.getElementById(`nav-btn-${viewId}`);
-        if (btn) btn.classList.add('active');
-      }
-
-      aplicarOperadorLogadoUI();
-
-      if (viewId === 'patio') { renderizarPatio(); desbloquearTabs(false); }
-      else if (viewId === 'tempos') { atualizarEtapasDinamicas(); }
-
-      const alvoScroll = document.getElementById(`view-${viewId}`);
-      if (alvoScroll) alvoScroll.scrollTo({ top: 0, behavior: 'smooth' });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function desbloquearTabs(liberar) {
-      ['nav-btn-dados', 'nav-btn-tempos', 'nav-btn-finalizar'].forEach(id => {
-        const el = document.getElementById(id);
-        if (liberar) el.classList.remove('opacity-50', 'pointer-events-none');
-        else el.classList.add('opacity-50', 'pointer-events-none');
-      });
-    }
-
-    document.getElementById('login-senha').addEventListener('keydown', function(event) { if (event.key === 'Enter') { event.preventDefault(); fazerLogin(); } });
-
-    function fazerLogin() {
-      const userRaw = document.getElementById('login-email').value; const senha = document.getElementById('login-senha').value;
-      if (!userRaw || !senha) { showToast("Preencha usuário/e-mail e senha.", "fa-circle-exclamation"); return; }
-      const emailFinal = formatarEmail(userRaw);
-      auth.signInWithEmailAndPassword(emailFinal, senha).then((userCredential) => {
-        document.getElementById('email-export').value = userCredential.user.email || '';
-        showToast("Login efetuado com sucesso!", "fa-check-circle");
-      }).catch(error => {
-        showToast(error.code === 'auth/invalid-credential' ? "Usuário/e-mail ou senha incorretos." : "Erro: " + error.message, "fa-circle-xmark");
-      });
-    }
-
-    function logout(mensagemToast = "Sessão terminada.") {
-      if (auth) {
-        auth.signOut().then(() => {
-          document.getElementById('btn-logout').classList.add('hidden');
-          document.getElementById('login-senha').value = '';
-          clearTimeout(inactivityTimer);
-          appState.activeId = null;
-          operadorLogado = { nome: '---', email: '', turno: 'A' };
-          try { localStorage.removeItem(LS_LAST_ACT); } catch (e) {}
-          showToast(mensagemToast, "fa-door-open");
-          navTo('login');
-        });
-      }
-    }
-
-    /* ---------- PÁTIO ---------- */
-    function marcaTempoRegistro(reg) {
-      if (reg && reg.updated_at) {
-        const n = parseInt(reg.updated_at, 10);
-        if (!isNaN(n)) return n;
-      }
-      if (reg && typeof reg.id === 'string') {
-        const m = reg.id.match(/(\d{10,})/);
-        if (m) return parseInt(m[1], 10);
-      }
-      return 0;
-    }
-
-    function renderizarPatio() {
-      const lista = document.getElementById('lista-patio');
-      const empty = document.getElementById('empty-patio');
-      const contador = document.getElementById('contador-patio');
-      const busca = (document.getElementById('patio-busca')?.value || '').trim().toUpperCase();
-
-      lista.innerHTML = '';
-      contador.innerText = filaRegistros.length;
-
-      const emAndamento = filaRegistros.filter(r => !r.saida).length;
-      const concluidos = filaRegistros.length - emAndamento;
-      const sA = document.getElementById('stat-andamento'); if (sA) sA.innerText = emAndamento;
-      const sC = document.getElementById('stat-concluido'); if (sC) sC.innerText = concluidos;
-
-      let base = filaRegistros;
-      if (busca) {
-        base = base.filter(r =>
-          (r.placa || '').toUpperCase().includes(busca) ||
-          (r.fornecedor || '').toUpperCase().includes(busca) ||
-          (r.nf || '').toUpperCase().includes(busca) ||
-          (r.operador || '').toUpperCase().includes(busca) ||
-          (r.doca || '').toUpperCase().includes(busca)
-        );
-      }
-
-      if (base.length === 0) { empty.classList.remove('hidden'); return; }
-      empty.classList.add('hidden');
-
-      const filaOrdenada = [...base].sort((a, b) => marcaTempoRegistro(b) - marcaTempoRegistro(a));
-
-      filaOrdenada.forEach(reg => {
-        const isFim = !!reg.saida;
-        const status = isFim
-          ? '<span class="chip chip-green"><i class="fa-solid fa-check"></i> Concluído</span>'
-          : '<span class="chip chip-blue"><i class="fa-solid fa-clock"></i> Em operação</span>';
-
-        const chips = [];
-        if (reg.doca) chips.push(`<span class="chip chip-gray"><i class="fa-solid fa-warehouse"></i> ${reg.doca}</span>`);
-        if (reg.operador) chips.push(`<span class="chip chip-gray"><i class="fa-regular fa-user"></i> ${reg.operador}</span>`);
-        if (reg.fez_pesagem === 'SIM') chips.push('<span class="chip chip-amber"><i class="fa-solid fa-scale-balanced"></i> Pesagem</span>');
-        if (reg.emb_carregamento === 'SIM') chips.push('<span class="chip chip-violet"><i class="fa-solid fa-boxes-packing"></i> Carreg. emb.</span>');
-        if (reg.emb_descarregamento === 'SIM') chips.push('<span class="chip chip-teal"><i class="fa-solid fa-box-open"></i> Descarr. emb.</span>');
-
-        lista.innerHTML += `
-          <div class="truck-card ${isFim ? 'fim' : ''}" onclick="abrirRegistro('${reg.id}')">
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0 flex-1">
-                <p class="placa m-0">${reg.placa || 'SEM PLACA'}</p>
-                <p class="text-[11px] text-slate-500 font-bold mt-1 mb-0 truncate">${reg.fornecedor || 'Fornecedor não informado'}</p>
-              </div>
-              <div class="flex-shrink-0">${status}</div>
-            </div>
-            <div class="flex flex-wrap gap-1.5">${chips.join(' ')}</div>
-            <div class="flex items-center justify-between gap-2 pt-2" style="border-top:1px solid #eef1f6;">
-              <p class="text-[10px] font-bold text-slate-500 truncate m-0 min-w-0 flex-1">${descreverUltimaAcao(reg)}</p>
-              <i class="fa-solid fa-chevron-right text-slate-300 text-[10px] flex-shrink-0"></i>
-            </div>
-          </div>`;
-      });
-    }
-
-    function descreverUltimaAcao(reg) {
-      const mapa = [
-        ['saida', 'Saída registrada'],
-        ['fim_conf', 'Fim da conferência'],
-        ['ini_conf', 'Início da conferência'],
-        ['fim_emb_desc', 'Fim descarreg. embalagem'],
-        ['ini_emb_desc', 'Início descarreg. embalagem'],
-        ['fim_carr', 'Fim carreg. embalagem'],
-        ['ini_carr', 'Início carreg. embalagem'],
-        ['fim_desc', 'Fim da descarga'],
-        ['ini_desc', 'Início da descarga'],
-        ['lib_portaria', 'Liberado na portaria'],
-        ['fim_pesag', 'Fim da pesagem'],
-        ['ini_pesag', 'Início da pesagem'],
-        ['chegada', 'Chegada registrada']
-      ];
-      for (const [campo, texto] of mapa) {
-        if (reg[campo]) return `${texto} às ${reg[campo]}`;
-      }
-      return 'Registro criado — sem horários';
-    }
-
-    function iniciarNovoRegistro() {
-      limparFormularioDOM();
-      appState.activeId = "REG_" + Date.now();
-      appState.horarios = {};
-      if (operadorLogado.nome && operadorLogado.nome !== '---') {
-        document.getElementById('form-operador').value = operadorLogado.nome;
-        document.getElementById('form-turno').value = operadorLogado.turno || 'A';
-      }
-      salvarEstadoAtual();
-      desbloquearTabs(true);
-      atualizarHeadersAtivos();
-      navTo('dados');
-      setToday();
-    }
-
-    function abrirRegistro(id) {
-      const reg = filaRegistros.find(r => r.id === id);
-      if (!reg) return;
-
-      appState.activeId = reg.id;
-      appState.horarios = {
-        chegada: reg.chegada, lib_portaria: reg.lib_portaria, ini_desc: reg.ini_desc,
-        fim_desc: reg.fim_desc, ini_conf: reg.ini_conf, fim_conf: reg.fim_conf,
-        saida: reg.saida, ini_pesag: reg.ini_pesag, fim_pesag: reg.fim_pesag,
-        ini_carr: reg.ini_carr, fim_carr: reg.fim_carr,
-        ini_emb_desc: reg.ini_emb_desc, fim_emb_desc: reg.fim_emb_desc
-      };
-      Object.keys(appState.horarios).forEach(key => { if (!appState.horarios[key]) delete appState.horarios[key]; });
-
-      document.getElementById('form-data').value = reg.data || '';
-      document.getElementById('form-hora').value = reg.hora || '';
-      document.getElementById('form-turno').value = reg.turno || 'A';
-      document.getElementById('form-operador').value = reg.operador || '';
-      document.getElementById('form-fornecedor').value = reg.fornecedor || '';
-      document.getElementById('form-placa').value = reg.placa || '';
-      document.getElementById('form-doca').value = reg.doca || 'Rec';
-      document.getElementById('form-nf').value = reg.nf || '';
-      document.getElementById('form-caixas').value = reg.qtd_caixas || '';
-      document.getElementById('form-motivo').value = reg.motivo_atraso || '';
-
-      setFlag('pesagem', reg.fez_pesagem === 'SIM' ? 'SIM' : 'NÃO', true);
-      setFlag('conferencia', reg.fez_conferencia === 'NÃO' ? 'NÃO' : 'SIM', true);
-
-      let embC = reg.emb_carregamento, embD = reg.emb_descarregamento;
-      if (embC === undefined && embD === undefined) {
-        const antigoSim = reg.chegou_emb === 'SIM';
-        embC = (antigoSim && (reg.tipo_embalagem || 'CARREGAMENTO') === 'CARREGAMENTO') ? 'SIM' : 'NÃO';
-        embD = (antigoSim && reg.tipo_embalagem === 'DESCARREGAMENTO') ? 'SIM' : 'NÃO';
-      }
-      setFlag('emb_carr', embC === 'SIM' ? 'SIM' : 'NÃO', true);
-      setFlag('emb_desc', embD === 'SIM' ? 'SIM' : 'NÃO', true);
-
-      desbloquearTabs(true);
-      atualizarHeadersAtivos();
-      atualizarEtapasDinamicas();
-      navTo('tempos');
-    }
-
-    function salvarEstadoAtual() {
-      if (!appState.activeId || isDeleting) return;
-
-      const h = appState.horarios;
-      const op = document.getElementById('form-operador').value.trim().toUpperCase();
-      const forn = document.getElementById('form-fornecedor').value.trim().toUpperCase();
-      const placa = document.getElementById('form-placa').value.trim().toUpperCase();
-      const embC = temEmbCarr() ? 'SIM' : 'NÃO';
-      const embD = temEmbDesc() ? 'SIM' : 'NÃO';
-
-      let tipoEmb = '';
-      if (embC === 'SIM' && embD === 'SIM') tipoEmb = 'CARREGAMENTO E DESCARREGAMENTO';
-      else if (embC === 'SIM') tipoEmb = 'CARREGAMENTO';
-      else if (embD === 'SIM') tipoEmb = 'DESCARREGAMENTO';
-
-      const payload = {
-        id: appState.activeId,
-        status: h.saida ? 'FINALIZADO' : 'EM_ANDAMENTO',
-        data: document.getElementById('form-data').value,
-        hora: document.getElementById('form-hora').value,
-        turno: document.getElementById('form-turno').value,
-        operador: op, conferente: op, fornecedor: forn, placa: placa,
-        operador_logado: operadorLogado.nome || '',
-        email_logado: operadorLogado.email || '',
-        doca: document.getElementById('form-doca').value,
-        nf: document.getElementById('form-nf').value.trim().toUpperCase(),
-        qtd_caixas: document.getElementById('form-caixas').value,
-        chegada: h.chegada || "", lib_portaria: h.lib_portaria || "",
-        ini_desc: h.ini_desc || "", fim_desc: h.fim_desc || "",
-        ini_conf: h.ini_conf || "", fim_conf: h.fim_conf || "",
-        saida: h.saida || "",
-        fez_pesagem: document.getElementById('form-pesagem').value,
-        fez_conferencia: document.getElementById('form-conferencia').value,
-        ini_pesag: h.ini_pesag || "", fim_pesag: h.fim_pesag || "",
-        emb_carregamento: embC,
-        emb_descarregamento: embD,
-        chegou_emb: (embC === 'SIM' || embD === 'SIM') ? 'SIM' : 'NÃO',
-        tipo_embalagem: tipoEmb,
-        ini_carr: h.ini_carr || "", fim_carr: h.fim_carr || "",
-        carreg: calcularDiferencaMinutos(h.ini_carr, h.fim_carr),
-        ini_emb_desc: h.ini_emb_desc || "", fim_emb_desc: h.fim_emb_desc || "",
-        desc_emb: calcularDiferencaMinutos(h.ini_emb_desc, h.fim_emb_desc),
-        espera_port: calcularDiferencaMinutos(h.chegada, h.lib_portaria),
-        descarga: calcularDiferencaMinutos(h.ini_desc, h.fim_desc),
-        conferencia: calcularDiferencaMinutos(h.ini_conf, h.fim_conf),
-        pesag: calcularDiferencaMinutos(h.ini_pesag, h.fim_pesag),
-        lead_time: calcularDiferencaMinutos(h.chegada, h.saida),
-        motivo_atraso: document.getElementById('form-motivo').value.trim().toUpperCase(),
-        updated_at: Date.now()
-      };
-
-      const idx = filaRegistros.findIndex(r => r.id === appState.activeId);
-      if (idx >= 0) { filaRegistros[idx] = payload; } else { filaRegistros.push(payload); }
-
-      atualizarHeadersAtivos();
-      enviarSyncParcialFirebase(payload);
-    }
-
-    function atualizarHeadersAtivos() {
-      const p = document.getElementById('form-placa').value.trim().toUpperCase() || 'NOVO CAMINHÃO';
-      document.getElementById('header-placa-ativa').innerText = p;
-      document.getElementById('header-tempos-placa').innerText = p;
-    }
-
-    function confirmarExclusaoAtual() {
-      if (!appState.activeId) { showToast("Nenhum registro selecionado.", "fa-circle-exclamation"); return; }
-      document.getElementById('modal-exclusao').style.display = 'flex';
-    }
-
-    function fecharModalExclusao() { document.getElementById('modal-exclusao').style.display = 'none'; }
-
-    function executarExclusaoDefinitiva() {
-      isDeleting = true;
-      fecharModalExclusao();
-      if (!appState.activeId) { isDeleting = false; return; }
-
-      const targetId = appState.activeId;
-      filaRegistros = filaRegistros.filter(r => r.id !== targetId);
-
-      if (db) {
-        db.ref('controle_logistico/' + targetId).remove().then(() => {
-          showToast("Caminhão excluído com sucesso.", "fa-trash");
-          appState.activeId = null;
-          isDeleting = false;
-          navTo('patio');
-        }).catch(err => {
-          isDeleting = false;
-          showToast("Erro ao excluir na nuvem.", "fa-triangle-exclamation");
-          navTo('patio');
-        });
-      } else {
-        isDeleting = false;
-        appState.activeId = null;
-        showToast("Caminhão excluído.", "fa-trash");
-        navTo('patio');
-      }
-    }
-
-    function limparFormularioDOM() {
-      document.getElementById('form-fornecedor').value = "";
-      document.getElementById('form-placa').value = "";
-      document.getElementById('form-nf').value = "";
-      document.getElementById('form-caixas').value = "";
-      document.getElementById('form-motivo').value = "";
-      setFlag('pesagem', 'NÃO', true);
-      setFlag('conferencia', 'SIM', true);
-      setFlag('emb_carr', 'NÃO', true);
-      setFlag('emb_desc', 'NÃO', true);
-      atualizarEtapasDinamicas();
-    }
-
-    function abrirDropdownFornecedor() {
-      document.getElementById('forn-dropdown').classList.remove('hidden');
-      filtrarFornecedores();
-    }
-
-    function fecharDropdownFornecedor() {
-      setTimeout(() => {
-        const drop = document.getElementById('forn-dropdown');
-        if (drop) drop.classList.add('hidden');
-      }, 200);
-    }
-
-    function renderFornecedores(lista) {
-      const drop = document.getElementById('forn-dropdown');
-      if (!drop) return;
-      if (lista.length === 0) {
-        drop.innerHTML = `<div class="p-3 text-[12px] text-slate-400 font-bold text-center">Nenhum encontrado</div>`;
-        return;
-      }
-      drop.innerHTML = lista.map(f => `<div class="p-3 border-b border-slate-100 text-[12.5px] font-bold text-slate-700 cursor-pointer" onmousedown="selecionarFornecedor('${f}')">${f}</div>`).join('');
-    }
-
-    function filtrarFornecedores() {
-      const val = document.getElementById('form-fornecedor').value.toUpperCase();
-      renderFornecedores(listaFornecedoresApp.filter(f => f.includes(val)));
-      salvarEstadoAtual();
-    }
-
-    function selecionarFornecedor(val) {
-      document.getElementById('form-fornecedor').value = val;
-      document.getElementById('forn-dropdown').classList.add('hidden');
-      salvarEstadoAtual();
-    }
-
-    function onOperadorInput(val) {
-      const opName = val.trim().toUpperCase();
-      if (operadoresMap[opName]) document.getElementById('form-turno').value = operadoresMap[opName];
-      salvarEstadoAtual();
-    }
-
-    function atualizarEtapasDinamicas() {
-      const teveConferencia = document.getElementById('form-conferencia').value;
-      const tevePesagem = document.getElementById('form-pesagem').value;
-
-      let etapas = [{ id: 'chegada', txt: 'Registrar chegada', icon: 'fa-truck-arrow-right' }];
-
-      if (tevePesagem === 'SIM') {
-        etapas.push({ id: 'ini_pesag', txt: 'Iniciar pesagem', icon: 'fa-scale-balanced' });
-        etapas.push({ id: 'fim_pesag', txt: 'Fim da pesagem', icon: 'fa-check' });
-      }
-      etapas.push({ id: 'lib_portaria', txt: 'Liberar portaria', icon: 'fa-gate-open' });
-      etapas.push({ id: 'ini_desc', txt: 'Iniciar descarga', icon: 'fa-dolly' });
-      etapas.push({ id: 'fim_desc', txt: 'Fim da descarga', icon: 'fa-box-open' });
-
-      if (temEmbCarr()) {
-        etapas.push({ id: 'ini_carr', txt: 'Iniciar carreg. embalagem', icon: 'fa-boxes-packing' });
-        etapas.push({ id: 'fim_carr', txt: 'Fim carreg. embalagem', icon: 'fa-box' });
-      }
-      if (temEmbDesc()) {
-        etapas.push({ id: 'ini_emb_desc', txt: 'Iniciar descarreg. embalagem', icon: 'fa-box-open' });
-        etapas.push({ id: 'fim_emb_desc', txt: 'Fim descarreg. embalagem', icon: 'fa-box' });
-      }
-
-      if (teveConferencia === 'SIM') {
-        etapas.push({ id: 'ini_conf', txt: 'Iniciar conferência', icon: 'fa-clipboard-check' });
-        etapas.push({ id: 'fim_conf', txt: 'Fim da conferência', icon: 'fa-check-double' });
-      }
-      etapas.push({ id: 'saida', txt: 'Registrar saída', icon: 'fa-flag-checkered' });
-
-      etapasPontoAtivas = etapas;
-      renderizarListaTempos();
-    }
-
-    function renderizarListaTempos() {
-      const lista = document.getElementById('lista-horarios');
-      lista.innerHTML = '';
-      etapasPontoAtivas.forEach((etapa) => {
-        lista.innerHTML += `
-          <li id="li-etapa-${etapa.id}" class="step-row">
-            <div id="div-etapa-${etapa.id}" class="step-name">
-              <div id="icon-etapa-${etapa.id}" class="w-5 text-center"><i class="fa-solid fa-circle text-[7px]"></i></div>
-              <span>${etapa.txt}</span>
-            </div>
-            <input type="time" id="input-etapa-${etapa.id}" class="time-input" value="${appState.horarios[etapa.id] || ''}" onchange="atualizarHorarioManual('${etapa.id}', this.value)" />
-          </li>`;
-      });
-      recalcularEtapaAtual();
-      atualizarVisuaisTempos();
-    }
-
-    function atualizarProgresso() {
-      const total = etapasPontoAtivas.length;
-      const feitas = etapasPontoAtivas.filter(e => appState.horarios[e.id]).length;
-      const barra = document.getElementById('progresso-barra');
-      const txt = document.getElementById('progresso-texto');
-      const atual = document.getElementById('progresso-etapa-atual');
-      if (barra) barra.style.width = total ? `${Math.round((feitas / total) * 100)}%` : '0%';
-      if (txt) txt.innerText = `${feitas} / ${total}`;
-      if (atual) {
-        atual.innerHTML = etapaAtualIndex < total
-          ? `Próxima etapa: <strong class="text-slate-900">${etapasPontoAtivas[etapaAtualIndex].txt}</strong>`
-          : `<strong style="color:var(--green);">Todas as etapas concluídas</strong>`;
-      }
-    }
-
-    function atualizarVisuaisTempos() {
-      const btn = document.getElementById('btn-ponto');
-      const txt = document.getElementById('txt-ponto');
-      const icon = document.getElementById('icon-ponto');
-
-      etapasPontoAtivas.forEach((etapa, idx) => {
-        const inputEl = document.getElementById(`input-etapa-${etapa.id}`);
-        const liEl = document.getElementById(`li-etapa-${etapa.id}`);
-        const divEl = document.getElementById(`div-etapa-${etapa.id}`);
-        const iconEl = document.getElementById(`icon-etapa-${etapa.id}`);
-        if (!inputEl) return;
-
-        const hora = appState.horarios[etapa.id] || "";
-        const isPast = hora !== "";
-        const isCurrent = idx === etapaAtualIndex;
-
-        if (inputEl.value !== hora && document.activeElement !== inputEl) inputEl.value = hora;
-
-        liEl.className = `step-row ${isCurrent ? 'atual' : ''}`;
-        divEl.className = 'step-name';
-        divEl.style.color = isPast ? '#0f1729' : (isCurrent ? '#1d4ed8' : '#94a3b8');
-        divEl.style.fontWeight = isPast ? '800' : '700';
-        iconEl.innerHTML = isPast
-          ? '<i class="fa-solid fa-circle-check" style="color:var(--green); font-size:15px;"></i>'
-          : (isCurrent ? '<i class="fa-solid fa-arrow-right" style="color:var(--blue); font-size:13px;"></i>' : '<i class="fa-solid fa-circle text-[7px]"></i>');
-        inputEl.className = isPast ? "time-input preenchido" : "time-input";
-      });
-
-      if (etapaAtualIndex < etapasPontoAtivas.length) {
-        const proxima = etapasPontoAtivas[etapaAtualIndex];
-        txt.innerText = proxima.txt;
-        icon.className = `fa-solid ${proxima.icon}`;
-        btn.disabled = false;
-        btn.className = "btn-ponto bg-etapa-padrao";
-      } else {
-        txt.innerText = "Operação concluída";
-        icon.className = "fa-solid fa-check-double";
-        btn.disabled = true;
-        btn.className = "btn-ponto bg-etapa-fim";
-      }
-
-      atualizarProgresso();
-    }
-
-    function formatarHoraAtual() { const now = new Date(); return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); }
-
-    function registrarProximaEtapa() {
-      if (etapaAtualIndex >= etapasPontoAtivas.length) return;
-      const etapa = etapasPontoAtivas[etapaAtualIndex];
-      appState.horarios[etapa.id] = formatarHoraAtual();
-      showToast(`${etapa.txt} — ${appState.horarios[etapa.id]}`, "fa-clock");
-      recalcularEtapaAtual();
-      atualizarVisuaisTempos();
-      salvarEstadoAtual();
-    }
-
-    function atualizarHorarioManual(idEtapa, novoValor) {
-      if (novoValor) appState.horarios[idEtapa] = novoValor; else delete appState.horarios[idEtapa];
-      recalcularEtapaAtual();
-      atualizarVisuaisTempos();
-      salvarEstadoAtual();
-    }
-
-    function recalcularEtapaAtual() {
-      for (let i = 0; i < etapasPontoAtivas.length; i++) {
-        if (!appState.horarios[etapasPontoAtivas[i].id]) { etapaAtualIndex = i; return; }
-      }
-      etapaAtualIndex = etapasPontoAtivas.length;
-    }
-
-    function resetarTempos() { document.getElementById('modal-reset').style.display = 'flex'; }
-    function fecharModalReset() { document.getElementById('modal-reset').style.display = 'none'; }
-    function executarResetTempos() {
-      fecharModalReset();
-      appState.horarios = {};
-      recalcularEtapaAtual();
-      atualizarVisuaisTempos();
-      salvarEstadoAtual();
-      showToast("Horários zerados.", "fa-rotate-left");
-    }
-
-    function calcularDiferencaMinutos(hIni, hFim) {
-      if (!hIni || !hFim) return '';
-      let pI = hIni.split(':'), pF = hFim.split(':');
-      let mI = parseInt(pI[0]) * 60 + parseInt(pI[1]);
-      let mF = parseInt(pF[0]) * 60 + parseInt(pF[1]);
-      if (mF < mI) mF += 24 * 60;
-      return mF - mI;
-    }
-
-    function enviarSyncParcialFirebase(payload) {
-      if (!auth || !auth.currentUser || !db || isDeleting) return;
-      clearTimeout(autoSaveTimeout);
-      autoSaveTimeout = setTimeout(() => {
-        if (!isDeleting) db.ref('controle_logistico/' + payload.id).set(payload).catch(e => console.log('Aguardando rede...'));
-      }, 1000);
-    }
-
-    function initFirebaseApp() {
-      const firebaseConfig = { apiKey: "AIzaSyBQ7_k7huhS8oAyKp0OsbEajXFmrNxcrlo", authDomain: "kyro-7cb7a.firebaseapp.com", databaseURL: "https://kyro-7cb7a-default-rtdb.firebaseio.com", projectId: "kyro-7cb7a", storageBucket: "kyro-7cb7a.firebasestorage.app", messagingSenderId: "368737182812", appId: "1:368737182812:web:7be81b22a1a1fec5c97299" };
-      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-      db = firebase.database(); auth = firebase.auth();
-
-      try { auth.setPersistence(firebase.auth.Auth.Persistence.SESSION); } catch (e) { console.log('Persistência indisponível', e); }
-
-      /* OUVINTE PRINCIPAL DE AUTENTICAÇÃO À PROVA DE FALHAS */
-      auth.onAuthStateChanged((user) => {
-        if (user) {
-          resetTimer();
-          iniciarVigilanciaSessao();
-          
-          const emailExpEl = document.getElementById('email-export');
-          if (emailExpEl) emailExpEl.value = user.email || '';
-          
-          let emailPart = (user.email || '').split('@')[0];
-          operadorLogado = { nome: emailPart.toUpperCase(), email: user.email || '', turno: 'A' };
-          aplicarOperadorLogadoUI();
-
-          // Puxar da base de operadores
-          db.ref('cadastros/operadores').once('value').then(snap => {
-            let ops = snap.val(); 
-            // Usa .filter(Boolean) para limpar registros nulos (fantasmas)
-            let arr = Array.isArray(ops) ? ops.filter(Boolean) : Object.values(ops || {}).filter(Boolean);
-            
-            let targetEmail = (user.email || '').trim().toLowerCase();
-            let targetUser = targetEmail.split('@')[0];
-
-            let opProfile = arr.find(o => {
-              // Cast seguro com String() para evitar travamentos
-              let dbEmail = (typeof o === 'object' && o.email) ? String(o.email).trim().toLowerCase() : '';
-              let dbUser = (typeof o === 'object' && o.usuario) ? String(o.usuario).trim().toLowerCase() : '';
-              let dbNome = (typeof o === 'object' && o.nome) ? String(o.nome).trim().toLowerCase() : String(o).trim().toLowerCase();
-              return (dbEmail && dbEmail === targetEmail) || (dbUser && dbUser === targetUser) || (dbNome === targetUser);
-            });
-
-            if (opProfile) {
-              let pNome = typeof opProfile === 'object' ? (opProfile.nome || opProfile.usuario || targetUser) : String(opProfile);
-              let pTurno = typeof opProfile === 'object' ? (opProfile.turno || 'A') : 'A';
-              
-              operadorLogado = { 
-                nome: String(pNome).toUpperCase(), 
-                email: targetEmail, 
-                turno: String(pTurno).toUpperCase() 
-              };
-            } else {
-              operadorLogado = { 
-                nome: targetUser.toUpperCase(), 
-                email: targetEmail, 
-                turno: 'A' 
-              };
-            }
-
-            let opInput = document.getElementById('form-operador');
-            let tInput = document.getElementById('form-turno');
-            if (opInput) opInput.value = operadorLogado.nome;
-            if (tInput) tInput.value = operadorLogado.turno;
-            
-            aplicarOperadorLogadoUI();
-          }).catch(err => {
-            console.log("Erro ao sincronizar operador:", err);
-            aplicarOperadorLogadoUI();
-          });
-
-          const btnLogout = document.getElementById('btn-logout');
-          if (btnLogout) btnLogout.classList.remove('hidden');
-          
-          if (currentView === 'login') navTo('patio');
-        } else {
-          clearTimeout(inactivityTimer);
-          clearInterval(sessaoTickTimer);
-          operadorLogado = { nome: '---', email: '', turno: 'A' };
-          aplicarOperadorLogadoUI();
-          navTo('login');
-        }
-      });
-
-      /* OUVINTE DE DADOS DO PÁTIO */
-      db.ref('controle_logistico').on('value', (snapshot) => {
-        filaRegistros = snapshot.exists() ? Object.values(snapshot.val()).filter(Boolean) : [];
-        if (currentView === 'patio') renderizarPatio();
-      });
-
-      /* CONEXÃO */
-      db.ref('.info/connected').on('value', snap => {
-        const icon = document.getElementById('sync-status');
-        if(icon) icon.className = snap.val() === true ? 'dot-on' : 'dot-off';
-      });
-
-      /* OUVINTE DA LISTA DE OPERADORES À PROVA DE FALHAS */
-      db.ref('cadastros/operadores').on('value', snap => {
-        const dl = document.getElementById('op-list'); 
-        if(dl) dl.innerHTML = ''; 
-        operadoresMap = {};
-        
-        let ops = snap.val();
-        let arr = Array.isArray(ops) ? ops.filter(Boolean) : Object.values(ops || {}).filter(Boolean);
-        
-        arr.forEach(o => {
-          let nRaw = typeof o === 'object' ? (o.nome || o.usuario || o.email || '') : String(o);
-          if (!nRaw) return;
-          
-          let nome = String(nRaw).toUpperCase();
-          operadoresMap[nome] = (typeof o === 'object' && o.turno ? String(o.turno) : 'A').toUpperCase();
-          
-          if (dl) {
-            let opt = document.createElement('option');
-            opt.value = nome;
-            dl.appendChild(opt);
-          }
-        });
-      });
-
-      /* OUVINTE DA LISTA DE FORNECEDORES À PROVA DE FALHAS */
-      db.ref('cadastros/fornecedores').on('value', snap => {
-        let forns = snap.val();
-        let arr = Array.isArray(forns) ? forns.filter(Boolean) : Object.values(forns || {}).filter(Boolean);
-        
-        listaFornecedoresApp = arr.map(f => {
-            let nomeF = typeof f === 'object' ? (f.nome || '') : String(f);
-            return String(nomeF).trim().toUpperCase();
-        }).filter(Boolean);
-        
-        renderFornecedores(listaFornecedoresApp);
-      });
-    }
-
-    function prepararDadosExcel(dados) {
-      return dados.map(r => ({
-        "Data": r.data ? r.data.split('-').reverse().join('/') : "",
-        "Turno": r.turno || "",
-        "Fornecedor": r.fornecedor || "",
-        "Placa": r.placa || "",
-        "Doca": r.doca || "",
-        "Operador": r.operador || "",
-        "Operador Logado": r.operador_logado || "",
-        "NF": r.nf || "",
-        "Caixas": parseInt(r.qtd_caixas) || 0,
-        "Chegada": r.chegada || "",
-        "Lib. Portaria": r.lib_portaria || "",
-        "Espera Portaria (m)": r.espera_port || "",
-        "Ini. Descarga": r.ini_desc || "",
-        "Fim Descarga": r.fim_desc || "",
-        "Descarga (m)": r.descarga || "",
-        "Carreg. Embalagem?": r.emb_carregamento || "NÃO",
-        "Ini. Carreg. Emb.": r.ini_carr || "",
-        "Fim Carreg. Emb.": r.fim_carr || "",
-        "Carreg. Emb. (m)": r.carreg || "",
-        "Descarr. Embalagem?": r.emb_descarregamento || "NÃO",
-        "Ini. Descarr. Emb.": r.ini_emb_desc || "",
-        "Fim Descarr. Emb.": r.fim_emb_desc || "",
-        "Descarr. Emb. (m)": r.desc_emb || "",
-        "Ini. Conferência": r.ini_conf || "",
-        "Fim Conferência": r.fim_conf || "",
-        "Conferência (m)": r.conferencia || "",
-        "Fez Pesagem?": r.fez_pesagem || "",
-        "Ini. Pesagem": r.ini_pesag || "",
-        "Fim Pesagem": r.fim_pesag || "",
-        "Pesagem (m)": r.pesag || "",
-        "Saída": r.saida || "",
-        "Lead Time (m)": r.lead_time || "",
-        "Status": r.status || "",
-        "Motivo Atraso": r.motivo_atraso || ""
-      }));
-    }
-
-    function obterDadosFiltradosPorData() {
-      const dtIni = document.getElementById('export-data-ini').value;
-      const dtFim = document.getElementById('export-data-fim').value;
-      let filtrados = filaRegistros;
-      if (dtIni) filtrados = filtrados.filter(r => r.data >= dtIni);
-      if (dtFim) filtrados = filtrados.filter(r => r.data <= dtFim);
-      return [...filtrados].sort((a, b) => marcaTempoRegistro(b) - marcaTempoRegistro(a));
-    }
-
-    function gerarWorkBookExportacao() {
-      const dados = obterDadosFiltradosPorData();
-      if (dados.length === 0) return null;
-
-      const dadosFormatados = prepararDadosExcel(dados);
-      const wsRegistros = XLSX.utils.json_to_sheet(dadosFormatados);
-
-      const resumoAgrupado = {};
-      dados.forEach(r => {
-        const f = r.fornecedor || 'NÃO IDENTIFICADO';
-        if (!resumoAgrupado[f]) resumoAgrupado[f] = { veiculos: 0, caixas: 0, sumLd: 0, atrasos: 0, embC: 0, embD: 0 };
-        resumoAgrupado[f].veiculos++;
-        resumoAgrupado[f].caixas += parseInt(r.qtd_caixas) || 0;
-        if (r.emb_carregamento === 'SIM') resumoAgrupado[f].embC++;
-        if (r.emb_descarregamento === 'SIM') resumoAgrupado[f].embD++;
-        const lt = parseInt(r.lead_time);
-        if (!isNaN(lt)) { resumoAgrupado[f].sumLd += lt; if (lt > 120) resumoAgrupado[f].atrasos++; }
-      });
-
-      const arrayResumo = Object.keys(resumoAgrupado).map(f => ({
-        "Transportadora / Fornecedor": f,
-        "Total de Veículos": resumoAgrupado[f].veiculos,
-        "Volume de Caixas": resumoAgrupado[f].caixas,
-        "Carreg. Embalagem": resumoAgrupado[f].embC,
-        "Descarr. Embalagem": resumoAgrupado[f].embD,
-        "Média de Lead Time (min)": resumoAgrupado[f].veiculos > 0 ? Math.round(resumoAgrupado[f].sumLd / resumoAgrupado[f].veiculos) : 0,
-        "Ocorrências de Atraso (>120m)": resumoAgrupado[f].atrasos
-      })).sort((a, b) => b["Total de Veículos"] - a["Total de Veículos"]);
-
-      const wsResumo = XLSX.utils.json_to_sheet(arrayResumo, { origin: "A3" });
-      XLSX.utils.sheet_add_aoa(wsResumo, [["RESUMO GERENCIAL"], ["Análise Consolidada por Transportadora no Período"]], { origin: "A1" });
-
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, wsResumo, "Tabela Dinâmica");
-      XLSX.utils.book_append_sheet(wb, wsRegistros, "Dados Diários");
-      return wb;
-    }
-
-    function baixarExcel() {
-      const wb = gerarWorkBookExportacao();
-      if (!wb) { showToast("Nenhum registro encontrado neste período.", "fa-circle-exclamation"); return; }
-      const hj = new Date();
-      const fileName = `App_Logistica_${hj.getFullYear()}-${hj.getMonth()+1}-${hj.getDate()}.xlsx`;
-      XLSX.writeFile(wb, fileName);
-      showToast("Download do Excel concluído!", "fa-file-excel");
-    }
-
-    async function enviarPorEmail() {
-      const emailDestino = document.getElementById('email-export').value;
-      if (!emailDestino) { showToast("Informe um e-mail de destino.", "fa-triangle-exclamation"); return; }
-
-      const wb = gerarWorkBookExportacao();
-      if (!wb) { showToast("Nenhum registro encontrado neste período.", "fa-circle-exclamation"); return; }
-
-      baixarExcel();
-
-      try {
-        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-        const blob = new Blob([wbout], { type: 'application/octet-stream' });
-        const file = new File([blob], "Relatorio_Logistica_HL.xlsx", { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ title: 'Relatório Logístico HL', text: 'Segue em anexo o relatório exportado do sistema.', files: [file] });
-          showToast("Opções de envio abertas!", "fa-share-nodes");
-          return;
-        }
-      } catch (err) { console.log("Compartilhamento nativo não suportado", err); }
-
-      setTimeout(() => {
-        const assunto = encodeURIComponent("Relatório Logístico - HL Mando");
-        const corpo = encodeURIComponent(`Olá,\n\nSegue o relatório logístico.\n\n(O arquivo Excel acabou de ser baixado no seu dispositivo para anexo).\n\nEnviado para: ${emailDestino}`);
-        window.location.href = `mailto:${emailDestino}?subject=${assunto}&body=${corpo}`;
-        showToast("App de E-mail aberto.", "fa-envelope-open");
-      }, 800);
-    }
-
-    window.onload = function() {
-      initFirebaseApp();
-      marcarAtividade();
-      sincronizarTodosSegs();
-      atualizarChipSessao();
-
-      document.querySelectorAll('#view-dados input, #view-dados select, #form-motivo').forEach(el => {
-        el.addEventListener('input', salvarEstadoAtual);
-        el.addEventListener('change', salvarEstadoAtual);
-      });
-    };
-
-    /* ================================================================
-   CORREÇÃO: Conferência + Calculadora + Copiar caminhão
-   Usa as variáveis reais do app: appState.activeId, filaRegistros,
-   salvarEstadoAtual(), navTo(), showToast(), etapasPontoAtivas.
-   ================================================================ */
-
-/* Ajuste aqui quando receber os valores reais */
-var PART_NUMBERS = ['PART-001', 'PART-002', 'PART-003'];
-var MULTIPLO_PADRAO = 1;
-
-if (!appState.conferencias) appState.conferencias = [];
-var confProtectTimer = null;
+</div>
+
+<script>
+	/* ============================================================
+   App Logística - HL Mando | JS completo
+   ============================================================ */
+
+/* ===== 1. CONFIG FIREBASE ===== */
+const firebaseConfig = {
+  apiKey: 'AIzaSyBQ7_k7huhS8oAyKp0OsbEajXFmrNxcrlo',
+  authDomain: 'kyro-7cb7a.firebaseapp.com',
+  databaseURL: 'https://kyro-7cb7a-default-rtdb.firebaseio.com',
+  projectId: 'kyro-7cb7a',
+  storageBucket: 'kyro-7cb7a.firebasestorage.app',
+  messagingSenderId: '368737182812',
+  appId: '1:368737182812:web:7be81b22a1a1fec5c97299',
+  measurementId: 'G-1XKDHWVEVE'
+};
+
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+let db = firebase.database();
+let auth = firebase.auth();
+try { auth.setPersistence(firebase.auth.Auth.Persistence.NONE); } catch (e) {}
+
+/* ===== 2. ESTADO GLOBAL ===== */
+let filaRegistros = [];
+let operadorLogado = { nome: '---', turno: 'A', email: '' };
+let listaOperadores = [];
+let listaFornecedores = [];
+let currentView = 'login';
+let isDeleting = false;
+
+const appState = {
+  activeId: null,
+  reg: null,
+  horarios: {},
+  conferencias: []
+};
+
+let multMap = {};
+let partNumbersList = [];
+const MULTIPLO_PADRAO = 1;
+
+/* ===== 3. HELPERS ===== */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const hojeISO = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const agoraHHMM = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+
+function diffMinutos(inicio, fim) {
+  if (!inicio || !fim) return null;
+  const [h1, m1] = inicio.split(':').map(Number);
+  const [h2, m2] = fim.split(':').map(Number);
+  let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+  if (diff < 0) diff += 24 * 60;
+  return diff;
+}
 
 function normalizarConf(c) {
   if (!c) return [];
   if (Array.isArray(c)) return c;
-  return Object.keys(c).map(function (k) { return c[k]; });
+  return Object.keys(c).map((k) => c[k]);
 }
 
-/* Calculo de caixas: quantidade / multiplo, arredondado para cima */
+function showToast(msg) { try { alert(msg); } catch (e) {} }
+function registroAtivo() { return appState.reg || null; }
+
+/* ===== 4. NAVEGAÇÃO ===== */
+function navTo(view) {
+  const bloqueadas = ['dados', 'tempos', 'finalizar'];
+  if (bloqueadas.includes(view) && !appState.activeId) return;
+
+  if ((view === 'tempos' || view === 'finalizar') && appState.activeId) {
+    salvarEstadoAtual().catch(() => {});
+  }
+
+  document.querySelectorAll('.view-container').forEach((v) => v.classList.remove('active'));
+  const alvo = $('view-' + view);
+  if (alvo) alvo.classList.add('active');
+
+  const nav = $('main-bottom-nav');
+  if (view === 'login') {
+    if (nav) nav.classList.remove('show');
+  } else {
+    if (nav) nav.classList.add('show');
+    document.querySelectorAll('#main-bottom-nav .nav-item').forEach((n) => {
+      n.classList.remove('active');
+      if (n.id === 'nav-btn-' + view) n.classList.add('active');
+      if (['nav-btn-dados', 'nav-btn-tempos', 'nav-btn-finalizar'].includes(n.id)) {
+        n.classList.toggle('opacity-50', !appState.activeId);
+        n.classList.toggle('pointer-events-none', !appState.activeId);
+      }
+    });
+  }
+
+  currentView = view;
+  if (view === 'patio') renderizarPatio();
+  if (view === 'dados') atualizarHeaderPlaca();
+  if (view === 'tempos') { renderizarListaTempos(); atualizarProgresso(); }
+  if (view === 'finalizar') {
+    if (!$('export-data-ini').value) $('export-data-ini').value = hojeISO().slice(0, 8) + '01';
+    if (!$('export-data-fim').value) $('export-data-fim').value = hojeISO();
+  }
+  window.scrollTo(0, 0);
+}
+
+function atualizarHeaderPlaca() {
+  const reg = registroAtivo();
+  const el = $('header-placa-ativa');
+  if (el) el.textContent = reg ? (reg.placa || 'SEM PLACA') : 'NENHUM SELECIONADO';
+}
+
+/* ===== 5. AUTENTICAÇÃO ===== */
+let loginTipo = 'USER';
+
+function setLoginType(tipo) {
+  loginTipo = tipo;
+  const btnUser = $('btn-login-user');
+  const btnEmail = $('btn-login-email');
+  const label = $('label-login-input');
+  const input = $('login-email');
+  const hint = $('hint-login');
+  if (tipo === 'USER') {
+    btnUser.classList.add('on');
+    btnEmail.classList.remove('on');
+    if (label) label.innerText = 'Nome de usuário';
+    if (input) input.placeholder = 'ex: joao.silva';
+    if (hint) hint.innerText = 'Você pode usar seu nome de usuário ou apelido cadastrado.';
+  } else {
+    btnEmail.classList.add('on');
+    btnUser.classList.remove('on');
+    if (label) label.innerText = 'E-mail completo';
+    if (input) input.placeholder = 'ex: email@exemplo.com';
+    if (hint) hint.innerText = 'Digite seu endereço de e-mail cadastrado.';
+  }
+}
+
+function toggleSenha() {
+  const inp = $('login-senha');
+  const ic = $('icon-senha');
+  if (!inp) return;
+  const mostrar = inp.type === 'password';
+  inp.type = mostrar ? 'text' : 'password';
+  if (ic) ic.className = mostrar
+    ? 'fa-regular fa-eye-slash absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm cursor-pointer'
+    : 'fa-regular fa-eye absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm cursor-pointer';
+}
+
+async function fazerLogin() {
+  const id = $('login-email') ? $('login-email').value.trim() : '';
+  const senha = $('login-senha') ? $('login-senha').value : '';
+  if (!id || !senha) { showToast('Preencha usuário e senha.'); return; }
+  let email = id;
+  if (loginTipo === 'USER') {
+    const op = listaOperadores.find((o) => (o.usuario || o.nome || '').toLowerCase() === id.toLowerCase());
+    if (!op || !op.email) { showToast('Usuário não encontrado.'); return; }
+    email = op.email;
+  }
+  try {
+    await auth.signInWithEmailAndPassword(email, senha);
+  } catch (e) {
+    showToast('Usuário ou senha inválidos.');
+  }
+}
+
+function logout(msg) {
+  if (!auth) return;
+  auth.signOut().then(() => {
+    appState.activeId = null;
+    appState.reg = null;
+    appState.horarios = {};
+    appState.conferencias = [];
+    operadorLogado = { nome: '---', turno: 'A', email: '' };
+    aplicarOperadorLogadoUI();
+    navTo('login');
+    if (msg) showToast(msg);
+  }).catch(() => {});
+}
+
+function abrirModalCadastro() { $('modal-cadastro-usuario').classList.add('open'); }
+function fecharModalCadastro() { $('modal-cadastro-usuario').classList.remove('open'); }
+
+async function executarCadastro() {
+  const id = $('cad-email') ? $('cad-email').value.trim() : '';
+  const senha = $('cad-senha') ? $('cad-senha').value : '';
+  if (senha.length < 6) { showToast('A senha deve ter no mínimo 6 caracteres.'); return; }
+  if (!id.includes('@')) { showToast('Informe um e-mail válido para criar o acesso.'); return; }
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(id, senha);
+    await db.ref('cadastros/operadores/' + cred.user.uid).set({
+      nome: id.split('@')[0],
+      email: id,
+      criadoEm: Date.now()
+    });
+    fecharModalCadastro();
+    $('cad-email').value = '';
+    $('cad-senha').value = '';
+  } catch (e) {
+    showToast('Não foi possível criar o acesso: ' + e.message);
+  }
+}
+
+auth.onAuthStateChanged(async (user) => {
+  const btnLogout = $('btn-logout');
+  if (user) {
+    if (btnLogout) btnLogout.classList.remove('hidden');
+    const emailExport = $('email-export');
+    if (emailExport) emailExport.value = user.email || '';
+    await carregarOperadores();
+    await identificarOperador(user);
+    iniciarTimerInatividade();
+    navTo('patio');
+  } else {
+    if (btnLogout) btnLogout.classList.add('hidden');
+    appState.activeId = null;
+    appState.reg = null;
+    appState.horarios = {};
+    appState.conferencias = [];
+    operadorLogado = { nome: '---', turno: 'A', email: '' };
+    aplicarOperadorLogadoUI();
+    clearTimeout(inactivityTimer);
+    navTo('login');
+  }
+});
+
+async function carregarOperadores() {
+  try {
+    const snap = await db.ref('cadastros/operadores').once('value');
+    listaOperadores = [];
+    snap.forEach((child) => listaOperadores.push(child.val()));
+    const dl = $('lista-operadores');
+    if (dl) dl.innerHTML = listaOperadores.map((o) => '<option value="' + esc(o.nome || '') + '"></option>').join('');
+  } catch (e) {}
+}
+
+async function identificarOperador(user) {
+  const op = listaOperadores.find((o) => o.email === user.email || o.nome === user.email || o.usuario === user.email);
+  operadorLogado = op
+    ? { nome: op.nome || user.email.split('@')[0], turno: op.turno || 'A', email: user.email }
+    : { nome: user.email.split('@')[0], turno: 'A', email: user.email };
+  aplicarOperadorLogadoUI();
+  const tInput = $('form-turno');
+  if (tInput) tInput.value = operadorLogado.turno;
+}
+
+function aplicarOperadorLogadoUI() {
+  const nomeEl = $('operador-nome');
+  const avatarEl = $('operador-avatar');
+  const turnoEl = $('turno-chip-txt');
+  const dadosOpEl = $('dados-operador-logado');
+  if (nomeEl) nomeEl.textContent = operadorLogado.nome;
+  if (avatarEl) avatarEl.textContent = (operadorLogado.nome || '--').slice(0, 2).toUpperCase();
+  if (turnoEl) turnoEl.textContent = 'TURNO ' + operadorLogado.turno;
+  if (dadosOpEl) dadosOpEl.textContent = operadorLogado.nome;
+}
+
+/* Inatividade */
+const INACTIVITY_TIME_MS = 10 * 60 * 1000;
+let inactivityTimer = null;
+let ultimaAtividade = Date.now();
+
+function marcarAtividade() { ultimaAtividade = Date.now(); atualizarChipSessao(); }
+function atualizarChipSessao() {
+  const el = $('sessao-restante');
+  if (!el) return;
+  const restante = Math.max(0, INACTIVITY_TIME_MS - (Date.now() - ultimaAtividade));
+  const min = Math.floor(restante / 60000);
+  const seg = Math.floor((restante % 60000) / 1000);
+  el.textContent = String(min).padStart(2, '0') + ':' + String(seg).padStart(2, '0');
+}
+function checkInactivityAndLogout() {
+  if (auth && auth.currentUser && Date.now() - ultimaAtividade > INACTIVITY_TIME_MS) {
+    logout('Sessão encerrada: 10 minutos sem atividade.');
+    return true;
+  }
+  return false;
+}
+function resetTimer() {
+  marcarAtividade();
+  clearTimeout(inactivityTimer);
+  if (auth && auth.currentUser) inactivityTimer = setTimeout(checkInactivityAndLogout, INACTIVITY_TIME_MS);
+  atualizarChipSessao();
+}
+function iniciarTimerInatividade() {
+  resetTimer();
+  setInterval(resetTimer, 30000);
+}
+['click', 'keydown', 'touchstart'].forEach((ev) => document.addEventListener(ev, marcarAtividade));
+
+/* ===== 6. PÁTIO ===== */
+db.ref('controle_logistico').on('value', (snap) => {
+  filaRegistros = [];
+  snap.forEach((child) => {
+    const v = child.val();
+    if (v) filaRegistros.push({ id: child.key, ...v });
+  });
+  if (currentView === 'patio') renderizarPatio();
+});
+
+db.ref('.info/connected').on('value', (snap) => {
+  const online = snap.val() === true;
+  const dot = $('sync-status');
+  if (dot) dot.className = online ? 'dot-on' : 'dot-off';
+});
+
+function renderizarPatio() {
+  const lista = $('lista-patio');
+  const empty = $('empty-patio');
+  const contador = $('contador-patio');
+  const termo = $('patio-busca') ? $('patio-busca').value.trim().toLowerCase() : '';
+  const filtrados = filaRegistros.filter((r) => {
+    if (!termo) return true;
+    return (r.placa || '').toLowerCase().includes(termo) ||
+           (r.fornecedor || '').toLowerCase().includes(termo) ||
+           (r.nf || '').toLowerCase().includes(termo) ||
+           (r.container || '').toLowerCase().includes(termo);
+  }).sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0));
+  if (contador) contador.textContent = filaRegistros.length;
+  if (empty) empty.classList.toggle('hidden', filtrados.length > 0);
+  if (!lista) return;
+  lista.innerHTML = '';
+  filtrados.forEach((reg) => {
+    const isFim = reg.status === 'FINALIZADO';
+    const status = isFim
+      ? '<span class="chip chip-green"><i class="fa-solid fa-check"></i> Concluído</span>'
+      : '<span class="chip chip-blue"><i class="fa-solid fa-spinner"></i> Em operação</span>';
+    const chips = [];
+    if (reg.doca) chips.push('<span class="chip">' + esc(reg.doca) + '</span>');
+    if (reg.container) chips.push('<span class="chip"><i class="fa-solid fa-box"></i> ' + esc(reg.container) + '</span>');
+    if (reg.operador) chips.push('<span class="chip"><i class="fa-solid fa-user"></i> ' + esc(reg.operador) + '</span>');
+    if (reg.fez_pesagem === 'SIM') chips.push('<span class="chip" style="background:#fef3c7;color:#92400e;"><i class="fa-solid fa-weight-scale"></i> Pesagem</span>');
+    if (reg.emb_carr === 'SIM') chips.push('<span class="chip" style="background:#f3e8ff;color:#7c3aed;"><i class="fa-solid fa-boxes-stacked"></i> Carreg. emb.</span>');
+    if (reg.emb_desc === 'SIM') chips.push('<span class="chip" style="background:#ccfbf1;color:#0f766e;"><i class="fa-solid fa-box-open"></i> Descarr. emb.</span>');
+    const card = document.createElement('div');
+    card.className = 'truck-card ' + (isFim ? 'fim' : '');
+    card.onclick = () => abrirRegistro(reg.id);
+    card.innerHTML =
+      '<div class="flex items-start justify-between gap-2">' +
+        '<div class="min-w-0 flex-1">' +
+          '<p class="placa m-0">' + esc(reg.placa || 'SEM PLACA') + '</p>' +
+          '<p class="text-[11px] text-slate-500 font-bold mt-1 mb-0 truncate">' + esc(reg.fornecedor || 'Fornecedor não informado') + '</p>' +
+        '</div>' +
+        '<div class="flex-shrink-0">' + status + '</div>' +
+      '</div>' +
+      '<div class="flex flex-wrap gap-1.5 mt-2">' + chips.join(' ') + '</div>' +
+      '<div class="flex items-center justify-between gap-2 pt-2 mt-2" style="border-top:1px solid #eef1f6;">' +
+        '<p class="text-[10px] font-bold text-slate-500 truncate m-0 min-w-0 flex-1">' + esc(descreverUltimaAcao(reg)) + '</p>' +
+        '<i class="fa-solid fa-chevron-right text-slate-300 text-[10px] flex-shrink-0"></i>' +
+      '</div>';
+    lista.appendChild(card);
+  });
+}
+
+function descreverUltimaAcao(reg) {
+  const etapas = montarEtapas(reg);
+  for (let i = etapas.length - 1; i >= 0; i--) {
+    if (reg[etapas[i].id]) return etapas[i].label + ' às ' + reg[etapas[i].id];
+  }
+  return 'Registro criado sem horários';
+}
+
+/* ===== 7. DADOS ===== */
+function iniciarNovoRegistro() {
+  limparFormularioDOM();
+  appState.activeId = 'REG_' + Date.now();
+  appState.reg = {
+    id: appState.activeId,
+    status: 'EM_ANDAMENTO',
+    data: hojeISO(),
+    hora_inicio: agoraHHMM(),
+    turno: operadorLogado.turno || 'A',
+    operador: operadorLogado.nome !== '---' ? operadorLogado.nome : '',
+    fornecedor: '', placa: '', container: '', doca: 'Rec', nf: '', qtd_caixas: '',
+    fez_pesagem: 'NÃO', teve_conferencia: 'NÃO', emb_carr: 'NÃO', emb_desc: 'NÃO',
+    conferencias: []
+  };
+  appState.horarios = {};
+  appState.conferencias = [];
+  preencherFormulario(appState.reg);
+  atualizarHeaderPlaca();
+  navTo('dados');
+}
+
+function limparFormularioDOM() {
+  ['form-data', 'form-hora', 'form-turno', 'form-operador', 'form-fornecedor', 'form-placa', 'form-container', 'form-doca', 'form-nf', 'form-qtd-caixas'].forEach((id) => {
+    const el = $(id);
+    if (el) el.value = '';
+  });
+  ['form-pesagem', 'form-conferencia', 'form-emb-carr', 'form-emb-desc'].forEach((id) => {
+    const el = $(id);
+    if (el) el.value = 'NÃO';
+  });
+  document.querySelectorAll('.seg button').forEach((b) => b.classList.remove('on'));
+  document.querySelectorAll('.seg').forEach((s) => {
+    const first = s.querySelector('button');
+    if (first) first.classList.add('on');
+  });
+}
+
+function preencherFormulario(reg) {
+  $('form-data').value = reg.data || hojeISO();
+  $('form-hora').value = reg.hora_inicio || '';
+  $('form-turno').value = reg.turno || 'A';
+  $('form-operador').value = reg.operador || '';
+  $('form-fornecedor').value = reg.fornecedor || '';
+  $('form-placa').value = reg.placa || '';
+  $('form-container').value = reg.container || '';
+  $('form-doca').value = reg.doca || 'Rec';
+  $('form-nf').value = reg.nf || '';
+  $('form-qtd-caixas').value = reg.qtd_caixas || '';
+  setFlag('fez_pesagem', reg.fez_pesagem || 'NÃO');
+  setFlag('teve_conferencia', reg.teve_conferencia || 'NÃO');
+  setFlag('emb_carr', reg.emb_carr || 'NÃO');
+  setFlag('emb_desc', reg.emb_desc || 'NÃO');
+}
+
+function setToday() {
+  const el = $('form-data');
+  if (el) el.value = hojeISO();
+  const h = $('form-hora');
+  if (h) h.value = agoraHHMM();
+  salvarEstadoAtual().catch(() => {});
+}
+
+function abrirRegistro(id) {
+  const reg = filaRegistros.find((r) => r.id === id);
+  if (!reg) return;
+  appState.activeId = id;
+  appState.reg = { ...reg };
+  appState.horarios = {};
+  montarEtapas(appState.reg).forEach((e) => { if (appState.reg[e.id]) appState.horarios[e.id] = appState.reg[e.id]; });
+  appState.conferencias = normalizarConf(appState.reg.conferencias);
+  preencherFormulario(appState.reg);
+  atualizarHeaderPlaca();
+  navTo('dados');
+}
+
+function setFlag(campo, valor) {
+  const segId = { fez_pesagem: 'seg-pesagem', teve_conferencia: 'seg-conferencia', emb_carr: 'seg-emb_carr', emb_desc: 'seg-emb_desc' }[campo];
+  const formId = { fez_pesagem: 'form-pesagem', teve_conferencia: 'form-conferencia', emb_carr: 'form-emb-carr', emb_desc: 'form-emb-desc' }[campo];
+  const seg = $(segId);
+  if (seg) {
+    seg.querySelectorAll('button').forEach((b) => b.classList.remove('on'));
+    seg.querySelectorAll('button').forEach((b) => { if (b.textContent.trim() === valor) b.classList.add('on'); });
+  }
+  const hidden = $(formId);
+  if (hidden) hidden.value = valor;
+  if (appState.reg) appState.reg[campo] = valor;
+}
+
+function usarOperadorLogado() {
+  if (operadorLogado.nome && operadorLogado.nome !== '---') $('form-operador').value = operadorLogado.nome;
+}
+
+function filtrarFornecedores() {
+  const val = $('form-fornecedor') ? $('form-fornecedor').value.toUpperCase() : '';
+  const drop = $('forn-dropdown');
+  if (!drop) return;
+  const lista = listaFornecedores.filter((f) => !val || f.toUpperCase().includes(val)).slice(0, 6);
+  if (lista.length === 0) { drop.classList.add('hidden'); return; }
+  drop.classList.remove('hidden');
+  drop.innerHTML = lista.map((f) => '<div class="p-3 border-b border-slate-100 text-[12.5px] font-bold text-slate-700 cursor-pointer" onmousedown="selecionarFornecedor(\'' + f.replace(/'/g, "\'") + '\')">' + esc(f) + '</div>').join('');
+}
+
+function selecionarFornecedor(nome) {
+  $('form-fornecedor').value = nome;
+  const drop = $('forn-dropdown');
+  if (drop) drop.classList.add('hidden');
+}
+
+async function carregarFornecedores() {
+  try {
+    const snap = await db.ref('cadastros/fornecedores').once('value');
+    listaFornecedores = [];
+    snap.forEach((child) => {
+      const v = child.val();
+      if (typeof v === 'string') listaFornecedores.push(v);
+      else if (v && v.nome) listaFornecedores.push(v.nome);
+    });
+  } catch (e) {}
+}
+
+function salvarEstadoAtual() {
+  if (!appState.activeId || !appState.reg || isDeleting) return Promise.resolve();
+  const base = appState.reg;
+  const dados = {
+    ...base,
+    id: appState.activeId,
+    data: $('form-data') ? $('form-data').value || hojeISO() : hojeISO(),
+    hora_inicio: $('form-hora') ? $('form-hora').value || '' : '',
+    turno: $('form-turno') ? $('form-turno').value || 'A' : 'A',
+    operador: $('form-operador') ? $('form-operador').value.trim() || '' : '',
+    fornecedor: $('form-fornecedor') ? $('form-fornecedor').value.trim() || '' : '',
+    placa: $('form-placa') ? $('form-placa').value.trim().toUpperCase() : '',
+    container: $('form-container') ? $('form-container').value.trim() : '',
+    doca: $('form-doca') ? $('form-doca').value || 'Rec' : 'Rec',
+    nf: $('form-nf') ? $('form-nf').value.trim() || '' : '',
+    qtd_caixas: $('form-qtd-caixas') ? $('form-qtd-caixas').value || '' : '',
+    fez_pesagem: $('form-pesagem') ? $('form-pesagem').value || 'NÃO' : 'NÃO',
+    teve_conferencia: $('form-conferencia') ? $('form-conferencia').value || 'NÃO' : 'NÃO',
+    emb_carr: $('form-emb-carr') ? $('form-emb-carr').value || 'NÃO' : 'NÃO',
+    emb_desc: $('form-emb-desc') ? $('form-emb-desc').value || 'NÃO' : 'NÃO',
+    horarios: appState.horarios,
+    conferencias: appState.conferencias,
+    operador_logado: operadorLogado.nome || '',
+    updated_at: Date.now(),
+    status: base.saida ? 'FINALIZADO' : (base.status || 'EM_ANDAMENTO')
+  };
+  Object.keys(appState.horarios).forEach((k) => { dados[k] = appState.horarios[k]; });
+  appState.reg = dados;
+  return db.ref('controle_logistico/' + appState.activeId).set(dados);
+}
+
+function salvarEIrParaHorarios() {
+  const placa = $('form-placa') ? $('form-placa').value.trim() : '';
+  const fornecedor = $('form-fornecedor') ? $('form-fornecedor').value.trim() : '';
+  if (!placa || !fornecedor) { showToast('Informe a placa e o fornecedor antes de avançar.'); return; }
+  salvarEstadoAtual().then(() => { navTo('tempos'); }).catch(() => showToast('Não foi possível salvar. Verifique a internet.'));
+}
+
+/* ===== 8. MÚLTIPLOS POR CAIXA (sincronizado com o Master Hub) ===== */
+function atualizarPartNumbers() {
+  partNumbersList = partNumbersList.filter((p, i) => partNumbersList.indexOf(p) === i);
+  ['conf-parts-list', 'mult-parts-list'].forEach((id) => {
+    const dl = $(id);
+    if (!dl) return;
+    let opt = '';
+    partNumbersList.forEach((p) => { opt += '<option value="' + esc(p) + '"></option>'; });
+    dl.innerHTML = opt;
+  });
+}
+
+db.ref('cadastros/produtos_mestre').on('value', (snap) => {
+  partNumbersList = [];
+  if (snap.exists()) {
+    const prods = snap.val();
+    const arr = Array.isArray(prods) ? prods : Object.values(prods || {});
+    arr.forEach((p) => {
+      if (p && p.partNumber) partNumbersList.push(String(p.partNumber).trim().toUpperCase());
+    });
+  }
+  atualizarPartNumbers();
+});
+
+function carregarMultiplos() {
+  db.ref('cadastros/multiplos_por_caixa').on('value', (snap) => {
+    multMap = snap.exists() ? (snap.val() || {}) : {};
+    multRender();
+    confAtualizarPreview();
+  });
+}
+
+function abrirMultiplos() {
+  document.querySelectorAll('.view-container').forEach((v) => v.classList.remove('active'));
+  const view = $('view-multiplos');
+  if (view) view.classList.add('active');
+  currentView = 'multiplos';
+  document.querySelectorAll('#main-bottom-nav .nav-item').forEach((n) => n.classList.remove('active'));
+  const nb = $('nav-btn-multiplos');
+  if (nb) nb.classList.add('active');
+  multRender();
+  window.scrollTo(0, 0);
+}
+
+function multSalvar() {
+  const pn = ($('mult-part') ? $('mult-part').value : '').trim().toUpperCase();
+  const val = Number($('mult-valor') ? $('mult-valor').value : 0) || 0;
+  if (!pn) { showToast('Informe o part number.'); return; }
+  if (val < 1) { showToast('O múltiplo deve ser no mínimo 1.'); return; }
+  multMap[pn] = val;
+  db.ref('cadastros/multiplos_por_caixa').set(multMap).then(() => {
+    $('mult-part').value = '';
+    $('mult-valor').value = '1';
+    multRender();
+    showToast('Múltiplo cadastrado: ' + pn + ' = ' + val + '/caixa');
+  }).catch(() => showToast('Não foi possível salvar. Verifique a internet.'));
+}
+
+function multRemover(pn) {
+  delete multMap[pn];
+  db.ref('cadastros/multiplos_por_caixa').set(multMap).then(multRender).catch(() => {});
+}
+
+function multRender() {
+  const lista = $('mult-lista');
+  const prev = $('mult-preview');
+  if (!lista) return;
+  lista.innerHTML = '';
+  const chaves = Object.keys(multMap);
+  if (!chaves.length) {
+    lista.innerHTML = '<p class="text-center text-slate-400 font-bold text-[12px] py-6">Nenhum múltiplo cadastrado ainda.</p>';
+  } else {
+    chaves.sort().forEach((pn) => {
+      const div = document.createElement('div');
+      div.className = 'conf-item';
+      div.innerHTML =
+        '<div style="min-width:0"><b>' + esc(pn) + '</b><span>' + esc(multMap[pn]) + ' por caixa</span></div>' +
+        '<button type="button" onclick="multRemover(\'' + pn.replace(/'/g, "\'") + '\')" style="background:#fff1f2;color:#e11d48;border:none;border-radius:8px;width:28px;height:28px;font-weight:800;cursor:pointer"><i class="fa-solid fa-xmark"></i></button>';
+      lista.appendChild(div);
+    });
+  }
+  if (prev) prev.innerHTML = chaves.length ? chaves.length + ' part numbers com múltiplo cadastrado' : '';
+}
+
+/* ===== 9. CONFERÊNCIA ===== */
 function calcularCaixas(qtd, mult) {
   qtd = Number(qtd) || 0;
   mult = Number(mult) || MULTIPLO_PADRAO;
@@ -2035,100 +1251,91 @@ function calcularCaixas(qtd, mult) {
   return Math.ceil(qtd / mult);
 }
 
-/* Registro em edicao: usa appState.activeId + filaRegistros do app real */
-function confRegistroAtual() {
-  if (!appState || !appState.activeId) return null;
-  var r = null;
-  if (typeof filaRegistros !== 'undefined' && filaRegistros) {
-    for (var i = 0; i < filaRegistros.length; i++) {
-      if (filaRegistros[i] && String(filaRegistros[i].id) === String(appState.activeId)) {
-        r = filaRegistros[i];
-        break;
-      }
-    }
-  }
-  if (!r) {
-    r = {
-      id: appState.activeId,
-      placa: (document.getElementById('form-placa') || {}).value || '',
-      fornecedor: (document.getElementById('form-fornecedor') || {}).value || '',
-      turno: (document.getElementById('form-turno') || {}).value || 'A',
-      operador: (document.getElementById('form-operador') || {}).value || '',
-      doca: (document.getElementById('form-doca') || {}).value || 'Rec',
-      nf: (document.getElementById('form-nf') || {}).value || '',
-      qtd_caixas: (document.getElementById('form-qtd-caixas') || {}).value || '',
-      fez_pesagem: (document.getElementById('form-pesagem') || {}).value || 'NÃO',
-      teve_conferencia: (document.getElementById('form-conferencia') || {}).value || 'NÃO'
-    };
-  }
-  return r;
+function qtdMenorQueMultiplo(qtd, mult) {
+  qtd = Number(qtd) || 0;
+  mult = Number(mult) || MULTIPLO_PADRAO;
+  if (mult <= 0) mult = MULTIPLO_PADRAO;
+  if (qtd <= 0) return false;
+  return qtd % mult !== 0;
 }
 
-function confPlacaAtiva() {
-  var r = confRegistroAtual();
-  if (r && r.placa) return r.placa;
-  var el = document.getElementById('header-placa-ativa');
-  if (el && el.textContent && el.textContent !== 'NENHUM SELECIONADO') return el.textContent;
-  return '';
+/* Ao digitar ou selecionar o part number, preenche o múltiplo do cadastro */
+function confAutoMultiplo() {
+  const pn = ($('conf-part') ? $('conf-part').value : '').trim().toUpperCase();
+  const mField = $('conf-multiplo');
+  if (!mField) return;
+  if (pn && multMap[pn]) mField.value = multMap[pn];
+  else if (pn && !multMap[pn]) mField.value = '1';
+  confAtualizarPreview();
 }
 
 function confAtualizarPreview() {
-  var q = document.getElementById('conf-qtd');
-  var m = document.getElementById('conf-multiplo');
-  var el = document.getElementById('conf-preview');
-  if (!el) return;
-  el.innerHTML = 'Caixas: <strong>' + calcularCaixas(q ? q.value : 0, m ? m.value : 0) + '</strong>';
+  const q = $('conf-qtd');
+  const m = $('conf-multiplo');
+  const el = $('conf-preview');
+  const aviso = $('conf-aviso');
+  const qtd = q ? Number(q.value) || 0 : 0;
+  const mult = m ? Number(m.value) || MULTIPLO_PADRAO : MULTIPLO_PADRAO;
+  if (el) el.innerHTML = 'Caixas: <strong>' + calcularCaixas(qtd, mult) + '</strong>';
+  if (aviso) aviso.style.display = qtdMenorQueMultiplo(qtd, mult) ? 'block' : 'none';
+  if (q) q.addEventListener('change', salvarConferenciaSeNecessario);
 }
 
-/* ---------- Abrir tela de conferencia ---------- */
+function salvarConferenciaSeNecessario() { confSalvarNoRegistro(); }
+
 function abrirConferencia() {
-  var r = confRegistroAtual();
-  if (!r) { alert('Abra ou crie um caminhão antes de fazer a conferência.'); return; }
-  appState.conferencias = normalizarConf(r.conferencias);
-  document.querySelectorAll('.view-container').forEach(function (el) { el.classList.remove('active'); });
-  var conf = document.getElementById('view-conf');
+  if (!appState.activeId) { showToast('Abra ou crie um caminhão antes de fazer a conferência.'); return; }
+  appState.conferencias = normalizarConf(registroAtivo() ? registroAtivo().conferencias : []);
+  document.querySelectorAll('.view-container').forEach((v) => v.classList.remove('active'));
+  const conf = $('view-conf');
   if (conf) conf.classList.add('active');
   currentView = 'conf';
-  document.querySelectorAll('#main-bottom-nav .nav-item').forEach(function (n) { n.classList.remove('active'); });
-  var nb = document.getElementById('nav-btn-conf');
+  document.querySelectorAll('#main-bottom-nav .nav-item').forEach((n) => n.classList.remove('active'));
+  const nb = $('nav-btn-conf');
   if (nb) nb.classList.add('active');
-  document.getElementById('conf-placa-info').textContent = confPlacaAtiva() || 'CAMINHÃO';
+  const placa = $('conf-placa-info');
+  const reg = registroAtivo();
+  if (placa) placa.textContent = reg && reg.placa ? reg.placa : 'CAMINHÃO SEM PLACA';
   confRender();
   window.scrollTo(0, 0);
 }
 
 function confRender() {
-  var lista = document.getElementById('conf-lista');
+  const lista = $('conf-lista');
   if (!lista) return;
   lista.innerHTML = '';
-  var total = 0;
-  appState.conferencias.forEach(function (it, i) {
-    var cx = calcularCaixas(it.quantidade, it.multiplo);
+  let total = 0;
+  appState.conferencias.forEach((it, i) => {
+    const cx = calcularCaixas(it.quantidade, it.multiplo);
     total += cx;
-    var div = document.createElement('div');
+    const incompleta = qtdMenorQueMultiplo(it.quantidade, it.multiplo);
+    const div = document.createElement('div');
     div.className = 'conf-item';
     div.innerHTML =
-      '<div style="min-width:0"><b>' + (it.partNumber || '') + '</b>' +
-      '<span>Qtd: ' + it.quantidade + ' | Múltiplo: ' + it.multiplo + '/caixa</span></div>' +
+      '<div style="min-width:0"><b>' + esc(it.partNumber) + '</b>' +
+      '<span>Qtd: ' + esc(it.quantidade) + ' | Múltiplo: ' + esc(it.multiplo) + '/caixa</span>' +
+      (incompleta ? '<br><small style="color:#d97706;">Quantidade menor que o múltiplo (caixa incompleta)</small>' : '') +
+      '</div>' +
       '<div style="text-align:right"><small>caixas</small><b style="font-size:15px">' + cx + '</b></div>' +
       '<button type="button" onclick="confRemover(' + i + ')" style="background:#fff1f2;color:#e11d48;border:none;border-radius:8px;width:28px;height:28px;font-weight:800;cursor:pointer"><i class="fa-solid fa-xmark"></i></button>';
     lista.appendChild(div);
   });
-  var tot = document.getElementById('conf-total');
+  const tot = $('conf-total');
   if (tot) tot.textContent = 'Total de caixas: ' + total;
 }
 
 function confAdicionar() {
-  var r = confRegistroAtual();
-  if (!r) { alert('Abra ou crie um caminhão antes de adicionar itens.'); return; }
-  var pn = (document.getElementById('conf-part').value || '').trim();
-  var qtd = Number(document.getElementById('conf-qtd').value) || 0;
-  var mult = Number(document.getElementById('conf-multiplo').value) || MULTIPLO_PADRAO;
-  if (!pn) { alert('Informe o part number.'); return; }
-  if (qtd <= 0) { alert('Informe a quantidade.'); return; }
+  if (!appState.activeId) { showToast('Abra ou crie um caminhão antes de adicionar itens.'); return; }
+  const pn = ($('conf-part') ? $('conf-part').value : '').trim().toUpperCase();
+  const qtd = Number($('conf-qtd') ? $('conf-qtd').value : 0) || 0;
+  let mult = Number($('conf-multiplo') ? $('conf-multiplo').value : 0) || MULTIPLO_PADRAO;
+  if (mult < 1) mult = MULTIPLO_PADRAO;
+  if (!pn) { showToast('Informe o part number.'); return; }
+  if (qtd <= 0) { showToast('Informe a quantidade.'); return; }
   appState.conferencias.push({ partNumber: pn, quantidade: qtd, multiplo: mult });
-  document.getElementById('conf-part').value = '';
-  document.getElementById('conf-qtd').value = '';
+  $('conf-part').value = '';
+  $('conf-qtd').value = '';
+  $('conf-multiplo').value = '1';
   confAtualizarPreview();
   confRender();
   confSalvarNoRegistro();
@@ -2140,30 +1347,26 @@ function confRemover(i) {
   confSalvarNoRegistro();
 }
 
-/* Salva conferencias via update e protege contra o set do autosave,
-   que sobrescreve o registro inteiro e apagaria o campo conferencias. */
+/* Persistência: grava no Firebase, mantendo a conferência após trocar de aba ou abrir outro caminhão */
 function confSalvarNoRegistro() {
-  if (!appState || !appState.activeId) return;
-  var lista = (appState.conferencias || []).slice();
-  var ref = db.ref('controle_logistico/' + appState.activeId);
-  ref.update({ conferencias: lista }).catch(function () {});
-  clearTimeout(confProtectTimer);
-  confProtectTimer = setTimeout(function () {
-    ref.update({ conferencias: lista }).catch(function () {});
-  }, 1300);
+  if (!appState.activeId) return;
+  const lista = (appState.conferencias || []).slice();
+  salvarEstadoAtual().then(() => {
+    db.ref('controle_logistico/' + appState.activeId).update({ conferencias: lista }).catch(() => {});
+  }).catch(() => {});
 }
 
 function confContinuar() {
   confSalvarNoRegistro();
-  if (typeof navTo === 'function') navTo('tempos');
+  navTo('tempos');
 }
 
-/* ---------- Calculadora ---------- */
-var calcExpr = '';
-var calcMostra = '0';
+/* ===== 10. CALCULADORA ===== */
+let calcExpr = '';
+let calcMostra = '0';
 
 function calcPintar() {
-  var el = document.getElementById('calc-display');
+  const el = $('calc-display');
   if (el) el.textContent = calcMostra;
 }
 
@@ -2173,7 +1376,7 @@ function calcAcao(v) {
   else if (v === '=') {
     if (!calcExpr) return;
     try {
-      var r = Function('"use strict"; return (' + calcExpr + ');')();
+      const r = Function('"use strict"; return (' + calcExpr + ');')();
       calcMostra = String(Math.round(r * 1e10) / 1e10);
       calcExpr = calcMostra;
     } catch (e) { calcMostra = 'Erro'; calcExpr = ''; }
@@ -2181,60 +1384,293 @@ function calcAcao(v) {
   calcPintar();
 }
 
-/* ---------- Copiar caminhao (novo contêiner) ---------- */
+/* ===== 11. COPIAR CAMINHÃO (dados + horários + conferências) ===== */
 function copiarCaminhao() {
-  var origem = confRegistroAtual();
-  if (!origem) { alert('Abra ou crie um caminhão antes de copiar.'); return; }
+  const origem = registroAtivo();
+  if (!origem) { showToast('Abra ou crie um caminhão antes de copiar.'); return; }
   if (!confirm('Copiar este caminhão como novo registro, com os mesmos dados e horários?')) return;
 
-  var novo = {};
-  for (var k in origem) {
-    if (Object.prototype.hasOwnProperty.call(origem, k)) novo[k] = origem[k];
-  }
-  delete novo.id;
-  delete novo.updated_at;
-  novo.status = 'EM_ANDAMENTO';
-  novo.conferencias = (appState.conferencias || []).slice();
-
-  /* Copia os horários registrados para o novo registro */
-  if (typeof etapasPontoAtivas !== 'undefined' && etapasPontoAtivas) {
-    etapasPontoAtivas.forEach(function (e) {
-      if (origem[e.id]) novo[e.id] = origem[e.id];
+  salvarEstadoAtual().then(() => {
+    const atualizado = registroAtivo() || origem;
+    const novo = {};
+    Object.keys(atualizado).forEach((k) => {
+      if (k !== 'id' && k !== 'updated_at' && k !== 'updatedAt') novo[k] = atualizado[k];
     });
-  }
+    novo.status = 'EM_ANDAMENTO';
+    novo.copiadoDe = appState.activeId;
+    novo.conferencias = (appState.conferencias || []).slice();
+    Object.keys(appState.horarios).forEach((h) => { novo[h] = appState.horarios[h]; });
 
-  var ref = db.ref('controle_logistico').push();
-  ref.set(novo).then(function () {
-    appState.activeId = ref.key;
-    appState.horarios = {};
-    if (typeof etapasPontoAtivas !== 'undefined' && etapasPontoAtivas) {
-      etapasPontoAtivas.forEach(function (e) {
-        if (novo[e.id]) appState.horarios[e.id] = novo[e.id];
-      });
-    }
-    appState.conferencias = normalizarConf(novo.conferencias);
-    if (typeof showToast === 'function') showToast('Caminhão copiado com dados e horários.', 'fa-clone');
-    else alert('Caminhão copiado com dados e horários.');
-    if (typeof desbloquearTabs === 'function') desbloquearTabs(true);
-    if (typeof atualizarHeadersAtivos === 'function') atualizarHeadersAtivos();
-    if (typeof navTo === 'function') navTo('dados');
-  }).catch(function () {
-    alert('Não foi possível copiar agora. Verifique a internet.');
+    const ref = db.ref('controle_logistico').push();
+    ref.set(novo).then(() => {
+      appState.activeId = ref.key;
+      appState.reg = { ...novo, id: ref.key };
+      appState.conferencias = normalizarConf(novo.conferencias).slice();
+      appState.horarios = {};
+      montarEtapas(appState.reg).forEach((e) => { if (appState.reg[e.id]) appState.horarios[e.id] = appState.reg[e.id]; });
+      preencherFormulario(appState.reg);
+      atualizarHeaderPlaca();
+      showToast('Caminhão copiado com dados e horários.');
+      navTo('dados');
+    }).catch(() => showToast('Não foi possível copiar agora. Verifique a internet.'));
+  }).catch(() => showToast('Não foi possível salvar. Verifique a internet.'));
+}
+
+/* ===== 12. HORÁRIOS ===== */
+function montarEtapas(reg) {
+  const etapas = [
+    { id: 'chegada', label: 'Chegada' },
+    { id: 'lib_portaria', label: 'Liberação portaria' },
+    { id: 'ini_desc', label: 'Início descarga' },
+    { id: 'fim_desc', label: 'Fim descarga' }
+  ];
+  if (reg.emb_carr === 'SIM') {
+    etapas.push({ id: 'ini_carr', label: 'Início carreg. embalagem' });
+    etapas.push({ id: 'fim_carr', label: 'Fim carreg. embalagem' });
+  }
+  if (reg.emb_desc === 'SIM') {
+    etapas.push({ id: 'ini_emb_desc', label: 'Início descarr. embalagem' });
+    etapas.push({ id: 'fim_emb_desc', label: 'Fim descarr. embalagem' });
+  }
+  if (reg.teve_conferencia === 'SIM') {
+    etapas.push({ id: 'ini_conf', label: 'Início conferência' });
+    etapas.push({ id: 'fim_conf', label: 'Fim conferência' });
+  }
+  if (reg.fez_pesagem === 'SIM') {
+    etapas.push({ id: 'ini_pesag', label: 'Início pesagem' });
+    etapas.push({ id: 'fim_pesag', label: 'Fim pesagem' });
+  }
+  etapas.push({ id: 'saida', label: 'Registrar saída' });
+  return etapas;
+}
+
+function renderizarListaTempos() {
+  const reg = registroAtivo();
+  const lista = $('lista-tempos');
+  if (!lista || !reg) return;
+  const etapas = montarEtapas(reg);
+  lista.innerHTML = '';
+  etapas.forEach((etapa) => {
+    const valor = reg[etapa.id] || appState.horarios[etapa.id] || '';
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:8px;';
+    div.innerHTML =
+      '<div style="display:flex;align-items:center;gap:8px;min-width:0;">' +
+        '<i class="fa-solid ' + (valor ? 'fa-circle-check' : 'fa-circle') + '" style="font-size:13px;color:' + (valor ? '#16a34a' : '#cbd5e1') + ';"></i>' +
+        '<span style="font-size:12.5px;font-weight:700;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(etapa.label) + '</span>' +
+      '</div>' +
+      '<input type="time" class="time-input ' + (valor ? 'preenchido' : '') + '" data-etapa="' + etapa.id + '" value="' + esc(valor) + '" />';
+    lista.appendChild(div);
+  });
+  lista.querySelectorAll('.time-input').forEach((inp) => {
+    inp.addEventListener('change', () => atualizarHorarioManual(inp.dataset.etapa, inp.value));
   });
 }
 
-/* ---------- Inicializacao: preenche lista de part numbers ---------- */
-(function () {
-  var dl = document.getElementById('conf-parts-list');
-  if (dl) {
-    var opt = '';
-    for (var i = 0; i < PART_NUMBERS.length; i++) {
-      opt += '<option value="' + PART_NUMBERS[i] + '"></option>';
-    }
-    dl.innerHTML = opt;
+function atualizarProgresso() {
+  const reg = registroAtivo();
+  if (!reg) return;
+  const etapas = montarEtapas(reg);
+  const feitas = etapas.filter((e) => reg[e.id] || appState.horarios[e.id]).length;
+  const total = etapas.length;
+  const txt = $('progresso-texto');
+  const barra = $('progresso-barra');
+  const atual = $('progresso-etapa-atual');
+  const btn = $('btn-ponto-texto');
+  if (txt) txt.textContent = feitas + ' / ' + total;
+  if (barra) barra.style.width = (total ? (feitas / total * 100) : 0) + '%';
+  const proxima = etapas.find((e) => !(reg[e.id] || appState.horarios[e.id]));
+  if (atual) atual.textContent = proxima ? 'Próxima etapa: ' + proxima.label : 'Todas as etapas concluídas';
+  if (btn) btn.textContent = proxima ? proxima.label : 'Operação concluída';
+}
+
+function registrarProximaEtapa() {
+  const reg = registroAtivo();
+  if (!reg) return;
+  const etapas = montarEtapas(reg);
+  const proxima = etapas.find((e) => !(reg[e.id] || appState.horarios[e.id]));
+  if (!proxima) return;
+  const hora = agoraHHMM();
+  appState.horarios[proxima.id] = hora;
+  reg[proxima.id] = hora;
+  salvarEstadoAtual().then(() => {
+    renderizarListaTempos();
+    atualizarProgresso();
+  }).catch(() => showToast('Não foi possível salvar. Verifique a internet.'));
+}
+
+let timerSalvar = null;
+function atualizarHorarioManual(etapaId, valor) {
+  const reg = registroAtivo();
+  if (!reg) return;
+  appState.horarios[etapaId] = valor;
+  reg[etapaId] = valor;
+  clearTimeout(timerSalvar);
+  timerSalvar = setTimeout(() => { salvarEstadoAtual().catch(() => {}); }, 1000);
+}
+
+function resetarTempos() { $('modal-reset').classList.add('open'); }
+function fecharModalReset() { $('modal-reset').classList.remove('open'); }
+function executarResetTempos() {
+  fecharModalReset();
+  const reg = registroAtivo();
+  if (!reg) return;
+  montarEtapas(reg).forEach((e) => { appState.horarios[e.id] = ''; reg[e.id] = ''; });
+  salvarEstadoAtual().then(() => {
+    renderizarListaTempos();
+    atualizarProgresso();
+  }).catch(() => showToast('Não foi possível salvar. Verifique a internet.'));
+}
+
+/* ===== 13. FINALIZAR ===== */
+$('form-motivo').addEventListener('input', () => {
+  const reg = registroAtivo();
+  if (!reg) return;
+  clearTimeout(timerSalvar);
+  timerSalvar = setTimeout(() => {
+    reg.motivo_atraso = $('form-motivo').value;
+    salvarEstadoAtual().catch(() => {});
+  }, 1000);
+});
+
+function confirmarExclusaoAtual() { $('modal-exclusao').classList.add('open'); }
+function fecharModalExclusao() { $('modal-exclusao').classList.remove('open'); }
+function executarExclusaoDefinitiva() {
+  fecharModalExclusao();
+  if (!appState.activeId) return;
+  isDeleting = true;
+  db.ref('controle_logistico/' + appState.activeId).remove().then(() => {
+    isDeleting = false;
+    appState.activeId = null;
+    appState.reg = null;
+    appState.horarios = {};
+    appState.conferencias = [];
+    navTo('patio');
+  }).catch(() => {
+    isDeleting = false;
+    showToast('Não foi possível excluir. Verifique a internet.');
+  });
+}
+
+/* ===== 14. EXPORTAÇÃO ===== */
+function prepararDadosExcel(registros) {
+  return registros.map((r) => ({
+    'Data': r.data || '',
+    'Turno': r.turno || '',
+    'Fornecedor': r.fornecedor || '',
+    'Placa': r.placa || '',
+    'Container': r.container || '',
+    'Doca': r.doca || '',
+    'Operador': r.operador || '',
+    'Operador Logado': r.operador_logado || '',
+    'NF': r.nf || '',
+    'Caixas': r.qtd_caixas || '',
+    'Chegada': r.chegada || '',
+    'Lib. Portaria': r.lib_portaria || '',
+    'Espera Portaria (m)': diffMinutos(r.chegada, r.lib_portaria) ?? '',
+    'Ini. Descarga': r.ini_desc || '',
+    'Fim Descarga': r.fim_desc || '',
+    'Descarga (m)': diffMinutos(r.ini_desc, r.fim_desc) ?? '',
+    'Carreg. Embalagem?': r.emb_carr || 'NÃO',
+    'Ini. Carreg. Emb.': r.ini_carr || '',
+    'Fim Carreg. Emb.': r.fim_carr || '',
+    'Carreg. Emb. (m)': diffMinutos(r.ini_carr, r.fim_carr) ?? '',
+    'Descarr. Embalagem?': r.emb_desc || 'NÃO',
+    'Ini. Descarr. Emb.': r.ini_emb_desc || '',
+    'Fim Descarr. Emb.': r.fim_emb_desc || '',
+    'Descarr. Emb. (m)': diffMinutos(r.ini_emb_desc, r.fim_emb_desc) ?? '',
+    'Ini. Conferência': r.ini_conf || '',
+    'Fim Conferência': r.fim_conf || '',
+    'Conferência (m)': diffMinutos(r.ini_conf, r.fim_conf) ?? '',
+    'Fez Pesagem?': r.fez_pesagem || 'NÃO',
+    'Ini. Pesagem': r.ini_pesag || '',
+    'Fim Pesagem': r.fim_pesag || '',
+    'Pesagem (m)': diffMinutos(r.ini_pesag, r.fim_pesag) ?? '',
+    'Saída': r.saida || '',
+    'Lead Time (m)': diffMinutos(r.chegada, r.saida) ?? '',
+    'Conferências': normalizarConf(r.conferencias).map((c) => c.partNumber + ': ' + c.quantidade + ' (' + calcularCaixas(c.quantidade, c.multiplo) + ' cx)').join(' | '),
+    'Status': r.status === 'FINALIZADO' ? 'Concluído' : 'Em operação',
+    'Motivo Atraso': r.motivo_atraso || ''
+  }));
+}
+
+function gerarWorkBookExportacao(registros) {
+  const wb = XLSX.utils.book_new();
+  const porFornecedor = {};
+  registros.forEach((r) => {
+    const nome = r.fornecedor || 'Sem fornecedor';
+    porFornecedor[nome] = porFornecedor[nome] || { total: 0, caixas: 0, carreg: 0, descarr: 0, lead: [], atrasos: 0 };
+    const g = porFornecedor[nome];
+    g.total++;
+    g.caixas += parseInt(r.qtd_caixas, 10) || 0;
+    if (r.emb_carr === 'SIM') g.carreg++;
+    if (r.emb_desc === 'SIM') g.descarr++;
+    const lt = diffMinutos(r.chegada, r.saida);
+    if (lt !== null) g.lead.push(lt);
+    if (lt !== null && lt > 120) g.atrasos++;
+  });
+  const resumo = Object.entries(porFornecedor).map(([nome, g]) => ({
+    'Transportadora / Fornecedor': nome,
+    'Total de Veículos': g.total,
+    'Volume de Caixas': g.caixas,
+    'Carreg. Embalagem': g.carreg,
+    'Descarr. Embalagem': g.descarr,
+    'Média de Lead Time (min)': g.lead.length ? Math.round(g.lead.reduce((a, b) => a + b, 0) / g.lead.length) : 0,
+    'Ocorrências de Atraso (>120m)': g.atrasos
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumo), 'Tabela Dinâmica');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(prepararDadosExcel(registros)), 'Dados Diários');
+  return wb;
+}
+
+function baixarExcel() {
+  if (typeof XLSX === 'undefined') { showToast('Biblioteca de Excel não carregada. Verifique a internet.'); return; }
+  const ini = $('export-data-ini').value;
+  const fim = $('export-data-fim').value;
+  let registros = filaRegistros;
+  if (ini && fim) registros = registros.filter((r) => r.data && r.data >= ini && r.data <= fim);
+  const wb = gerarWorkBookExportacao(registros);
+  const hj = new Date();
+  const fileName = 'App_Logistica_' + hj.getFullYear() + '-' + (hj.getMonth() + 1) + '-' + hj.getDate() + '.xlsx';
+  XLSX.writeFile(wb, fileName);
+  showToast('Download do Excel concluído!');
+}
+
+async function enviarPorEmail() {
+  if (typeof XLSX === 'undefined') { showToast('Biblioteca de Excel não carregada. Verifique a internet.'); return; }
+  const emailDestino = $('email-export').value;
+  const ini = $('export-data-ini').value;
+  const fim = $('export-data-fim').value;
+  let registros = filaRegistros;
+  if (ini && fim) registros = registros.filter((r) => r.data && r.data >= ini && r.data <= fim);
+  const wb = gerarWorkBookExportacao(registros);
+  const dados = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([dados], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const arquivo = new File([blob], 'Relatorio_Logistica_HL.xlsx', { type: blob.type });
+  if (navigator.canShare && navigator.canShare({ files: [arquivo] })) {
+    await navigator.share({ files: [arquivo], title: 'Relatório Logística HL', text: 'Relatório de controle de pátio' });
+  } else {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Relatorio_Logistica_HL.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
+    window.location.href = 'mailto:' + (emailDestino || '') +
+      '?subject=' + encodeURIComponent('Relatório Logística HL') +
+      '&body=' + encodeURIComponent('Segue em anexo o relatório de controle de pátio.');
   }
-})();
-  </script>
+}
+
+/* ===== 15. INICIALIZAÇÃO ===== */
+carregarMultiplos();
+carregarFornecedores();
+atualizarPartNumbers();
+
+window.onload = () => {
+  marcarAtividade();
+};
+</script>
 </body>
 </html>
 
