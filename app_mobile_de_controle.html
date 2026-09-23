@@ -26,12 +26,7 @@
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-body {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--ink);
-  -webkit-font-smoothing: antialiased;
-}
+body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
 [hidden] { display: none !important; }
 
 .view-container { display: none; }
@@ -92,22 +87,26 @@ body {
 #view-conf .conf-cab p, #view-multiplos .conf-cab p { margin: 2px 0 0; font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; }
 .calc-display { background: var(--ink); color: #fff; border-radius: 12px; padding: 13px 14px; font-size: 26px; font-weight: 800; text-align: right; margin-bottom: 10px; min-height: 54px; word-break: break-all; font-variant-numeric: tabular-nums; }
 .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.calc-btn { border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 12px 0; font-size: 17px; font-weight: 800; color: var(--ink); cursor: pointer; font-family: inherit; }
+.calc-btn { border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 14px 0; font-size: 18px; font-weight: 800; color: var(--ink); cursor: pointer; font-family: inherit; }
 .calc-btn:active { transform: scale(.96); background: #eef2f7; }
 .calc-op { background: #eef4ff; color: var(--blue); }
 .calc-fn { background: #fff1f2; color: var(--rose); }
-.calc-igual { background: var(--blue); color: #fff; border-color: var(--blue); }
+.calc-igual { background: var(--blue); color: #fff; border-color: var(--blue); grid-row: span 2; }
 .conf-preview { background: #eef4ff; color: #1e40af; border-radius: 10px; padding: 9px 12px; margin-top: 10px; font-size: 13.5px; font-weight: 700; text-align: center; }
 .conf-preview strong { font-size: 20px; }
+.conf-aviso { background: #fef3c7; color: #92400e; }
 .conf-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; background: #fff; }
 .conf-item b { display: block; font-size: 13px; color: var(--ink); }
 .conf-item span { font-size: 11.5px; color: var(--slate); font-weight: 600; }
 .conf-item small { font-size: 11px; color: #94a3b8; }
 .conf-total-bar { background: var(--ink); color: #fff; border-radius: 12px; padding: 11px; text-align: center; font-weight: 800; font-size: 14px; margin: 10px 0; }
+.campo-pn { display: flex; gap: 8px; }
+.campo-pn input { flex: 1; }
+.btn-pn { background: #eef4ff; color: var(--blue); border: 1px solid #bfdbfe; border-radius: 10px; padding: 10px 12px; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; white-space: nowrap; }
 
 .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--white); border-top: 1px solid var(--line); display: none; justify-content: space-around; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); z-index: 50; }
 .bottom-nav.show { display: flex; }
-.nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--slate); font-size: 10px; font-weight: 700; cursor: pointer; padding: 4px 8px; }
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--slate); font-size: 10px; font-weight: 700; cursor: pointer; padding: 4px 6px; }
 .nav-item i { font-size: 16px; }
 .nav-item.active { color: var(--blue); }
 .nav-item.opacity-50 { opacity: .4; }
@@ -116,6 +115,13 @@ body {
 .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.55); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 100; }
 .modal-overlay.open { display: flex; }
 .modal-card { background: var(--white); border-radius: 18px; padding: 20px; width: 100%; max-width: 380px; }
+
+.picker-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.55); display: none; align-items: flex-end; justify-content: center; z-index: 110; }
+.picker-overlay.open { display: flex; }
+.picker-sheet { background: var(--white); border-radius: 18px 18px 0 0; width: 100%; max-width: 480px; max-height: 70vh; display: flex; flex-direction: column; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
+.picker-lista { overflow-y: auto; margin-top: 10px; }
+.picker-item { padding: 13px 12px; border-bottom: 1px solid var(--line); font-size: 14px; font-weight: 700; color: var(--ink); cursor: pointer; }
+.picker-item:active { background: var(--bg); }
 </style>
 </head>
 <body>
@@ -320,12 +326,11 @@ body {
           <input type="hidden" id="form-pesagem" value="NÃO" />
         </div>
         <div>
-          <label class="mobile-label">Conferência</label>
+          <label class="mobile-label">Conferência (sempre SIM)</label>
           <div class="seg compact" id="seg-conferencia">
-            <button type="button" onclick="setFlag('teve_conferencia','NÃO')" class="on">NÃO</button>
-            <button type="button" onclick="setFlag('teve_conferencia','SIM')">SIM</button>
+            <button type="button" class="on" disabled>SIM</button>
           </div>
-          <input type="hidden" id="form-conferencia" value="NÃO" />
+          <input type="hidden" id="form-conferencia" value="SIM" />
         </div>
       </div>
       <div class="flex items-center gap-2 mb-3">
@@ -406,22 +411,23 @@ body {
         <button type="button" class="calc-btn calc-igual" onclick="calcAcao('=')">=</button>
         <button type="button" class="calc-btn" style="grid-column:span 2" onclick="calcAcao('0')">0</button>
         <button type="button" class="calc-btn" onclick="calcAcao('.')">.</button>
-        <button type="button" class="calc-btn calc-igual" onclick="calcAcao('=')">=</button>
       </div>
     </div>
 
     <div class="card">
       <div class="block-label"><i class="fa-solid fa-boxes-stacked"></i> Item conferido</div>
-      <label class="mobile-label">Part number (digite ou selecione)</label>
-      <input type="text" id="conf-part" list="conf-parts-list" class="mobile-input text-sm" placeholder="Digite ou selecione o part number" oninput="confAutoMultiplo()">
-      <datalist id="conf-parts-list"></datalist>
+      <label class="mobile-label">Part number (escreva ou selecione)</label>
+      <div class="campo-pn">
+        <input type="text" id="conf-part" class="mobile-input text-sm" placeholder="Digite o part number" oninput="confAutoMultiplo()">
+        <button type="button" class="btn-pn" onclick="abrirPickerPN('conf-part')"><i class="fa-solid fa-list"></i> Selecionar</button>
+      </div>
       <label class="mobile-label">Quantidade total</label>
       <input type="number" id="conf-qtd" inputmode="numeric" min="0" class="mobile-input text-sm" placeholder="0" oninput="confAtualizarPreview()">
       <label class="mobile-label">Múltiplo por caixa (auto do cadastro)</label>
       <input type="number" id="conf-multiplo" inputmode="numeric" min="1" value="1" class="mobile-input text-sm" oninput="confAtualizarPreview()">
       <div class="conf-preview" id="conf-preview">Caixas: <strong>0</strong></div>
-      <div class="conf-preview" id="conf-aviso" style="display:none;background:#fef3c7;color:#92400e;">
-        Quantidade menor que o múltiplo: sobra caixa incompleta.
+      <div class="conf-preview conf-aviso" id="conf-aviso" style="display:none;">
+        Sobra: <strong id="conf-sobra-info">0</strong> item(ns) sem caixa completa.
       </div>
       <button type="button" onclick="confAdicionar()" style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:800;font-size:14px;margin-top:12px;font-family:inherit;">
         <i class="fa-solid fa-plus"></i> Adicionar item
@@ -430,6 +436,7 @@ body {
 
     <div id="conf-lista"></div>
     <div class="conf-total-bar" id="conf-total">Total de caixas: 0</div>
+    <div class="conf-total-bar" id="conf-total-sobra" style="background:#92400e;display:none;">Sobra total: 0 item(ns)</div>
     <button type="button" onclick="confContinuar()" style="width:100%;background:#16a34a;color:#fff;border:none;border-radius:12px;padding:14px;font-weight:800;font-size:14px;font-family:inherit;">
       <i class="fa-solid fa-arrow-right"></i> Continuar para horários
     </button>
@@ -448,9 +455,11 @@ body {
 
     <div class="card">
       <div class="block-label"><i class="fa-solid fa-cubes"></i> Cadastrar múltiplo</div>
-      <label class="mobile-label">Part number (digite ou selecione)</label>
-      <input type="text" id="mult-part" list="mult-parts-list" class="mobile-input text-sm" placeholder="Digite ou selecione do cadastro">
-      <datalist id="mult-parts-list"></datalist>
+      <label class="mobile-label">Part number (escreva ou selecione)</label>
+      <div class="campo-pn">
+        <input type="text" id="mult-part" class="mobile-input text-sm" placeholder="Digite o part number">
+        <button type="button" class="btn-pn" onclick="abrirPickerPN('mult-part')"><i class="fa-solid fa-list"></i> Selecionar</button>
+      </div>
       <label class="mobile-label">Múltiplo por caixa</label>
       <div style="display:flex;gap:8px;">
         <input type="number" id="mult-valor" inputmode="numeric" min="1" value="1" class="mobile-input text-sm" style="flex:1;">
@@ -640,9 +649,21 @@ body {
   </div>
 </div>
 
+<!-- Seletor de Part Number (sheet inferior) -->
+<div id="picker-pn" class="picker-overlay">
+  <div class="picker-sheet">
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="font-black text-[15px] text-slate-900 m-0">Selecionar Part Number</h3>
+      <button onclick="fecharPickerPN()" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <input type="text" id="picker-busca" class="mobile-input text-sm" placeholder="Buscar part number..." oninput="buscarPN()" />
+    <div class="picker-lista" id="picker-lista"></div>
+  </div>
+</div>
+
 <script>
 	/* ============================================================
-   App Logística - HL Mando | JS completo
+   App Logística - HL Mando | JS completo (corrigido)
    ============================================================ */
 
 /* ===== 1. CONFIG FIREBASE ===== */
@@ -677,9 +698,11 @@ const appState = {
   conferencias: []
 };
 
-let multMap = {};
+let multArray = [];   // [{partNumber, multiplo}, ...] salvo no Firebase
+let multMap = {};     // partNumber -> multiplo (construído de multArray)
 let partNumbersList = [];
 const MULTIPLO_PADRAO = 1;
+let pickerTarget = null; // id do input que receberá a seleção do picker
 
 /* ===== 3. HELPERS ===== */
 const $ = (id) => document.getElementById(id);
@@ -710,6 +733,8 @@ function navTo(view) {
   const bloqueadas = ['dados', 'tempos', 'finalizar'];
   if (bloqueadas.includes(view) && !appState.activeId) return;
 
+  /* Ao sair de Conf. ou Mult., garante que tudo está salvo */
+  if (currentView === 'conf') confSalvarNoRegistro();
   if ((view === 'tempos' || view === 'finalizar') && appState.activeId) {
     salvarEstadoAtual().catch(() => {});
   }
@@ -1011,7 +1036,7 @@ function iniciarNovoRegistro() {
     turno: operadorLogado.turno || 'A',
     operador: operadorLogado.nome !== '---' ? operadorLogado.nome : '',
     fornecedor: '', placa: '', container: '', doca: 'Rec', nf: '', qtd_caixas: '',
-    fez_pesagem: 'NÃO', teve_conferencia: 'NÃO', emb_carr: 'NÃO', emb_desc: 'NÃO',
+    fez_pesagem: 'NÃO', teve_conferencia: 'SIM', emb_carr: 'NÃO', emb_desc: 'NÃO',
     conferencias: []
   };
   appState.horarios = {};
@@ -1026,13 +1051,15 @@ function limparFormularioDOM() {
     const el = $(id);
     if (el) el.value = '';
   });
-  ['form-pesagem', 'form-conferencia', 'form-emb-carr', 'form-emb-desc'].forEach((id) => {
+  ['form-pesagem', 'form-emb-carr', 'form-emb-desc'].forEach((id) => {
     const el = $(id);
     if (el) el.value = 'NÃO';
   });
-  document.querySelectorAll('.seg button').forEach((b) => b.classList.remove('on'));
+  const formConf = $('form-conferencia');
+  if (formConf) formConf.value = 'SIM';
+  document.querySelectorAll('.seg button').forEach((b) => { if (!b.disabled) b.classList.remove('on'); });
   document.querySelectorAll('.seg').forEach((s) => {
-    const first = s.querySelector('button');
+    const first = s.querySelector('button:not([disabled])');
     if (first) first.classList.add('on');
   });
 }
@@ -1049,7 +1076,7 @@ function preencherFormulario(reg) {
   $('form-nf').value = reg.nf || '';
   $('form-qtd-caixas').value = reg.qtd_caixas || '';
   setFlag('fez_pesagem', reg.fez_pesagem || 'NÃO');
-  setFlag('teve_conferencia', reg.teve_conferencia || 'NÃO');
+  setFlag('teve_conferencia', 'SIM'); // conferência sempre SIM
   setFlag('emb_carr', reg.emb_carr || 'NÃO');
   setFlag('emb_desc', reg.emb_desc || 'NÃO');
 }
@@ -1076,12 +1103,13 @@ function abrirRegistro(id) {
 }
 
 function setFlag(campo, valor) {
+  if (campo === 'teve_conferencia') { valor = 'SIM'; }
   const segId = { fez_pesagem: 'seg-pesagem', teve_conferencia: 'seg-conferencia', emb_carr: 'seg-emb_carr', emb_desc: 'seg-emb_desc' }[campo];
   const formId = { fez_pesagem: 'form-pesagem', teve_conferencia: 'form-conferencia', emb_carr: 'form-emb-carr', emb_desc: 'form-emb-desc' }[campo];
   const seg = $(segId);
   if (seg) {
-    seg.querySelectorAll('button').forEach((b) => b.classList.remove('on'));
-    seg.querySelectorAll('button').forEach((b) => { if (b.textContent.trim() === valor) b.classList.add('on'); });
+    seg.querySelectorAll('button').forEach((b) => { if (!b.disabled) b.classList.remove('on'); });
+    seg.querySelectorAll('button:not([disabled])').forEach((b) => { if (b.textContent.trim() === valor) b.classList.add('on'); });
   }
   const hidden = $(formId);
   if (hidden) hidden.value = valor;
@@ -1137,7 +1165,7 @@ function salvarEstadoAtual() {
     nf: $('form-nf') ? $('form-nf').value.trim() || '' : '',
     qtd_caixas: $('form-qtd-caixas') ? $('form-qtd-caixas').value || '' : '',
     fez_pesagem: $('form-pesagem') ? $('form-pesagem').value || 'NÃO' : 'NÃO',
-    teve_conferencia: $('form-conferencia') ? $('form-conferencia').value || 'NÃO' : 'NÃO',
+    teve_conferencia: 'SIM',
     emb_carr: $('form-emb-carr') ? $('form-emb-carr').value || 'NÃO' : 'NÃO',
     emb_desc: $('form-emb-desc') ? $('form-emb-desc').value || 'NÃO' : 'NÃO',
     horarios: appState.horarios,
@@ -1158,16 +1186,17 @@ function salvarEIrParaHorarios() {
   salvarEstadoAtual().then(() => { navTo('tempos'); }).catch(() => showToast('Não foi possível salvar. Verifique a internet.'));
 }
 
-/* ===== 8. MÚLTIPLOS POR CAIXA (sincronizado com o Master Hub) ===== */
-function atualizarPartNumbers() {
-  partNumbersList = partNumbersList.filter((p, i) => partNumbersList.indexOf(p) === i);
-  ['conf-parts-list', 'mult-parts-list'].forEach((id) => {
-    const dl = $(id);
-    if (!dl) return;
-    let opt = '';
-    partNumbersList.forEach((p) => { opt += '<option value="' + esc(p) + '"></option>'; });
-    dl.innerHTML = opt;
-  });
+/* ===== 8. PART NUMBERS + MÚLTIPLOS (sincronizados) ===== */
+function montarMultMap() {
+  multMap = {};
+  multArray.forEach((m) => { if (m && m.partNumber) multMap[String(m.partNumber).trim().toUpperCase()] = Number(m.multiplo) || MULTIPLO_PADRAO; });
+}
+
+function listaCompletaPN() {
+  const set = {};
+  partNumbersList.forEach((p) => { set[p] = true; });
+  Object.keys(multMap).forEach((p) => { set[p] = true; });
+  return Object.keys(set).sort();
 }
 
 db.ref('cadastros/produtos_mestre').on('value', (snap) => {
@@ -1179,12 +1208,18 @@ db.ref('cadastros/produtos_mestre').on('value', (snap) => {
       if (p && p.partNumber) partNumbersList.push(String(p.partNumber).trim().toUpperCase());
     });
   }
-  atualizarPartNumbers();
 });
 
 function carregarMultiplos() {
   db.ref('cadastros/multiplos_por_caixa').on('value', (snap) => {
-    multMap = snap.exists() ? (snap.val() || {}) : {};
+    if (snap.exists()) {
+      const v = snap.val();
+      multArray = Array.isArray(v) ? v : Object.values(v || {});
+    } else {
+      multArray = [];
+    }
+    multArray = multArray.filter((m) => m && m.partNumber);
+    montarMultMap();
     multRender();
     confAtualizarPreview();
   });
@@ -1207,18 +1242,21 @@ function multSalvar() {
   const val = Number($('mult-valor') ? $('mult-valor').value : 0) || 0;
   if (!pn) { showToast('Informe o part number.'); return; }
   if (val < 1) { showToast('O múltiplo deve ser no mínimo 1.'); return; }
-  multMap[pn] = val;
-  db.ref('cadastros/multiplos_por_caixa').set(multMap).then(() => {
+  multArray = multArray.filter((m) => String(m.partNumber).trim().toUpperCase() !== pn);
+  multArray.push({ partNumber: pn, multiplo: val });
+  montarMultMap();
+  db.ref('cadastros/multiplos_por_caixa').set(multArray).then(() => {
     $('mult-part').value = '';
     $('mult-valor').value = '1';
     multRender();
-    showToast('Múltiplo cadastrado: ' + pn + ' = ' + val + '/caixa');
+    showToast('Múltiplo salvo: ' + pn + ' = ' + val + '/caixa');
   }).catch(() => showToast('Não foi possível salvar. Verifique a internet.'));
 }
 
 function multRemover(pn) {
-  delete multMap[pn];
-  db.ref('cadastros/multiplos_por_caixa').set(multMap).then(multRender).catch(() => {});
+  multArray = multArray.filter((m) => String(m.partNumber).trim().toUpperCase() !== pn);
+  montarMultMap();
+  db.ref('cadastros/multiplos_por_caixa').set(multArray).then(multRender).catch(() => {});
 }
 
 function multRender() {
@@ -1226,23 +1264,62 @@ function multRender() {
   const prev = $('mult-preview');
   if (!lista) return;
   lista.innerHTML = '';
-  const chaves = Object.keys(multMap);
-  if (!chaves.length) {
+  if (!multArray.length) {
     lista.innerHTML = '<p class="text-center text-slate-400 font-bold text-[12px] py-6">Nenhum múltiplo cadastrado ainda.</p>';
   } else {
-    chaves.sort().forEach((pn) => {
+    multArray.slice().sort((a, b) => a.partNumber.localeCompare(b.partNumber)).forEach((m) => {
       const div = document.createElement('div');
       div.className = 'conf-item';
       div.innerHTML =
-        '<div style="min-width:0"><b>' + esc(pn) + '</b><span>' + esc(multMap[pn]) + ' por caixa</span></div>' +
-        '<button type="button" onclick="multRemover(\'' + pn.replace(/'/g, "\'") + '\')" style="background:#fff1f2;color:#e11d48;border:none;border-radius:8px;width:28px;height:28px;font-weight:800;cursor:pointer"><i class="fa-solid fa-xmark"></i></button>';
+        '<div style="min-width:0"><b>' + esc(m.partNumber) + '</b><span>' + esc(m.multiplo) + ' por caixa</span></div>' +
+        '<button type="button" onclick="multRemover(\'' + m.partNumber.replace(/'/g, "\'") + '\')" style="background:#fff1f2;color:#e11d48;border:none;border-radius:8px;width:28px;height:28px;font-weight:800;cursor:pointer"><i class="fa-solid fa-xmark"></i></button>';
       lista.appendChild(div);
     });
   }
-  if (prev) prev.innerHTML = chaves.length ? chaves.length + ' part numbers com múltiplo cadastrado' : '';
+  if (prev) prev.innerHTML = multArray.length ? multArray.length + ' part numbers com múltiplo cadastrado' : '';
 }
 
-/* ===== 9. CONFERÊNCIA ===== */
+/* ===== 9. SELETOR DE PART NUMBER (mobile-friendly) ===== */
+function abrirPickerPN(targetId) {
+  pickerTarget = targetId;
+  const busca = $('picker-busca');
+  if (busca) busca.value = '';
+  const overlay = $('picker-pn');
+  if (overlay) overlay.classList.add('open');
+  buscarPN();
+}
+
+function fecharPickerPN() {
+  const overlay = $('picker-pn');
+  if (overlay) overlay.classList.remove('open');
+  pickerTarget = null;
+}
+
+function buscarPN() {
+  const lista = $('picker-lista');
+  if (!lista) return;
+  const termo = ($('picker-busca') ? $('picker-busca').value : '').trim().toUpperCase();
+  const todos = listaCompletaPN();
+  const filtrados = termo ? todos.filter((p) => p.toUpperCase().includes(termo)) : todos;
+  if (!filtrados.length) {
+    lista.innerHTML = '<p class="text-center text-slate-400 font-bold text-[12px] py-6">Nenhum part number encontrado.</p>';
+    return;
+  }
+  lista.innerHTML = filtrados.map((p) =>
+    '<div class="picker-item" onclick="escolherPN(\'' + p.replace(/'/g, "\'") + '\')">' + esc(p) + '</div>'
+  ).join('');
+}
+
+function escolherPN(valor) {
+  if (pickerTarget) {
+    const input = $(pickerTarget);
+    if (input) input.value = valor;
+  }
+  fecharPickerPN();
+  if (pickerTarget === 'conf-part') confAutoMultiplo();
+}
+
+/* ===== 10. CONFERÊNCIA ===== */
 function calcularCaixas(qtd, mult) {
   qtd = Number(qtd) || 0;
   mult = Number(mult) || MULTIPLO_PADRAO;
@@ -1251,15 +1328,14 @@ function calcularCaixas(qtd, mult) {
   return Math.ceil(qtd / mult);
 }
 
-function qtdMenorQueMultiplo(qtd, mult) {
+function calcularSobra(qtd, mult) {
   qtd = Number(qtd) || 0;
   mult = Number(mult) || MULTIPLO_PADRAO;
   if (mult <= 0) mult = MULTIPLO_PADRAO;
-  if (qtd <= 0) return false;
-  return qtd % mult !== 0;
+  if (qtd <= 0) return 0;
+  return qtd % mult;
 }
 
-/* Ao digitar ou selecionar o part number, preenche o múltiplo do cadastro */
 function confAutoMultiplo() {
   const pn = ($('conf-part') ? $('conf-part').value : '').trim().toUpperCase();
   const mField = $('conf-multiplo');
@@ -1274,18 +1350,19 @@ function confAtualizarPreview() {
   const m = $('conf-multiplo');
   const el = $('conf-preview');
   const aviso = $('conf-aviso');
+  const sobraEl = $('conf-sobra-info');
   const qtd = q ? Number(q.value) || 0 : 0;
   const mult = m ? Number(m.value) || MULTIPLO_PADRAO : MULTIPLO_PADRAO;
   if (el) el.innerHTML = 'Caixas: <strong>' + calcularCaixas(qtd, mult) + '</strong>';
-  if (aviso) aviso.style.display = qtdMenorQueMultiplo(qtd, mult) ? 'block' : 'none';
-  if (q) q.addEventListener('change', salvarConferenciaSeNecessario);
+  const sobra = calcularSobra(qtd, mult);
+  if (aviso) aviso.style.display = sobra > 0 ? 'block' : 'none';
+  if (sobraEl) sobraEl.textContent = sobra;
 }
-
-function salvarConferenciaSeNecessario() { confSalvarNoRegistro(); }
 
 function abrirConferencia() {
   if (!appState.activeId) { showToast('Abra ou crie um caminhão antes de fazer a conferência.'); return; }
-  appState.conferencias = normalizarConf(registroAtivo() ? registroAtivo().conferencias : []);
+  const reg = registroAtivo();
+  if (reg) appState.conferencias = normalizarConf(reg.conferencias);
   document.querySelectorAll('.view-container').forEach((v) => v.classList.remove('active'));
   const conf = $('view-conf');
   if (conf) conf.classList.add('active');
@@ -1294,9 +1371,9 @@ function abrirConferencia() {
   const nb = $('nav-btn-conf');
   if (nb) nb.classList.add('active');
   const placa = $('conf-placa-info');
-  const reg = registroAtivo();
   if (placa) placa.textContent = reg && reg.placa ? reg.placa : 'CAMINHÃO SEM PLACA';
   confRender();
+  confAtualizarPreview();
   window.scrollTo(0, 0);
 }
 
@@ -1305,16 +1382,18 @@ function confRender() {
   if (!lista) return;
   lista.innerHTML = '';
   let total = 0;
+  let totalSobra = 0;
   appState.conferencias.forEach((it, i) => {
     const cx = calcularCaixas(it.quantidade, it.multiplo);
+    const sobra = calcularSobra(it.quantidade, it.multiplo);
     total += cx;
-    const incompleta = qtdMenorQueMultiplo(it.quantidade, it.multiplo);
+    totalSobra += sobra;
     const div = document.createElement('div');
     div.className = 'conf-item';
     div.innerHTML =
       '<div style="min-width:0"><b>' + esc(it.partNumber) + '</b>' +
       '<span>Qtd: ' + esc(it.quantidade) + ' | Múltiplo: ' + esc(it.multiplo) + '/caixa</span>' +
-      (incompleta ? '<br><small style="color:#d97706;">Quantidade menor que o múltiplo (caixa incompleta)</small>' : '') +
+      '<br><span style="color:#334155;">Caixas: ' + cx + (sobra > 0 ? ' | <span style="color:#d97706;">Sobra: ' + sobra + '</span>' : '') + '</span>' +
       '</div>' +
       '<div style="text-align:right"><small>caixas</small><b style="font-size:15px">' + cx + '</b></div>' +
       '<button type="button" onclick="confRemover(' + i + ')" style="background:#fff1f2;color:#e11d48;border:none;border-radius:8px;width:28px;height:28px;font-weight:800;cursor:pointer"><i class="fa-solid fa-xmark"></i></button>';
@@ -1322,6 +1401,15 @@ function confRender() {
   });
   const tot = $('conf-total');
   if (tot) tot.textContent = 'Total de caixas: ' + total;
+  const totSobra = $('conf-total-sobra');
+  if (totSobra) {
+    if (totalSobra > 0) {
+      totSobra.style.display = 'block';
+      totSobra.textContent = 'Sobra total: ' + totalSobra + ' item(ns) sem caixa completa';
+    } else {
+      totSobra.style.display = 'none';
+    }
+  }
 }
 
 function confAdicionar() {
@@ -1338,7 +1426,7 @@ function confAdicionar() {
   $('conf-multiplo').value = '1';
   confAtualizarPreview();
   confRender();
-  confSalvarNoRegistro();
+  confSalvarNoRegistro(); // grava imediatamente no Firebase
 }
 
 function confRemover(i) {
@@ -1347,21 +1435,22 @@ function confRemover(i) {
   confSalvarNoRegistro();
 }
 
-/* Persistência: grava no Firebase, mantendo a conferência após trocar de aba ou abrir outro caminhão */
+/* Garante persistência: grava o registro inteiro + conferencias no Firebase.
+   É chamada em toda alteração e ao sair da aba, então nada se perde
+   ao trocar de aba, abrir outro caminhão ou fechar o app. */
 function confSalvarNoRegistro() {
-  if (!appState.activeId) return;
-  const lista = (appState.conferencias || []).slice();
-  salvarEstadoAtual().then(() => {
-    db.ref('controle_logistico/' + appState.activeId).update({ conferencias: lista }).catch(() => {});
+  if (!appState.activeId) return Promise.resolve();
+  return salvarEstadoAtual().then(() => {
+    const lista = (appState.conferencias || []).slice();
+    return db.ref('controle_logistico/' + appState.activeId).update({ conferencias: lista }).catch(() => {});
   }).catch(() => {});
 }
 
 function confContinuar() {
-  confSalvarNoRegistro();
-  navTo('tempos');
+  confSalvarNoRegistro().then(() => { navTo('tempos'); });
 }
 
-/* ===== 10. CALCULADORA ===== */
+/* ===== 11. CALCULADORA ===== */
 let calcExpr = '';
 let calcMostra = '0';
 
@@ -1384,13 +1473,13 @@ function calcAcao(v) {
   calcPintar();
 }
 
-/* ===== 11. COPIAR CAMINHÃO (dados + horários + conferências) ===== */
+/* ===== 12. COPIAR CAMINHÃO ===== */
 function copiarCaminhao() {
   const origem = registroAtivo();
   if (!origem) { showToast('Abra ou crie um caminhão antes de copiar.'); return; }
   if (!confirm('Copiar este caminhão como novo registro, com os mesmos dados e horários?')) return;
 
-  salvarEstadoAtual().then(() => {
+  confSalvarNoRegistro().then(() => {
     const atualizado = registroAtivo() || origem;
     const novo = {};
     Object.keys(atualizado).forEach((k) => {
@@ -1410,13 +1499,13 @@ function copiarCaminhao() {
       montarEtapas(appState.reg).forEach((e) => { if (appState.reg[e.id]) appState.horarios[e.id] = appState.reg[e.id]; });
       preencherFormulario(appState.reg);
       atualizarHeaderPlaca();
-      showToast('Caminhão copiado com dados e horários.');
+      showToast('Caminhão copiado com dados, horários e conferências.');
       navTo('dados');
     }).catch(() => showToast('Não foi possível copiar agora. Verifique a internet.'));
   }).catch(() => showToast('Não foi possível salvar. Verifique a internet.'));
 }
 
-/* ===== 12. HORÁRIOS ===== */
+/* ===== 13. HORÁRIOS ===== */
 function montarEtapas(reg) {
   const etapas = [
     { id: 'chegada', label: 'Chegada' },
@@ -1522,7 +1611,7 @@ function executarResetTempos() {
   }).catch(() => showToast('Não foi possível salvar. Verifique a internet.'));
 }
 
-/* ===== 13. FINALIZAR ===== */
+/* ===== 14. FINALIZAR ===== */
 $('form-motivo').addEventListener('input', () => {
   const reg = registroAtivo();
   if (!reg) return;
@@ -1552,7 +1641,7 @@ function executarExclusaoDefinitiva() {
   });
 }
 
-/* ===== 14. EXPORTAÇÃO ===== */
+/* ===== 15. EXPORTAÇÃO ===== */
 function prepararDadosExcel(registros) {
   return registros.map((r) => ({
     'Data': r.data || '',
@@ -1588,7 +1677,7 @@ function prepararDadosExcel(registros) {
     'Pesagem (m)': diffMinutos(r.ini_pesag, r.fim_pesag) ?? '',
     'Saída': r.saida || '',
     'Lead Time (m)': diffMinutos(r.chegada, r.saida) ?? '',
-    'Conferências': normalizarConf(r.conferencias).map((c) => c.partNumber + ': ' + c.quantidade + ' (' + calcularCaixas(c.quantidade, c.multiplo) + ' cx)').join(' | '),
+    'Conferências': normalizarConf(r.conferencias).map((c) => c.partNumber + ': ' + c.quantidade + ' (' + calcularCaixas(c.quantidade, c.multiplo) + ' cx' + (calcularSobra(c.quantidade, c.multiplo) > 0 ? ' | sobra ' + calcularSobra(c.quantidade, c.multiplo) : '') + ')').join(' | '),
     'Status': r.status === 'FINALIZADO' ? 'Concluído' : 'Em operação',
     'Motivo Atraso': r.motivo_atraso || ''
   }));
@@ -1662,10 +1751,9 @@ async function enviarPorEmail() {
   }
 }
 
-/* ===== 15. INICIALIZAÇÃO ===== */
+/* ===== 16. INICIALIZAÇÃO ===== */
 carregarMultiplos();
 carregarFornecedores();
-atualizarPartNumbers();
 
 window.onload = () => {
   marcarAtividade();
@@ -1673,4 +1761,5 @@ window.onload = () => {
 </script>
 </body>
 </html>
+
 
